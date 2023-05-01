@@ -1,0 +1,17 @@
+.foot {
+    vertical-align: middle;
+}
+
+.print-only {
+    display: none !important;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    .print-only {
+        display: initial !important;
+    }
+}

@@ -1,5 +1,5 @@
-import { Suspense, lazy } from 'preact/compat';
 import { Loading } from '@geist-ui/core';
+import { Suspense, lazy } from 'preact/compat';
 import { useLocale } from '../context/i18n/i18n';
 
 // @ts-ignore

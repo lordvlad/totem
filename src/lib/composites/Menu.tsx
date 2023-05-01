@@ -1,18 +1,17 @@
 import { Button, Grid, KeyCode, KeyMod, Keyboard, Spacer, useKeyboard, useToasts } from "@geist-ui/core"
-import { useI18n } from "../context/i18n/i18n"
-import { useCallback, useEffect, useRef, useState } from "preact/hooks"
-import { useTracks } from "../context/tracks"
 import { Archive, Music, Printer, Settings, Trash } from "@geist-ui/icons"
+import { useCallback, useEffect, useRef, useState } from "preact/hooks"
+import { useI18n } from "../context/i18n/i18n"
+import { useLibrary } from "../context/library/library"
 import { useSelection } from "../context/selection"
-import { useGlobalState } from "../hooks/useGlobalState"
-import { tttool } from "../telefunc/tttool.telefunc"
 import { initialOptions } from "../data/options"
+import { useGlobalState } from "../hooks/useGlobalState"
 
 export function Menu() {
     const i18n = useI18n()
     const { setToast } = useToasts()
     const { selected, reset } = useSelection()
-    const { tracks, clear, isLoading, remove, load } = useTracks()
+    const { tracks, load, isLoading, remove, clear } = useLibrary(x => x)
     const [isBundling, setIsBundling] = useState(false)
     const setShowOptionsPanel = useGlobalState('showOptionsPanel', false)[1]
     const options = useGlobalState('options', initialOptions)[0]
@@ -22,21 +21,6 @@ export function Menu() {
         reset()
         remove(...selectedTracks)
     }, [selected, tracks])
-
-    // const mp3WebWorker = useMp3WebWorker((resp) => {
-    //     switch (resp.event) {
-    //         case 'loaded': {
-    //             add(resp.meta)
-    //             if (resp.n === resp.total) setIsLoading(false)
-    //             break;
-    //         }
-    //         case 'error': {
-    //             setToast({ type: 'error', text: `Failed to load ${resp.file}: ${resp.error}` })
-    //             break;
-    //         }
-    //         default: console.log(resp)
-    //     }
-    // })
 
     const onChooseFilesClick = async () => {
         const opts = { multiple: true, types: [{ description: "Audio", accept: { "audio/*": [".mp3"] } }] }
@@ -50,9 +34,9 @@ export function Menu() {
             if (tracks.length === 0) return
             console.log("bundling tracks", tracks)
 
-            const { message } = await tttool({ options, tracks })
+            // const { message } = await tttool({ options, tracks })
 
-            console.log(message)
+            // console.log(message)
         } finally {
             setIsBundling(false)
         }
@@ -62,6 +46,7 @@ export function Menu() {
     useKeyboard(() => setShowOptionsPanel(true), [KeyCode.KEY_O, KeyMod.Alt])
     useKeyboard(() => onChooseFilesClick(), [KeyCode.KEY_O, KeyMod.CtrlCmd])
     useKeyboard(() => onBundleClick(), [KeyCode.KEY_S, KeyMod.CtrlCmd])
+    useKeyboard(() => clear(), [KeyCode.Delete, KeyMod.CtrlCmd])
 
     // use keyboard will be set up ONCE only, so we need to work around it having a stale
     // reference to onDeleteSelection
@@ -96,7 +81,7 @@ export function Menu() {
                 type="warning">
                 {selected.size ? i18n`Remove` : i18n`Clear`}
                 <Spacer w={.5} />
-                <Keyboard scale={1 / 3}>{selected.size ? i18n`del` : 'F5'}</Keyboard>
+                <Keyboard scale={1 / 3}>{selected.size ? i18n`del` : 'ctrl+del'}</Keyboard>
             </Button>
         </Grid>
         <Grid>

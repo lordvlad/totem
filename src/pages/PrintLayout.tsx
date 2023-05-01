@@ -1,12 +1,11 @@
 import { OIDCode } from "../lib/components/OIDCode/OIDCode"
-import { useTracks } from "../lib/context/tracks"
-import { getFrameData, title } from "../lib/data/id3"
-import { type Options, initialOptions } from "../lib/data/options"
+import { useLibrary } from "../lib/context/library/library"
+import { initialOptions, type Options } from "../lib/data/options"
 import { useGlobalState } from "../lib/hooks/useGlobalState"
 
 export function PrintLayout() {
     const { layout, cols } = useGlobalState<Options>("options", initialOptions)
-    const { tracks } = useTracks()
+    const { tracks } = useLibrary(x => x)
 
     return (
         <div className="print-only">
@@ -16,7 +15,7 @@ export function PrintLayout() {
                     {tracks.map(track =>
                         <tr>
                             <td><OIDCode code={10} width={32} height={32} /></td>
-                            <td>{title(track)}</td>
+                            <td>{track.title}</td>
                         </tr>
                     )}
                 </tbody>

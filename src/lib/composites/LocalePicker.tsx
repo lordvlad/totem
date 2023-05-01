@@ -1,7 +1,7 @@
-import { useState } from "preact/hooks"
-import { locales, useLocale } from "../context/i18n/i18n"
 import { Button, Popover } from "@geist-ui/core"
 import { Globe } from "@geist-ui/icons"
+import { useState } from "preact/hooks"
+import { locales, useLocale } from "../context/i18n/i18n"
 
 export function LocalePicker() {
   const [locale, setLocale] = useLocale()

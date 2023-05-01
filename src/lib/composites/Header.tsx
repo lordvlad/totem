@@ -1,9 +1,9 @@
-import { Text, Grid, Spacer, Button } from "@geist-ui/core";
+import { Button, Grid, Spacer, Text } from "@geist-ui/core";
 import { Feather, HelpCircle } from "@geist-ui/icons";
-import { LocalePicker } from "./LocalePicker";
-import { ThemePicker } from "./ThemePicker";
 import { useI18n } from "../context/i18n/i18n";
 import { useGlobalState } from "../hooks/useGlobalState";
+import { LocalePicker } from "./LocalePicker";
+import { ThemePicker } from "./ThemePicker";
 
 
 export function Header() {

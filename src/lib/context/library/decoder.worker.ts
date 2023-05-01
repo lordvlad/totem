@@ -2,7 +2,7 @@
 
 // export empty type because of tsc --isolatedModules flag
 export type { };
-declare const self: SharedWorkerGlobalScope;
+declare const self: WorkerGlobalScope;
 
 import { set } from 'idb-keyval'
 import { load } from '../../util/id3'
@@ -16,7 +16,7 @@ async function loadAllW(handles: FileSystemFileHandle[]) {
             n++
             const file = await handle.getFile()
             const { data, ...meta } = await load(file.stream())
-            await set(`track:${handle.name}`, { data, ...meta })
+            await set(`track:${handle.name}`, { data, ...meta, fileName: handle.name })
             emit({ event: "loaded", meta: { ...meta, fileName: handle.name }, file: handle.name, n, total })
         } catch (e) {
             emit({ event: 'error', file: handle.name, error: String(e), n, total })
@@ -24,27 +24,36 @@ async function loadAllW(handles: FileSystemFileHandle[]) {
     }
 }
 
-const allPorts: MessagePort[] = []
-
 function emit(resp: Mp3WebWorkerResponse, b = true) {
-    allPorts.forEach(port => {
-        try {
-            port.postMessage(resp)
-        } catch (e) {
-            console.error(e)
-            if (b) emit({ event: "error", error: String(e) }, false)
-        }
-    })
-}
-
-async function onMessage({ data }: MessageEvent<Mp3WebWorkerRequest>) {
-    switch (data.event) {
-        case "load": loadAllW(data.handles)
+    try {
+        postMessage(resp)
+    } catch (e) {
+        console.error(e)
+        if (b) emit({ event: "error", error: String(e) }, false)
     }
 }
 
-self.addEventListener("connect", ({ ports }) => {
-    const port = ports[0]
-    port.addEventListener("message", onMessage)
-    allPorts.push(port)
+function isReq(x: any): x is Mp3WebWorkerRequest {
+    return x != null && typeof x === "object" && "event" in x
+}
+
+self.addEventListener("message", (event: Event) => {
+    console.log("onmessage", event)
+    if ("data" in event && isReq(event.data)) {
+        switch (event.data.event) {
+            case "load": return loadAllW(event.data.handles)
+        }
+    }
+
+    throw new Error(`Unhandled event: ${JSON.stringify(event)}`)
+})
+
+self.addEventListener("error", e => {
+    console.error(e)
+    emit({ event: "error", error: String(e) })
+})
+
+self.addEventListener("unhandledrejection", e => {
+    console.error(e)
+    emit({ event: "error", error: String(e) })
 })

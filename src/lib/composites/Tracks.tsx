@@ -1,39 +1,34 @@
-import { useCallback } from "preact/hooks"
-import { Text, Button, Card, Table, Code, Checkbox } from "@geist-ui/core"
-import { Trash } from "@geist-ui/icons"
-import { useI18n } from "../context/i18n/i18n"
-import { useTracks } from "../context/tracks"
-import { type FrameId, getFrameData, type ID3 } from "../data/id3"
-import { useDropZone } from "../hooks/useDropZone"
-import { useSelection } from "../context/selection"
+import { Button, Card, Checkbox, Code, Table, Text } from "@geist-ui/core"
 import { type CheckboxEvent } from "@geist-ui/core/esm/checkbox"
+import { Trash } from "@geist-ui/icons"
+import { useCallback } from "preact/hooks"
+import { useI18n } from "../context/i18n/i18n"
+import { useLibrary } from "../context/library/library"
+import { useSelection } from "../context/selection"
+import { Track } from "../data/track"
+import { useDropZone } from "../hooks/useDropZone"
 
-function renderFrame(id: FrameId, i18n: ReturnType<typeof useI18n>) {
-    return function (_: any, rowData: ID3) {
-        const val = getFrameData<string>(rowData, id)
-        return typeof val === "undefined" ? <em>{i18n`unknown`}</em> : <>{val}</>
-    }
-}
 
 export function Tracks() {
     const i18n = useI18n()
-    const { tracks, remove, onDrop } = useTracks()
+    const { onDrop, remove, tracks } = useLibrary(x => x)
+
     const { ref, isOver } = useDropZone({ onDrop })
     const { selected, toggle, reset, select } = useSelection()
 
-    const renderTitle = useCallback(renderFrame('TIT2', i18n), [i18n])
-    const renderArtist = useCallback(renderFrame('TOA', i18n), [i18n])
-    const renderAlbum = useCallback(renderFrame('TALB', i18n), [i18n])
+    const renderTitle = (_: any, track: Track) => track.title ?? <em>{i18n`unknown`}</em>
+    const renderArtist = (_: any, track: Track) => track.artist ?? <em>{i18n`unknown`}</em>
+    const renderAlbum = (_: any, track: Track) => track.album ?? <em>{i18n`unknown`}</em>
 
-    const renderAction = useCallback((_: any, rowData: ID3) => {
+    const renderAction = useCallback((_: any, track: Track) => {
         return (
-            <Button type="error" auto scale={1 / 3} font="12px" onClick={() => remove(rowData)} icon={<Trash />}>
+            <Button type="error" auto scale={1 / 3} font="12px" onClick={() => remove(track)} icon={<Trash />}>
                 {i18n`Remove`}
             </Button>
         )
     }, [])
 
-    const renderCheckbox = useCallback((_: any, rowData: ID3, idx: number) => {
+    const renderCheckbox = useCallback((_: any, rowData: Track, idx: number) => {
         return (
             <Checkbox
                 onChange={() => toggle(idx)}

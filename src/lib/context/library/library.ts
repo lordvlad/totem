@@ -1,7 +1,7 @@
 import { useState as preactUseState, useEffect } from 'preact/hooks';
 import { type Mp3WebWorkerRequest, type Mp3WebWorkerResponse } from './decoder';
 import { distinct } from '../../util/distinct';
-import { delMany, getMany, keys } from 'idb-keyval';
+import { delMany, getMany, keys, setMany } from 'idb-keyval';
 import { Track } from '../../data/track';
 import { hydrate } from '../../util/hydrate';
 
@@ -23,6 +23,8 @@ type A =
     | { event: "initialized", tracks: Track[] }
     | { event: "clear" }
     | { event: "cleared" }
+    | { event: "update", tracks: Track[] }
+    | { event: "updated", tracks: Track[] }
     | { event: "remove", tracks: Track[] }
     | { event: "removed", tracks: Track[] }
 
@@ -56,6 +58,10 @@ function load(handles: FileSystemFileHandle[]) {
     dispatch({ event: "load", handles })
 }
 
+function update(...tracks: Track[]) {
+    dispatch({ event: "update", tracks })
+}
+
 function reduce(s: typeof state, action: A): S {
     switch (action.event) {
         case "load":
@@ -80,9 +86,8 @@ function reduce(s: typeof state, action: A): S {
             return { ...s, isLoading: true }
         case "removed":
             const removed = new Set(action.tracks.map(t => t.fileName))
-            return { ...s, isLoading: false, tracks: s.tracks.filter(t => removed.has(t.fileName)) }
+            return { ...s, isLoading: false, tracks: s.tracks.filter(t => !removed.has(t.fileName)) }
         case "clear":
-            console.log("CLEAR", s.tracks.map(t => `track:${t.fileName}`))
             delMany(s.tracks.map(t => `track:${t.fileName}`))
                 .then(() => dispatch({ event: "cleared" }))
                 .catch(e1 => console.error(e1))
@@ -98,6 +103,14 @@ function reduce(s: typeof state, action: A): S {
             return { ...s, isLoading: true, tracks: [] }
         case "initialized":
             return { ...s, isLoading: false, tracks: action.tracks }
+        case "update":
+            setMany(action.tracks.map(track => [`track:${track.fileName}`, track]))
+                .then(() => dispatch({ event: "updated", tracks: action.tracks }))
+                .catch(e1 => console.error(e1))
+            return { ...s, isLoading: true }
+        case "updated":
+            return { ...s, isLoading: false }
+
         default: throw new Error(`Unhandled action ${JSON.stringify(action)}`)
     }
 }
@@ -131,6 +144,7 @@ export function useLibrary<T>(getValue: ((s: S) => T)) {
         onDrop,
         clear,
         load,
+        update,
     };
 }
 

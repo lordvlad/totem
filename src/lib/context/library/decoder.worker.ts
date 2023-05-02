@@ -38,7 +38,6 @@ function isReq(x: any): x is Mp3WebWorkerRequest {
 }
 
 self.addEventListener("message", (event: Event) => {
-    console.log("onmessage", event)
     if ("data" in event && isReq(event.data)) {
         switch (event.data.event) {
             case "load": return loadAllW(event.data.handles)

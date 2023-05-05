@@ -1,13 +1,13 @@
 import { Button, Card, Checkbox, Code, Table, Text } from "@geist-ui/core"
 import { type CheckboxEvent } from "@geist-ui/core/esm/checkbox"
 import { Trash } from "@geist-ui/icons"
-import { useEffect, useCallback } from "preact/hooks"
+import { useCallback } from "preact/hooks"
+import { Editable } from "../components/Editable"
 import { useI18n } from "../context/i18n/i18n"
 import { useLibrary } from "../context/library/library"
 import { useSelection } from "../context/selection"
 import { Track } from "../data/track"
 import { useDropZone } from "../hooks/useDropZone"
-import { Editable } from "../components/Editable"
 
 function pd<E extends Event>(f: (e: E) => void) {
     return function (e: E) {
@@ -24,12 +24,50 @@ export function Tracks() {
     const { ref, isOver } = useDropZone({ onDrop })
     const { selected, toggle, reset, select } = useSelection()
 
+    const onEscape = (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement;
+        (target.parentElement?.parentElement?.parentElement?.firstChild?.firstChild?.firstChild as HTMLElement).focus();
+    }
+
+    const onRowKey = (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement;
+        try {
+            switch (e.key) {
+                case "j":
+                    (target.parentElement?.parentElement?.parentElement?.parentElement?.nextSibling?.firstChild?.firstChild?.firstChild as HTMLElement).focus();
+                    break;
+                case "k":
+                    (target.parentElement?.parentElement?.parentElement?.parentElement?.previousSibling?.firstChild?.firstChild?.firstChild as HTMLElement).focus();
+                    break;
+                case "Escape":
+                    e.stopPropagation();
+                    e.preventDefault();
+                    target.blur();
+                    return false;
+            }
+        } catch (err) {
+            console.warn(err)
+        }
+    }
+
     const renderTitle = (_: any, track: Track) =>
-        <Editable text={track.title} placeholder={i18n`unknown`} onChange={title => update(Object.assign(track, { title }))} />
+        <Editable
+            text={track.title}
+            placeholder={i18n`unknown`}
+            onEscape={onEscape}
+            onChange={title => update(Object.assign(track, { title }))} />
     const renderArtist = (_: any, track: Track) =>
-        <Editable text={track.artist} placeholder={i18n`unknown`} onChange={artist => update(Object.assign(track, { artist }))} />
+        <Editable
+            text={track.artist}
+            placeholder={i18n`unknown`}
+            onEscape={onEscape}
+            onChange={artist => update(Object.assign(track, { artist }))} />
     const renderAlbum = (_: any, track: Track) =>
-        <Editable text={track.album} placeholder={i18n`unknown`} onChange={album => update(Object.assign(track, { album }))} />
+        <Editable
+            text={track.album}
+            placeholder={i18n`unknown`}
+            onEscape={onEscape}
+            onChange={album => update(Object.assign(track, { album }))} />
 
     const renderAction = useCallback((_: any, track: Track) => {
         return (
@@ -40,7 +78,7 @@ export function Tracks() {
     }, [])
 
     const renderCheckbox = useCallback((_: any, __: any, idx: number) => (
-        <Checkbox onChange={() => toggle(idx)} checked={selected.has(idx)} />
+        <Checkbox onKeyDown={onRowKey} onChange={() => toggle(idx)} checked={selected.has(idx)} />
     ), [selected])
 
     if (!tracks.length) {
@@ -52,6 +90,16 @@ export function Tracks() {
         )
     }
 
+    const label = (<Checkbox
+        onChange={(e: CheckboxEvent) => {
+            if (e.target.checked) {
+                select(...tracks.map((_, idx) => idx))
+            } else {
+                reset()
+            }
+        }}
+    />)
+
     return (
         <Table hover
             ref={ref}
@@ -61,20 +109,13 @@ export function Tracks() {
                 width={1}
                 prop="select"
                 render={renderCheckbox}
-                label={
-                    <Checkbox
-                        onChange={(e: CheckboxEvent) => {
-                            if (e.target.checked) {
-                                select(...tracks.map((_, idx) => idx))
-                            } else {
-                                reset()
-                            }
-                        }}
-                    />}
+                /** @ts-ignore docs say its supported, but typing is missing */
+                label={label}
             />
-            <Table.Column prop="title" label={i18n`Title`} render={renderTitle} />
             <Table.Column prop="album" label={i18n`Album`} render={renderAlbum} />
             <Table.Column prop="artist" label={i18n`Artist`} render={renderArtist} />
+            <Table.Column prop="title" label={i18n`Title`} render={renderTitle} />
+            {/** @ts-ignore docs say its supported, but typing is missing */}
             <Table.Column prop="remove" label={i18n`Actions`} width={150} render={renderAction} />
         </Table>
     )

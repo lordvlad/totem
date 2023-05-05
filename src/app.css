@@ -24,8 +24,8 @@
     margin-left: -4px;
     margin-right: -4px;
     width: 100%;
-    /* padding-left: 0; */
-    /* padding-right: 0; */
-    /* border-left: 0; */
-    /* border-right: 0; */
+}
+
+.checkbox:focus-within {
+    outline: -webkit-focus-ring-color auto 1px;
 }

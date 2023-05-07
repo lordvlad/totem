@@ -241,7 +241,7 @@ export async function load(stream: ReadableStream<Uint8Array>) {
     const meta = await readMeta(s1)
     const data = await readAll(s2)
 
-    return { ...meta, data }
+    return { ...meta, data, size: data.byteLength }
 }
 
 export async function* loadAll(...streams: ReadableStream<Uint8Array>[]) {

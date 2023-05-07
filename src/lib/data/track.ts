@@ -4,6 +4,7 @@ import { type Frame, type FrameId, type ID3 } from "./id3";
 export class Track implements Pick<ID3, "fileName" | "frames"> {
     readonly fileName = "";
     readonly frames = {} as ID3["frames"]
+    readonly size = 0
     readonly data: Uint8Array | null = null
 
     frame<T = unknown>(id: FrameId) {

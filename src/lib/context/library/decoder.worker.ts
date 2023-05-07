@@ -8,7 +8,7 @@ import { set } from 'idb-keyval'
 import { load } from '../../util/id3'
 import { type Mp3WebWorkerRequest, type Mp3WebWorkerResponse } from './decoder';
 
-async function loadAllW(handles: FileSystemFileHandle[]) {
+async function loadAll(handles: FileSystemFileHandle[]) {
     let n = -1
     const total = handles.length
     for (const handle of handles) {
@@ -16,7 +16,8 @@ async function loadAllW(handles: FileSystemFileHandle[]) {
             n++
             const file = await handle.getFile()
             const { data, ...meta } = await load(file.stream())
-            await set(`track:${handle.name}`, { data, ...meta, fileName: handle.name })
+            await set(`data:${handle.name}`, data)
+            await set(`track:${handle.name}`, { ...meta, fileName: handle.name })
             emit({ event: "loaded", meta: { ...meta, fileName: handle.name }, file: handle.name, n, total })
         } catch (e) {
             emit({ event: 'error', file: handle.name, error: String(e), n, total })
@@ -40,7 +41,7 @@ function isReq(x: any): x is Mp3WebWorkerRequest {
 self.addEventListener("message", (event: Event) => {
     if ("data" in event && isReq(event.data)) {
         switch (event.data.event) {
-            case "load": return loadAllW(event.data.handles)
+            case "load": return loadAll(event.data.handles)
         }
     }
 

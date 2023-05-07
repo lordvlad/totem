@@ -1,3 +1,6 @@
+// import "@types/wicg-file-system-access"
+/// <reference types="@types/wicg-file-system-access" />
+
 import { Button, Grid, KeyCode, KeyMod, Keyboard, Spacer, useKeyboard, useToasts } from "@geist-ui/core"
 import { Archive, Music, Printer, Settings, Trash } from "@geist-ui/icons"
 import { useCallback, useEffect, useRef, useState } from "preact/hooks"
@@ -6,6 +9,7 @@ import { useLibrary } from "../context/library/library"
 import { useSelection } from "../context/selection"
 import { initialOptions } from "../data/options"
 import { useGlobalState } from "../hooks/useGlobalState"
+import { useGmeBuilder } from "../context/gme/gme"
 
 export function Menu() {
     const i18n = useI18n()
@@ -15,6 +19,7 @@ export function Menu() {
     const [isBundling, setIsBundling] = useState(false)
     const setShowOptionsPanel = useGlobalState('showOptionsPanel', false)[1]
     const options = useGlobalState('options', initialOptions)[0]
+    const { build } = useGmeBuilder()
 
     const onDeleteSelection = useCallback(() => {
         const selectedTracks = tracks.filter((_, idx) => selected.has(idx))
@@ -24,23 +29,52 @@ export function Menu() {
 
     const onChooseFilesClick = async () => {
         const opts = { multiple: true, types: [{ description: "Audio", accept: { "audio/*": [".mp3"] } }] }
-        const handles: FileSystemFileHandle[] = await (window as any).showOpenFilePicker(opts)
+        const handles: FileSystemFileHandle[] = await window.showOpenFilePicker(opts)
         load(handles)
     }
 
     const onBundleClick = useCallback(async () => {
+        if (tracks.length === 0) return
+
         setIsBundling(true)
         try {
-            if (tracks.length === 0) return
-            console.log("bundling tracks", tracks)
+            // const handle: FileSystemFileHandle = await window.showSaveFilePicker({
+            //     suggestedName: `file.gme`,
+            //     types: [
+            //         {
+            //             description: "GME",
+            //             accept: {
+            //                 "application/gme": [".gme"],
+            //             },
+            //         },
+            //     ],
+            // })
 
-            // const { message } = await tttool({ options, tracks })
+            // const stream = await handle.createWritable()
 
-            // console.log(message)
+            build({ tracks, productId: 0 })
+                // .pipeTo(stream)
+                .pipeTo(new WritableStream({
+                    async write(chunk) {
+                        setIsBundling(true)
+                        console.log("CHUNK", chunk)
+                        // await stream.write(chunk)
+                    },
+                    async abort(reason) {
+                        console.error(reason)
+                        setToast({ type: "error", text: String(reason), delay: 10 * 1000 })
+                        // await stream.abort(reason)
+                    },
+                    async close() {
+                        setIsBundling(false)
+                        // await stream.close()
+                    }
+                }))
+        } catch (e) {
+            setToast({ type: "error", text: String(e), delay: 10 * 1000 })
         } finally {
             setIsBundling(false)
         }
-
     }, [tracks, options])
 
     useKeyboard(() => setShowOptionsPanel(true), [KeyCode.KEY_O, KeyMod.Alt])

@@ -3,13 +3,13 @@ import './app.css'
 import { Grid, Link, Page, PageProps, Spacer } from '@geist-ui/core'
 import { Github } from '@geist-ui/icons'
 
-import { Header } from './lib/composites/Header.js'
-import { Help } from './lib/composites/Help'
-import { Menu } from './lib/composites/Menu.js'
-import { OptionsPanel } from './lib/composites/OptionsPanel'
-import { Tracks } from './lib/composites/Tracks.js'
+import { Header } from './composites/Header.js'
+import { Help } from './composites/Help'
+import { Menu } from './composites/Menu.js'
+import { OptionsPanel } from './composites/OptionsPanel'
+import { Tracks } from './composites/Tracks.js'
 
-import { useI18n } from './lib/context/i18n/i18n.js'
+import { useI18n } from './i18n/i18n.js'
 
 export function App(props: PageProps) {
   const i18n = useI18n()

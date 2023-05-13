@@ -1,8 +1,8 @@
-import { OIDCode } from "../lib/components/OIDCode/OIDCode"
-import { useI18n } from "../lib/context/i18n/i18n"
-import { useLibrary } from "../lib/context/library/library"
-import { initialOptions, type Options } from "../lib/data/options"
-import { useGlobalState } from "../lib/hooks/useGlobalState"
+import { OIDCode } from "../components/OIDCode/OIDCode"
+import { useI18n } from "../i18n/i18n"
+import { useLibrary } from "../library/useLibrary"
+import { initialPrintOptions, type Options } from "../library/options"
+import { useGlobalState } from "../hooks/useGlobalState"
 
 export function PrintLayout() {
     const { tracks } = useLibrary(x => x)

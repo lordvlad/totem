@@ -1,4 +1,4 @@
-name: Test app content to Pages
+name: Test app
 
 on:
   push

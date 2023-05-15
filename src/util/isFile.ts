@@ -1,5 +1,5 @@
-import { type PathLike } from "node:fs";
-import { stat } from "node:fs/promises";
+import { type PathLike } from "fs";
+import { stat } from "fs/promises";
 
 
 export async function isFile(path: PathLike) {

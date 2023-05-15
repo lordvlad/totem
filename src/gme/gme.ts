@@ -1,8 +1,7 @@
-// mosly informed by https://raw.githubusercontent.com/entropia/tip-toi-reveng/master/GME-Format.md
+// mostly informed by https://raw.githubusercontent.com/entropia/tip-toi-reveng/master/GME-Format.md
 
 import { type Track } from "../library/track";
 import { id } from "tsafe"
-import { TransformStream } from "node:stream/web";
 import { concat } from "../util/concat";
 import { singleChunkStream } from "../util/singleChunkStream";
 

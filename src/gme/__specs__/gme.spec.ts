@@ -1,17 +1,18 @@
 // @vitest-environment jsdom
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
-import { MediaTableItem, build, type GmeBuildConfig } from "../gme"
 
-import { mkdtemp, rm, stat } from "node:fs/promises"
-import { join } from "node:path"
+import { mkdtemp, rm, stat } from "fs/promises"
+import { tmpdir } from "os"
+import { join } from "path"
 
-import { tmpdir } from "node:os"
 import { id } from "tsafe"
+import { afterAll, beforeAll, describe, expect, it } from "vitest"
+
 import { Track } from "../../library/track"
-import { createWriteStream, createReadStream } from "../../util/webStreams"
 import { hydrate } from "../../util/hydrate"
 import { tttool } from "../../util/tttool"
+import { createReadStream, createWriteStream } from "../../util/webStreams"
+import { MediaTableItem, build, type GmeBuildConfig } from "../gme"
 
 const fetch = async (v: MediaTableItem) => {
     return createReadStream(join(__dirname, v.track.fileName))

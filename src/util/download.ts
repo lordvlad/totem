@@ -1,5 +1,5 @@
-import { createWriteStream } from "node:fs";
-import { get } from "node:https";
+import { createWriteStream } from "fs";
+import { get } from "https";
 
 export function download(url: string, path: string) {
     return new Promise<void>((resolve, reject) => {

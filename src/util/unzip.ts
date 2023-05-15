@@ -1,6 +1,6 @@
-import { createWriteStream } from "node:fs";
-import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { createWriteStream } from "fs";
+import { mkdir } from "fs/promises";
+import { join } from "path";
 import { Entry, open } from "yauzl";
 
 export function unzip(src: string, target: string) {

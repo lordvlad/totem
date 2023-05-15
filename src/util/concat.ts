@@ -1,5 +1,3 @@
-import { TransformStream } from "node:stream/web";
-
 export function concat<R>(streams: Iterable<ReadableStream<R>> | AsyncIterable<ReadableStream<R>>): ReadableStream<R> {
     const { readable, writable } = new TransformStream();
 

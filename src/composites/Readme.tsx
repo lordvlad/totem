@@ -3,9 +3,9 @@ import { Suspense, lazy } from 'preact/compat';
 import { useLocale } from '../i18n/i18n';
 
 // @ts-ignore
-const Readme_en_EN = lazy(() => import('../../../README.md'))
+const Readme_en_EN = lazy(() => import('../../README.md'))
 // @ts-ignore
-const Readme_de_DE = lazy(() => import('../../../README.de_DE.md'))
+const Readme_de_DE = lazy(() => import('../../README.de_DE.md'))
 
 export function Readme() {
     const locale = useLocale()[0]

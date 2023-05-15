@@ -1,4 +1,3 @@
-// import "@types/wicg-file-system-access"
 /// <reference types="@types/wicg-file-system-access" />
 
 import { Button, Grid, KeyCode, KeyMod, Keyboard, Spacer, useKeyboard, useToasts } from "@geist-ui/core"

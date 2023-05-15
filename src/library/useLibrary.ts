@@ -1,3 +1,5 @@
+/// <reference types="@types/wicg-file-system-access" />
+
 import { useState as preactUseState, useEffect } from 'preact/hooks';
 import { type Mp3WebWorkerRequest, type Mp3WebWorkerResponse } from './decoder';
 import { distinct } from '../util/distinct';
@@ -33,8 +35,7 @@ const distinctByName = distinct("fileName")
 async function onDrop(items: DataTransferItem[]) {
     const handlePromises = items.map(async item => {
         if (item.kind === 'file') {
-            // FIXME fix this any; this is an experimental API 
-            const handle = await ((item as any).getAsFileSystemHandle() as Promise<FileSystemHandle>)
+            const handle = await (item.getAsFileSystemHandle() as Promise<FileSystemHandle>)
             if (handle.kind === 'file') return handle as FileSystemFileHandle
         }
         console.error("Item dropped is not a file", item)

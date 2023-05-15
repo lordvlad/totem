@@ -48,10 +48,9 @@
     "typed-web-workers": "^4.0.0",
     "typescript": "^5.0.4",
     "vite": "^4.3.0",
+    "vite-plugin-checker": "^0.6.0",
     "vitest": "^0.31.0",
-    "yauzl": "^2.10.0"
-  },
-  "dependencies": {
+    "yauzl": "^2.10.0",
     "@types/node": "^20.1.0",
     "whatwg-streams": "^0.1.1"
   }

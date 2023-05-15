@@ -1,0 +1,19 @@
+name: Test app content to Pages
+
+jobs:
+  test:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20
+      - name: Install dependencies
+        uses: bahmutov/npm-install@v1
+      - name: Test project
+        run: npm run test

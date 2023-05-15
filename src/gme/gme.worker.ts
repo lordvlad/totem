@@ -6,7 +6,7 @@ declare const self: WorkerGlobalScope;
 
 import { fromWritablePort } from "remote-web-streams";
 import { get } from "idb-keyval";
-import { isReq, build, type MediaTableItem } from "./gme";
+import { isReq, build, type MediaTableItem, Req } from "./gme";
 import { singleChunkStream } from "../util/singleChunkStream";
 
 
@@ -16,18 +16,19 @@ async function fetchMedia({ track }: MediaTableItem) {
     return singleChunkStream(data)
 }
 
+function doBuild({ event: ignored, writablePort, ...cfg }: Req) {
+    build(cfg, fetchMedia)
+        .pipeTo(fromWritablePort<Uint8Array>(writablePort) as WritableStream<Uint8Array>)
+        .catch(e => postMessage({ event: "error", error: String(e) }))
+}
+
 self.addEventListener("error", e => console.error(e))
 self.addEventListener("unhandledrejection", e => console.error(e))
-self.addEventListener("message", async (event: Event) => {
+self.addEventListener("message", (event: Event) => {
     if ("data" in event && isReq(event.data)) {
         switch (event.data.event) {
             case "build":
-                const { event: ev1, writablePort, ...cfg } = event.data
-                try {
-                    build(cfg, fetchMedia).pipeTo(fromWritablePort<Uint8Array>(writablePort) as WritableStream<Uint8Array>)
-                } catch (e) {
-                    postMessage({ event: "error", error: String(e) })
-                }
+                doBuild(event.data)
                 break
         }
     } else if ("isTrusted" in event) {

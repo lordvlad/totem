@@ -43,7 +43,6 @@
     "react-dom": "^18.2.0",
     "remote-web-streams": "^0.1.0",
     "storybook": "^7.0.7",
-    "ts-standard": "^12.0.2",
     "tsafe": "^1.6.0",
     "tsc-watch": "^6.0.0",
     "typed-web-workers": "^4.0.0",

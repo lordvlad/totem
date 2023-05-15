@@ -1,9 +1,10 @@
 // mosly informed by https://raw.githubusercontent.com/entropia/tip-toi-reveng/master/GME-Format.md
 
-import { A } from "vitest/dist/types-b7007192";
 import { type Track } from "../library/track";
 import { id } from "tsafe"
 import { TransformStream } from "node:stream/web";
+import { concat } from "../util/concat";
+import { singleChunkStream } from "../util/singleChunkStream";
 
 type Script = {
     oid: number;
@@ -29,7 +30,7 @@ type Buf = {
     readonly view: DataView,
     readonly uint8: Uint8Array,
 }
-export type MediaItemFetcher = (item: MediaTableItem) => Promise<Uint8Array>
+export type MediaItemFetcher = (item: MediaTableItem) => Promise<ReadableStream<Uint8Array>>
 
 const utf8enc = new TextEncoder()
 
@@ -296,7 +297,7 @@ function alloc(size: number) {
 
 function checksum() {
     let sum = 0;
-    return new TransformStream<Uint8Array>({
+    return new TransformStream<Uint8Array, Uint8Array>({
         transform(chunk, controller) {
             controller.enqueue(chunk)
             for (const b of chunk) sum += b
@@ -311,24 +312,38 @@ function checksum() {
     })
 }
 
+
+function mediaFileCypher(x: number) {
+    const y = x ^ 0xff
+    return new TransformStream<Uint8Array>({
+        transform(chunk, controller) {
+            controller.enqueue(chunk.map(n => {
+                switch (n) {
+                    case 0:
+                    case 0xff:
+                    case x:
+                    case y: return n;
+                    default: return x ^ n;
+                }
+            }))
+        }
+    })
+}
+
 export function build(config: Parameters<typeof createLayout>[0], getMediaFn: MediaItemFetcher) {
-    let mediaIterator: undefined | Iterator<MediaTableItem>
+    async function* streams(): AsyncGenerator<ReadableStream<Uint8Array>> {
+        const layout = createLayout(config);
 
-    return new ReadableStream<Uint8Array>({
-        start(controller) {
-            const layout = createLayout(config);
-            const buf = alloc(layout.size)
-            layout.write(buf)
-            controller.enqueue(buf.uint8)
+        const buf = alloc(layout.size)
+        layout.write(buf)
+        yield singleChunkStream(buf.uint8)
 
-            mediaIterator = layout.mediaTable.items.values();
-        },
-        async pull(controller) {
-            if (!mediaIterator) throw new Error("media not available")
-            const { done, value } = mediaIterator?.next()
-            if (done) return controller.close()
-            controller.enqueue(await getMediaFn(value))
-        },
-    }).pipeThrough(checksum())
+        for (const media of layout.mediaTable.items) {
+            const data = await getMediaFn(media)
+            yield data.pipeThrough(mediaFileCypher(magicXorValue))
+        }
+    }
+
+    return concat(streams()).pipeThrough(checksum())
 }
 

@@ -9,11 +9,13 @@ import { join } from "node:path"
 import { tmpdir } from "node:os"
 import { id } from "tsafe"
 import { Track } from "../../library/track"
-import { createWriteStream } from "../../util/createWriteStream"
+import { createWriteStream, createReadStream } from "../../util/webStreams"
 import { hydrate } from "../../util/hydrate"
 import { tttool } from "../../util/tttool"
 
-const fetch = async (v: MediaTableItem) => new Uint8Array(v.track.size)
+const fetch = async (v: MediaTableItem) => {
+    return createReadStream(join(__dirname, v.track.fileName))
+}
 
 async function buildTo(cfg: Parameters<typeof build>[0], path: string) {
     await build(cfg, fetch).pipeTo(createWriteStream(path))
@@ -84,6 +86,14 @@ describe("gme", async () => {
             expect(stderr).toBeFalsy()
             expect(stdout).toContain(`All lines do satisfy hypothesis "play indicies are correct"!`)
             expect(stdout).toContain(`All lines do satisfy hypothesis "media indicies are correct"!`)
+        }
+
+        {
+            const { stdout, stderr } = await tttool("media", "--dir", join(tmpDir, "media"), gme)
+            expect(stderr).toBeFalsy()
+            expect(stdout).toContain(`Audio Table entries: 6`)
+
+            // TODO compare audio files byte-by-byte
         }
     })
 })

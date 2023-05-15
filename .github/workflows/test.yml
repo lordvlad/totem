@@ -1,10 +1,10 @@
 name: Test app content to Pages
 
+on:
+  push
+
 jobs:
   test:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

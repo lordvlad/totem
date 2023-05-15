@@ -2,7 +2,7 @@
 /// <reference types="@types/wicg-file-system-access" />
 
 import { Button, Grid, KeyCode, KeyMod, Keyboard, Spacer, useKeyboard, useToasts } from "@geist-ui/core"
-import { Archive, Music, Printer, Settings, Trash } from "@geist-ui/icons"
+import { Music, PenTool, Printer, Settings, Trash } from "@geist-ui/icons"
 import { useCallback, useEffect, useRef, useState } from "preact/hooks"
 import { useI18n } from "../i18n/i18n"
 import { useLibrary } from "../library/useLibrary"
@@ -10,6 +10,7 @@ import { useSelection } from "../library/useSelection"
 import { initialPrintOptions } from "../library/options"
 import { useGlobalState } from "../hooks/useGlobalState"
 import { useGmeBuilder } from "../gme/useGmeBuilder"
+import { GmeBuildConfig } from "../gme/gme"
 
 export function Menu() {
     const i18n = useI18n()
@@ -38,38 +39,27 @@ export function Menu() {
 
         setIsBundling(true)
         try {
-            // const handle: FileSystemFileHandle = await window.showSaveFilePicker({
-            //     suggestedName: `file.gme`,
-            //     types: [
-            //         {
-            //             description: "GME",
-            //             accept: {
-            //                 "application/gme": [".gme"],
-            //             },
-            //         },
-            //     ],
-            // })
-
-            // const stream = await handle.createWritable()
-
-            build({ tracks, productId: 0 })
-                // .pipeTo(stream)
-                .pipeTo(new WritableStream({
-                    async write(chunk) {
-                        setIsBundling(true)
-                        console.log("CHUNK", chunk)
-                        // await stream.write(chunk)
+            const handle: FileSystemFileHandle = await window.showSaveFilePicker({
+                suggestedName: `file.gme`,
+                types: [
+                    {
+                        description: "GME",
+                        accept: {
+                            "application/gme": [".gme"],
+                        },
                     },
-                    async abort(reason) {
-                        console.error(reason)
-                        setToast({ type: "error", text: String(reason), delay: 10 * 1000 })
-                        // await stream.abort(reason)
-                    },
-                    async close() {
-                        setIsBundling(false)
-                        // await stream.close()
-                    }
-                }))
+                ],
+            })
+
+            const stream = await handle.createWritable()
+
+            const cfg: GmeBuildConfig = {
+                tracks,
+                productId: 0,
+                language: 'GERMAN', // FIXME
+            }
+
+            await build(cfg).pipeTo(stream)
         } catch (e) {
             setToast({ type: "error", text: String(e), delay: 10 * 1000 })
         } finally {
@@ -124,9 +114,9 @@ export function Menu() {
                 onClick={onBundleClick}
                 loading={isBundling}
                 auto
-                icon={<Archive />}
+                icon={<PenTool />}
                 type="success">
-                {i18n`Save Bundle`}
+                {i18n`Save to tiptoi`}
                 <Spacer w={.5} />
                 <Keyboard scale={1 / 3} >{i18n`ctrl+S`}</Keyboard>
             </Button>

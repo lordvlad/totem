@@ -21,10 +21,10 @@ async function init() {
     if (sep === '/') {
         // FIXME remove this block
         console.log("ls -lash: ")
-        console.log(execSync(`ls -lash ${join(tttoolDir, `tttool-${version}`)}`))
+        console.log(execSync(`ls -lash ${join(tttoolDir, `tttool-${version}`)}`).toString("utf-8"))
     } else {
         console.log("dir: ")
-        console.log(execSync(`dir ${join(tttoolDir, `tttool-${version}`)}`))
+        console.log(execSync(`dir ${join(tttoolDir, `tttool-${version}`)}`).toString("utf-8"))
     }
     console.log("Downloaded and unpacked tttool to", tttoolDir)
 }

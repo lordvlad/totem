@@ -16,7 +16,7 @@ async function init() {
     await mkdir(tttoolDir, { recursive: true })
     await download(url, join(tttoolDir, "tttool.zip"))
     await unzip(join(tttoolDir, "tttool.zip"), tttoolDir)
-    if (sep === '/') await chmod(tttoolPath, '755')
+    if (sep === '/') await chmod(tttoolPath, '777')
     console.log("Downloaded and unpacked tttool to", tttoolDir)
 }
 

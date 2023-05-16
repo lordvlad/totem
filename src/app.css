@@ -29,3 +29,8 @@
 .checkbox:focus-within {
     outline: -webkit-focus-ring-color auto 1px;
 }
+
+#geist-ui-drawer .content {
+    overflow: scroll;
+    max-height: 100vh;
+}

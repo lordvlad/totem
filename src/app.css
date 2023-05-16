@@ -39,3 +39,7 @@
     align-self: center;
     margin-right: .5em;
 }
+
+footer>.item {
+    margin: 0 !important;
+}

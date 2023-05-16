@@ -34,7 +34,6 @@ export function App(props: PageProps) {
               <Github />
               {i18n`Check it out on github`}
             </Link>
-
           </Grid>
           <Grid>
             <Link color href="https://github.com/lordvlad/totem/issues" icon className="with-icon">

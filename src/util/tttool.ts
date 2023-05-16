@@ -1,4 +1,4 @@
-import { mkdir } from "fs/promises";
+import { mkdir, chmod } from "fs/promises";
 import { tmpdir } from "os";
 import { join, sep } from "path";
 import { download } from "./download";
@@ -16,7 +16,7 @@ async function init() {
     await mkdir(tttoolDir, { recursive: true })
     await download(url, join(tttoolDir, "tttool.zip"))
     await unzip(join(tttoolDir, "tttool.zip"), tttoolDir)
-
+    if (sep !== '/') await chmod(tttoolPath, '755')
     console.log("Downloaded and unpacked tttool to", tttoolDir)
 }
 

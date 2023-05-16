@@ -18,7 +18,7 @@ async function init() {
     await unzip(join(tttoolDir, "tttool.zip"), tttoolDir)
     if (sep === '/') {
         await chmod(tttoolPath, 0o755)
-        await chmod(join(tttoolDir, `tttool-${version}`, 'linux', 'ttool'), 0o755)
+        await chmod(join(tttoolDir, `tttool-${version}`, 'linux', 'tttool'), 0o755)
     }
     console.log("Downloaded and unpacked tttool to", tttoolDir)
 }

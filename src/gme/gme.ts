@@ -47,6 +47,7 @@ export interface ScriptTableItem extends LayoutItem {
     offset: number;
     scriptOffset: number;
     script: Script;
+    encoded: Uint8Array | undefined;
 }
 
 export interface MediaTableItem extends LayoutItem {
@@ -105,6 +106,14 @@ function createMediaTable({ tracks, offset }: { offset: number; tracks: Track[] 
     return { items, size, write(buf: Buf) { for (const item of items) item.write(buf); } }
 }
 
+function encodeScript(lines: string[] | undefined, scriptOffset: number) {
+    if (!lines) return undefined
+    // FIXME 
+    // https://github.com/entropia/tip-toi-reveng/wiki/GME-Play-script
+    // https://github.com/entropia/tip-toi-reveng/wiki/GME-Script-line
+    return new Uint8Array(0)
+}
+
 function createScriptTable({ offset, scripts: cfgScripts }: { scripts?: Script[]; offset: number; }) {
     const scripts: Script[] = cfgScripts ?? [{ oid: 1401 }]
     const size = 4 + 4 + (4 * scripts.length)
@@ -112,10 +121,12 @@ function createScriptTable({ offset, scripts: cfgScripts }: { scripts?: Script[]
     const lastOid = Math.max(...scripts.map(s => s.oid))
 
     const { items } = scripts.reduce(({ items, offset, scriptOffset }, script) => {
+        const encoded = encodeScript(script.lines, scriptOffset)
         return {
             offset: offset + 4,
-            scriptOffset: scriptOffset + 0 /* FIXME */,
+            scriptOffset: scriptOffset + (encoded?.byteLength ?? 0),
             items: [...items, id<ScriptTableItem>({
+                encoded,
                 script,
                 offset,
                 scriptOffset: script.lines ? scriptOffset : 0xffff_ffff,

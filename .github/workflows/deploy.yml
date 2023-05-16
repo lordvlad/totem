@@ -1,11 +1,11 @@
-
-name: Deploy app content to Pages
+name: Deploy App
 
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
-
+  # run when test workflow is completed
+  workflow_run:
+    workflows: Test App
+    branches: main
+    types: completed
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -22,12 +22,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
       - name: Build project
-        run: npm run build -- --base=/totem/
+        run: npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact

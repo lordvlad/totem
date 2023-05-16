@@ -1,10 +1,6 @@
-
-
 # totem
 
 your files on your tiptoi
-
----
 
 With totem, you can build your own audio books to use with your tiptoi. No account or credit card required, no cloud either. Everything stays on your computer.
 

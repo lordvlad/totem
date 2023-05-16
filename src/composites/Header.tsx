@@ -20,14 +20,18 @@ export function Header() {
                 <Text span font={1}>{i18n`your music on your tiptoi`}</Text>
             </h1>
         </Grid>
-        <Grid mt={1}>
-            <Button auto iconRight={<HelpCircle />} onClick={() => setShowHelp(true)}>{i18n`Help`}</Button>
-        </Grid>
-        <Grid mt={1}>
-            <LocalePicker />
-        </Grid>
-        <Grid mt={1}>
-            <ThemePicker />
+        <Grid>
+            <Grid.Container mt={1} gap={1}>
+                <Grid>
+                    <Button auto iconRight={<HelpCircle />} onClick={() => setShowHelp(true)}>{i18n`Help`}</Button>
+                </Grid>
+                <Grid>
+                    <LocalePicker />
+                </Grid>
+                <Grid>
+                    <ThemePicker />
+                </Grid>
+            </Grid.Container>
         </Grid>
     </Grid.Container>
     )

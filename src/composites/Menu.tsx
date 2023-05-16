@@ -1,7 +1,7 @@
 /// <reference types="@types/wicg-file-system-access" />
 
 import { Button, Grid, KeyCode, KeyMod, Keyboard, Spacer, useKeyboard, useToasts } from "@geist-ui/core"
-import { Music, PenTool, Printer, Settings, Trash } from "@geist-ui/icons"
+import { Feather, Music, Printer, Settings, Trash } from "@geist-ui/icons"
 import { useCallback, useEffect, useRef, useState } from "preact/hooks"
 import { useI18n } from "../i18n/i18n"
 import { useLibrary } from "../library/useLibrary"
@@ -113,7 +113,7 @@ export function Menu() {
                 onClick={onBundleClick}
                 loading={isBundling}
                 auto
-                icon={<PenTool />}
+                icon={<Feather />}
                 type="success">
                 {i18n`Save to tiptoi`}
                 <Spacer w={.5} />

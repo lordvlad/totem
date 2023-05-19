@@ -41,10 +41,18 @@ export function App(props: PageProps) {
               {i18n`File an issue`}
             </Link>
           </Grid>
-          <Grid md>&nbsp;</Grid>
-          <Grid>
-            v{`${import.meta.env.VITE_GIT_HASH ?? 'unknown'}`}
-          </Grid>
+          {
+            import.meta.env.VITE_GIT_HASH && (
+              <>
+                <Grid md></Grid>
+                <Grid>
+                  <Link target="_blank" color href={`https://github.com/lordvlad/totem/commit/${import.meta.env.VITE_GIT_HASH}`} icon>
+                    v{`${import.meta.env.VITE_GIT_HASH}`}
+                  </Link>
+                </Grid>
+              </>
+            )
+          }
         </Grid.Container>
       </Page.Footer>
     </Page >

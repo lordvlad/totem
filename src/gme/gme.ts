@@ -125,7 +125,7 @@ const rawXorValue = 0x39
 
 function createGameTable({ offset }: { offset: number; }) {
     // https://github.com/entropia/tip-toi-reveng/wiki/GME-Game-Table
-    const data = Buffer.from(`
+    const data = `
             0c 00 00 00 71 70 01 00  35 7a 01 00 91 7f 01 00
             00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
             cd 82 01 00 59 8a 01 00  e7 8e 01 00 4f 97 01 00 
@@ -134,12 +134,10 @@ function createGameTable({ offset }: { offset: number; }) {
             00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
             fb b2 01 00 
             00 00 00 00
-            `.split(/\s+/).filter(s => s.length).map(s => parseInt(s, 16)))
+            `.split(/\s+/).filter(s => s.length).map(s => parseInt(s, 16));
     return {
-        size: data.byteLength,
-        write(buf: Buf) {
-            buf.uint8.set(data, offset)
-        }
+        size: data.length,
+        write(buf: Buf) { buf.uint8.set(data, offset) }
     }
 }
 

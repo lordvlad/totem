@@ -1,4 +1,4 @@
-export function concat<R>(streams: Iterable<ReadableStream<R>> | AsyncIterable<ReadableStream<R>>): ReadableStream<R> {
+export function concatStreams<R>(streams: Iterable<ReadableStream<R>> | AsyncIterable<ReadableStream<R>>): ReadableStream<R> {
     const { readable, writable } = new TransformStream();
 
     // start the async pump

@@ -1,3 +1,5 @@
+import { concatBuffers } from "../util/concatBuffers"
+
 const asciiDecoder = new TextDecoder("ascii")
 const utf8Decoder = new TextDecoder("utf8")
 const utf16Decoder = new TextDecoder("utf-16")
@@ -391,14 +393,6 @@ async function readTags(stream: ReadableStreamDefaultReader<Uint8Array>): Promis
     return { ...id3, frames }
 }
 
-function concat(...chunks: Uint8Array[]) {
-    const length = chunks.reduce((l, chunk) => l + chunk.length, 0);
-    return chunks.reduce(([offset, concatd], chunk) => {
-        concatd.set(chunk, offset)
-        return [offset + chunk.length, concatd] as [number, Uint8Array]
-    }, [0, new Uint8Array(length)] as [number, Uint8Array])[1]
-}
-
 async function readAll(stream: ReadableStream<Uint8Array>) {
     let reader: ReadableStreamDefaultReader<Uint8Array> | undefined
     try {
@@ -409,7 +403,7 @@ async function readAll(stream: ReadableStream<Uint8Array>) {
             if (done) break
             chunks.push(value)
         }
-        return concat(...chunks)
+        return concatBuffers(...chunks)
     } finally {
         reader?.releaseLock()
     }

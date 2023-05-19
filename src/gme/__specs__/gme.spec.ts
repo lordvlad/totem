@@ -10,16 +10,24 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import { Track } from "../../library/track"
 import { hydrate } from "../../util/hydrate"
-import { tttool } from "../../util/tttool"
+import { play, tttool } from "../../util/tttool"
 import { createReadStream, createWriteStream } from "../../util/webStreams"
 import { MediaTableItem, build, type GmeBuildConfig } from "../gme"
+
+
+async function sleep(t: number) {
+    return new Promise<void>((resolve) => setTimeout(() => resolve(), t))
+}
 
 const fetch = async (v: MediaTableItem) => {
     return createReadStream(join(__dirname, v.track.fileName))
 }
 
 async function buildTo(cfg: Parameters<typeof build>[0], path: string) {
-    await build(cfg, fetch).pipeTo(createWriteStream(path))
+    await build(cfg, fetch).pipeTo(createWriteStream(path)).catch(e => {
+        console.error(e)
+        throw e
+    })
 }
 
 async function getTestMedia() {
@@ -90,11 +98,42 @@ describe("gme", async () => {
         }
 
         {
+            const { stdout, stderr } = await tttool("scripts", gme)
+            expect(stderr).toBeFalsy()
+            expect(stdout.split(/\r?\n/).join('\n')).toContain(`Script for OID 1401:
+    0==0? P(0)
+Script for OID 1402:
+    0==0? P(1)
+Script for OID 1403:
+    0==0? P(2)
+Script for OID 1404:
+    0==0? P(3)
+Script for OID 1405:
+    0==0? P(4)
+Script for OID 1406:
+    0==0? P(5)`)
+
+        }
+
+
+        {
             const { stdout, stderr } = await tttool("media", "--dir", join(tmpDir, "media"), gme)
             expect(stderr).toBeFalsy()
             expect(stdout).toContain(`Audio Table entries: 6`)
 
             // TODO compare audio files byte-by-byte
         }
-    })
+
+        {
+            const game = await play(gme)
+            await sleep(1000)
+            expect(game.out).toContain('Initial')
+            expect(game.err).toBeFalsy
+            game.touch(1401)
+            await sleep(3000)
+            expect(game.out).toContain("Playing audio sample 0")
+
+            await game.exit()
+        }
+    }, 10 * 1000)
 })

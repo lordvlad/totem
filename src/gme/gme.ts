@@ -2,12 +2,71 @@
 
 import { type Track } from "../library/track";
 import { id } from "tsafe"
-import { concat } from "../util/concat";
+import { concatStreams } from "../util/concatStreams";
 import { singleChunkStream } from "../util/singleChunkStream";
+import { concatBuffers } from "../util/concatBuffers";
 
-type Script = {
-    oid: number;
-    lines?: string[];
+type ScriptValue = { value: number; }
+type ScriptRegister = { register: number; }
+type ScriptParameter = ScriptValue | ScriptRegister
+
+function isValue(x: any): x is ScriptValue {
+    return x !== null && typeof x === "object" && "value" in x
+}
+
+function isRegister(x: any): x is ScriptRegister {
+    return x !== null && typeof x === "object" && "register" in x
+}
+
+
+const scriptConditionOps = {
+    "==": 0xfff9,
+    ">": 0xfffa,
+    "<": 0xfffb,
+    ">=": 0xfffd,
+    "<=": 0xfffe,
+    "!=": 0xffff,
+}
+
+const commands = {
+    "inc": 0xfff0, // FFF0 (written $r+=m): increment register $r by m or value of $m
+    "dec": 0xfff1, // FFF1 (written $r-=m): decrement register $r by m or value of $m
+    "mul": 0xfff2, // FFF2 (written $r*=m): multiply register $r by m or value of $m
+    "mod": 0xfff3, // FFF3 (written $r%=m): set register $r to $r mod m
+    "div": 0xfff4, // FFF4 (written $r/=m): set register $r to $r div m
+    "and": 0xfff5, // FFF5 (written $r&=m): bitwise and to register $r the value of m
+    "or": 0xfff6, // FFF6 (written $r|=m): bitwise or to register $r the value of m
+    "xor": 0xfff7, // FFF7 (written $r^=m): bitwise xor to register $r the value of m
+    "neg": 0xfff8, // FFF8 (written Neg($r)): negate register $r.
+    "set": 0xfff9, // FFF9 (written $r:=m): set register $r to m or value of $m
+    "playAny": 0xffe0, // FFE0 (written P*(): play one random sample of the media list
+    "playAll": 0xffe1, // FFE1 (written PA*(): play all samples of the media list
+    "play": 0xffe8, // FFE8 (written P(m)): play audio referenced by the mth entry in the indices list.
+    "playAllRange": 0xfb00, // FB00 (written PA(b-a)): play all samples from that inclusive range. a := lowbyte(m), b := highbyte(m)
+    "playAnyRange": 0xfc00, // FC00 (written P(b-a)): play one random sample from that inclusive range. a := lowbyte(m), b := highbyte(m)
+    "game": 0xfd00, // FD00 (written G(m)): begin game m.
+    "jump": 0xf8ff, // F8FF (written J(m)): jump to script m.
+    "cancel": 0xfaff, // FAFF (written C): cancel game mode.
+    "timer": 0xff00, // FF00 (written T($register,123)): Timer action.
+}
+
+type ScriptCondition = {
+    lhs: ScriptParameter;
+    op: keyof typeof scriptConditionOps;
+    rhs: ScriptParameter;
+}
+
+
+type ScriptAction = {
+    cmd: keyof typeof commands;
+    register?: number;
+    param: ScriptParameter;
+}
+
+type ScriptLine = {
+    conditions: ScriptCondition[];
+    actions: ScriptAction[];
+    playlist: number[];
 }
 
 export type GmeBuildConfig = {
@@ -16,7 +75,7 @@ export type GmeBuildConfig = {
     language: "GERMAN" | "DUTCH" | "FRENCH" | "ITALIAN" | "RUSSIAN" | "ENGLISH";
     comment?: string;
     initialRegisterValues?: number[];
-    scripts?: Script[];
+    scripts?: Record<number, ScriptLine[]>;
 };
 
 export type Req = {
@@ -43,10 +102,10 @@ function writeString({ view, uint8 }: Buf, pos: number, val: string, { lengthPre
 
 interface LayoutItem { write(buf: Buf): void; }
 
-export interface ScriptTableItem extends LayoutItem {
+export interface ScriptTableItem {
     offset: number;
     scriptOffset: number;
-    script: Script;
+    script: ScriptLine[] | undefined;
     encoded: Uint8Array | undefined;
 }
 
@@ -106,43 +165,118 @@ function createMediaTable({ tracks, offset }: { offset: number; tracks: Track[] 
     return { items, size, write(buf: Buf) { for (const item of items) item.write(buf); } }
 }
 
-function encodeScript(lines: string[] | undefined, scriptOffset: number) {
-    if (!lines) return undefined
-    // FIXME 
-    // https://github.com/entropia/tip-toi-reveng/wiki/GME-Play-script
-    // https://github.com/entropia/tip-toi-reveng/wiki/GME-Script-line
-    return new Uint8Array(0)
+
+function encodeLine(line: ScriptLine) {
+    const size = 3 * 2
+        + line.conditions.length * 8
+        + line.actions.length * 7
+        + line.playlist.length * 2
+
+    const b = new ArrayBuffer(size)
+    const v = new DataView(b)
+
+
+    let offset = 0
+    v.setUint16(0, line.conditions.length, true)
+    offset += 2
+
+    for (const condition of line.conditions) {
+        v.setUint8(offset, isRegister(condition.lhs) ? 0x00 : 0x01)
+        v.setUint16(offset + 1, isRegister(condition.lhs) ? condition.lhs.register : condition.lhs.value, true)
+        v.setUint16(offset + 3, scriptConditionOps[condition.op], true)
+        v.setUint8(offset + 5, isRegister(condition.rhs) ? 0x00 : 0x01)
+        v.setUint16(offset + 6, isRegister(condition.rhs) ? condition.rhs.register : condition.rhs.value, true)
+
+        offset += 8
+    }
+
+    v.setUint16(offset, line.actions.length, true)
+    offset += 2
+
+    for (const action of line.actions) {
+        v.setUint16(offset, action.register ?? 0, true)
+        v.setUint16(offset + 2, commands[action.cmd], true)
+        v.setUint8(offset + 4, isRegister(action.param) ? 0x00 : 0x01)
+        v.setUint16(offset + 5, isRegister(action.param) ? action.param.register : action.param.value, true)
+
+        offset += 7
+    }
+
+    v.setUint16(offset, line.playlist.length, true)
+    offset += 2
+    for (const item of line.playlist) {
+        v.setUint16(offset, item, true)
+        offset += 2
+    }
+
+    return new Uint8Array(b)
 }
 
-function createScriptTable({ offset, scripts: cfgScripts }: { scripts?: Script[]; offset: number; }) {
-    const scripts: Script[] = cfgScripts ?? [{ oid: 1401 }]
-    const size = 4 + 4 + (4 * scripts.length)
-    const firstOid = Math.min(...scripts.map(s => s.oid))
-    const lastOid = Math.max(...scripts.map(s => s.oid))
+function encodeScript(lines: ScriptLine[] | undefined, scriptOffsetArg: number) {
+    if (!lines || !lines.length) return undefined
 
-    const { items } = scripts.reduce(({ items, offset, scriptOffset }, script) => {
-        const encoded = encodeScript(script.lines, scriptOffset)
+    const encodedLines = lines.map(encodeLine)
+
+    const size = 2 + 4 * lines.length
+    const b = new ArrayBuffer(size)
+    const v = new DataView(b)
+    v.setUint16(0, lines.length, true)
+
+    let offset = 2
+    let scriptOffset = scriptOffsetArg + size
+
+    for (const line of encodedLines) {
+        v.setUint32(offset, scriptOffset, true)
+        offset += 2
+        scriptOffset += line.byteLength
+    }
+
+    return concatBuffers(...[new Uint8Array(b), ...encodedLines])
+}
+
+function createAlbumControls(tracks?: Track[]): Record<number, ScriptLine[]> {
+    if (typeof tracks === "undefined" || tracks.length === 0) return { 1401: [] }
+
+    const oid = 1401
+    const zero = { value: 0 }
+    const conditions: ScriptLine['conditions'] = [{ lhs: zero, op: "==", rhs: zero, }]
+    const actions: ScriptLine['actions'] = [{ register: 0, cmd: "play", param: zero }]
+
+    return Object.fromEntries(tracks.map((_, i) => {
+        const lines: ScriptLine[] = [{ conditions, actions, playlist: [i] }]
+        return [oid + i, lines]
+    }))
+}
+
+function createScriptTable({ offset, scripts: cfgScripts, tracks }: { scripts?: Record<number, ScriptLine[]>; offset: number; tracks?: Track[]; }) {
+    const scripts = cfgScripts ?? createAlbumControls(tracks)
+    const headSize = 4 + 4 + (4 * Object.keys(scripts).length)
+    const firstOid = Math.min(...Object.keys(scripts).map(Number))
+    const lastOid = Math.max(...Object.keys(scripts).map(Number))
+    const seq = new Array(lastOid - firstOid + 1).fill(0).map((_, i) => i + firstOid)
+
+    const { items, size } = seq.reduce(({ items, offset, scriptOffset, size }, oid) => {
+        const encoded = encodeScript(scripts[oid], scriptOffset)
         return {
             offset: offset + 4,
+            size: size + (encoded?.byteLength ?? 0),
             scriptOffset: scriptOffset + (encoded?.byteLength ?? 0),
             items: [...items, id<ScriptTableItem>({
                 encoded,
-                script,
+                script: scripts[oid],
                 offset,
-                scriptOffset: script.lines ? scriptOffset : 0xffff_ffff,
-                write({ view }) {
-                    view.setUint32(this.offset, this.scriptOffset, true);
-                },
+                scriptOffset: oid in scripts ? scriptOffset : 0xffff_ffff,
             })]
         }
 
-    }, { offset: offset + 8, items: id<ScriptTableItem[]>([]), scriptOffset: offset + size })
+    }, { size: headSize, offset: offset + 8, items: id<ScriptTableItem[]>([]), scriptOffset: offset + headSize })
     return {
         size,
-        write(buf: Buf) {
-            buf.view.setUint32(offset, firstOid, true)
-            buf.view.setUint32(offset + 4, lastOid, true)
-            for (const item of items) item.write(buf);
+        write({ uint8, view }: Buf) {
+            view.setUint16(offset, lastOid, true)
+            view.setUint16(offset + 4, firstOid, true)
+            for (const item of items) view.setUint32(item.offset, item.scriptOffset, true);
+            for (const item of items) if (item.encoded) uint8.set(item.encoded, item.scriptOffset);
         }
     }
 }
@@ -200,9 +334,7 @@ function createHeader({ comment: cfgComment, language: lang, productId }: Omit<G
         // 32bit. Pointer to register init values (16bit counter followed by n*16bit values. First value is register $0, followed by $1 and so on.)
         initialRegisterValuesOffset: id<LayoutItem & { val: number; }>({
             val: 0,
-            write({ view }) {
-                view.setUint32(0x0018, this.val, true)
-            }
+            write({ view }) { view.setUint32(0x0018, this.val, true) }
         }),
         // raw XOR value (8bit), see below at media table explanation.
         rawXorValue: id<LayoutItem>({
@@ -266,7 +398,7 @@ export function createLayout({ tracks, ...cfg }: GmeBuildConfig) {
 
     let offset = header.items.scriptTableOffset.val = 0x0200
 
-    const scriptTable = createScriptTable({ scripts: cfg.scripts, offset })
+    const scriptTable = createScriptTable({ scripts: cfg.scripts, offset, tracks })
 
     offset = header.items.initialRegisterValuesOffset.val = offset + scriptTable.size
     const initialRegisterValues = createInitialRegisterValues({ offset, initialRegisterValues: cfg.initialRegisterValues })
@@ -275,7 +407,7 @@ export function createLayout({ tracks, ...cfg }: GmeBuildConfig) {
     const powerOnSoundPlayListList = createPoweronSoundPlaylistList({ offset, trackIndex: 0 })
 
     offset = header.items.additionalScriptTableOffset.val = offset + powerOnSoundPlayListList.size
-    const additionalScripts = createScriptTable({ scripts: [{ oid: 0x3000 }], offset })
+    const additionalScripts = createScriptTable({ scripts: { 0x3000: [] }, offset })
 
     offset = header.items.gameTableOffset.val = offset + additionalScripts.size
     const gameTable = createGameTable({ offset })
@@ -354,6 +486,6 @@ export function build(config: Parameters<typeof createLayout>[0], getMediaFn: Me
         }
     }
 
-    return concat(streams()).pipeThrough(checksum())
+    return concatStreams(streams()).pipeThrough(checksum())
 }
 

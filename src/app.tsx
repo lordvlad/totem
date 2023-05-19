@@ -30,16 +30,20 @@ export function App(props: PageProps) {
       <Page.Footer>
         <Grid.Container gap={3}>
           <Grid>
-            <Link color href="http://github.com/lordvlad/totem" icon className="with-icon">
+            <Link target="_blank" color href="http://github.com/lordvlad/totem" icon className="with-icon">
               <Github />
               {i18n`Check it out on github`}
             </Link>
           </Grid>
           <Grid>
-            <Link color href="https://github.com/lordvlad/totem/issues" icon className="with-icon">
+            <Link target="_blank" color href="https://github.com/lordvlad/totem/issues" icon className="with-icon">
               <AlertTriangle />
               {i18n`File an issue`}
             </Link>
+          </Grid>
+          <Grid md>&nbsp;</Grid>
+          <Grid>
+            v{`${import.meta.env.VITE_GIT_HASH ?? 'unknown'}`}
           </Grid>
         </Grid.Container>
       </Page.Footer>

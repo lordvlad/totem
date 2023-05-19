@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
       - name: Build project
-        run: npm run build
+        run: VITE_GIT_HASH=${GITHUB_SHA::6} npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact

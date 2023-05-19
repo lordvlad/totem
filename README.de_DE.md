@@ -1,4 +1,4 @@
-# totem
+# Totem
 
 Deine Musik auf deinem Tiptoi.
 

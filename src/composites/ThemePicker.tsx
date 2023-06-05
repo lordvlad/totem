@@ -7,6 +7,7 @@ export function ThemePicker() {
     const i18n = useI18n()
     const { toggle, chosen } = useThemeType()
     return (
+        // @ts-expect-error
         <Button auto onClick={toggle} iconRight={{ 'light': <Sun />, 'dark': <Moon />, 'auto': <Moon />, }[chosen]} >
             {({ 'light': i18n`light`, 'dark': i18n`dark`, 'auto': i18n`auto` }[chosen])}
         </Button>

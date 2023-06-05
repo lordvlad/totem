@@ -11,7 +11,7 @@ export function useLocalStorageState<T>(key: string | null, initialValue: T | ((
         }
     }, [])
 
-    const setAndSaveState = (newState: T) => {
+    const setAndSaveState = (newState: T | ((prev: T) => T)) => {
         if (key !== null) localStorage.setItem(key, JSON.stringify(newState))
         setState(newState)
     }

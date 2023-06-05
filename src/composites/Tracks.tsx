@@ -64,6 +64,7 @@ export function Tracks() {
 
     const renderAction = useCallback((_: any, track: Track) => {
         return (
+            // @ts-expect-error
             <Button type="error" auto scale={1 / 3} font="12px" onClick={pd(() => remove(track))} icon={<Trash />}>
                 {i18n`Remove`}
             </Button>

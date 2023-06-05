@@ -126,12 +126,10 @@ Script for OID 1406:
 
         {
             const game = await play(gme)
-            await sleep(1000)
-            expect(game.out).toContain('Initial')
-            expect(game.err).toBeFalsy
+            expect(await game.out).toContain('Initial')
+            expect(await game.err).toBeFalsy
             game.touch(1401)
-            await sleep(3000)
-            expect(game.out).toContain("Playing audio sample 0")
+            expect(await game.out).toContain("Playing audio sample 0")
 
             await game.exit()
         }

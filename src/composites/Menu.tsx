@@ -83,19 +83,21 @@ export function Menu() {
 
     return (<Grid.Container gap={1}>
         <Grid>
+            {/* @ts-expect-error */}
             <Button
                 auto
                 disabled={isBundling}
                 loading={isLoading}
                 onClick={onChooseFilesClick}
                 icon={<Music />}
-                type="primary">
+            >
                 {tracks.length ? i18n`Add more` : i18n`Choose Files`}
                 <Spacer w={.5} />
                 <Keyboard scale={1 / 3} >{i18n`ctrl+O`}</Keyboard>
             </Button>
         </Grid>
         <Grid>
+            {/* @ts-expect-error */}
             <Button
                 disabled={isBundling || isLoading || tracks.length === 0}
                 onClick={() => selected.size ? onDeleteSelection() : clear()}
@@ -108,6 +110,7 @@ export function Menu() {
             </Button>
         </Grid>
         <Grid>
+            {/* @ts-expect-error */}
             <Button
                 disabled={isLoading || tracks.length === 0}
                 onClick={onBundleClick}
@@ -121,6 +124,7 @@ export function Menu() {
             </Button>
         </Grid>
         <Grid>
+            {/* @ts-expect-error */}
             <Button
                 auto
                 onClick={() => setShowOptionsPanel(true)}
@@ -131,6 +135,7 @@ export function Menu() {
             </Button>
         </Grid>
         <Grid>
+            {/* @ts-expect-error */}
             <Button
                 auto
                 disabled={isBundling || isLoading || tracks.length === 0}

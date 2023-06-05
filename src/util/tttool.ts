@@ -6,6 +6,7 @@ import { execFile } from "./execFile";
 import { isFile } from "./isFile";
 import { unzip } from "./unzip";
 import { spawn } from "child_process";
+import { Deferred, deferred } from "./deferred";
 
 const version = "1.11"
 const tttoolDir = join(tmpdir(), "totem-tttool")
@@ -29,6 +30,8 @@ export async function tttool(...args: string[]) {
     return await execFile(tttoolPath, args)
 }
 
+const stdoutIdleTime = 200
+
 export async function play(path: string) {
     await init()
 
@@ -40,12 +43,26 @@ export async function play(path: string) {
     const out: string[] = []
     const err: string[] = []
 
-    child.stdout.on("data", data => out.push(data))
-    child.stderr.on("data", data => err.push(data))
+    const outDeferredRef = { val: deferred<string>() };
+    const errDeferredRef = { val: deferred<string>() };
+
+    let resolveTimer: number | null = null
+
+    let armResolve = () => {
+        if (resolveTimer !== null) clearTimeout(resolveTimer)
+        resolveTimer = setTimeout(() => {
+            outDeferredRef.val.resolve(out.join(''));
+            errDeferredRef.val.resolve(err.join(''));
+            resolveTimer = null
+        }, stdoutIdleTime) as unknown as number
+    }
+
+    child.stdout.on("data", data => { out.push(data); armResolve() })
+    child.stderr.on("data", data => { err.push(data); armResolve() })
 
     return {
-        get err() { return err.join('') },
-        get out() { return out.join('') },
+        get out() { return outDeferredRef.val.promise },
+        get err() { return errDeferredRef.val.promise },
         async exit() {
             return new Promise<void>((resolve, reject) => {
 
@@ -61,8 +78,10 @@ export async function play(path: string) {
                 }
             })
         },
-        touch(oid: number, sleepTime?: number) {
+        touch(oid: number) {
             out.splice(0, out.length)
+            outDeferredRef.val = deferred<string>();
+            errDeferredRef.val = deferred<string>();
             child.stdin.cork()
             child.stdin.write(`${oid}\n`)
             child.stdin.uncork()

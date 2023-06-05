@@ -10,7 +10,7 @@ export function Header() {
     const i18n = useI18n()
     const setShowHelp = useGlobalState("help", false)[1]
 
-    return (<Grid.Container gap={1} align="justify">
+    return (<Grid.Container gap={1} justify="space-between">
         <Grid xs>
             <h1>
                 <Feather />
@@ -23,6 +23,7 @@ export function Header() {
         <Grid>
             <Grid.Container mt={1} gap={1}>
                 <Grid>
+                    {/* @ts-expect-error */}
                     <Button auto iconRight={<HelpCircle />} onClick={() => setShowHelp(true)}>{i18n`Help`}</Button>
                 </Grid>
                 <Grid>

@@ -1,9 +1,8 @@
 import { JSX } from "preact/jsx-runtime";
+import { useOptions } from "../../library/options";
 
 /**
  * translated using chatgpt from https://github.com/entropia/tip-toi-reveng/blob/master/src/OidCode.hs#L30
- * @param code 
- * @returns 
  */
 function checksum(code: number): number {
     const c1 = (((code >> 2) ^ (code >> 8) ^ (code >> 12) ^ (code >> 14)) & 0x01) << 1;
@@ -57,7 +56,8 @@ type Coords = { x: number; y: number }
 type Px = (arg: Coords) => JSX.Element;
 
 function Pixel({ x, y }: Coords) {
-    return <path d={`M ${x + 5},${y + 5} h2 v2 h-2 z`} />
+    const size = useOptions()[0].oidPixelSize
+    return <path d={`M ${x + size * 2 + 1},${y + size * 2 + 1} h${size} v${size} h-${size} z`} />
 }
 
 function at({ x = 0, y = 0 }: Partial<Coords>, F: Px) {
@@ -67,11 +67,12 @@ function at({ x = 0, y = 0 }: Partial<Coords>, F: Px) {
 const Special = at({ x: 3 }, Pixel)
 
 function shift(n: number) {
+    const size = useOptions()[0].oidPixelSize
     return assertNotUndefined(({
-        0: at({ x: 2, y: 2 }, Pixel),
-        1: at({ x: -2, y: 2 }, Pixel),
-        2: at({ x: -2, y: -2 }, Pixel),
-        3: at({ x: 2, y: -2 }, Pixel)
+        0: at({ x: size, y: size }, Pixel),
+        1: at({ x: -size, y: size }, Pixel),
+        2: at({ x: -size, y: -size }, Pixel),
+        3: at({ x: size, y: -size }, Pixel)
     })[n], `unexpected param ${n}`)
 }
 
@@ -96,14 +97,11 @@ export type OIDCodeProps = {
     width: number;
     height: number;
     code: number;
-} & ({ dpmm: number; } | { dpi: number } | {})
+}
 
 export function OIDCode({ code, width, height, ...props }: OIDCodeProps & JSX.SVGAttributes<SVGSVGElement>) {
-    const [dpmm, props2] = "dpmm" in props
-        ? (() => { const { dpmm, ...props3 } = props; return [dpmm, props3] })()
-        : "dpi" in props
-            ? (() => { const { dpi, ...props3 } = props; return [dpi * 0.039370079, props3] })()
-            : [48, props]
+    // convert dpi to dpmm
+    const dpmm = useOptions()[0].oidCodeResolution * 0.039370079
 
     const id = `pattern.${code}`
 
@@ -112,7 +110,7 @@ export function OIDCode({ code, width, height, ...props }: OIDCodeProps & JSX.SV
             width={width}
             height={height}
             viewBox={`0 0 ${width * dpmm} ${height * dpmm}`}
-            {...props2} >
+            {...props} >
             <defs>
                 <OIDCodePattern code={code} id={id} />
             </defs>

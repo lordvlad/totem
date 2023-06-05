@@ -19,7 +19,9 @@ export function LocalePicker() {
   )
 
   return (
+    // @ts-expect-error
     <Popover visible={isLanguageMenuVisible} content={menu}>
+      {/* @ts-expect-error */}
       <Button
         auto
         iconRight={<Globe />}

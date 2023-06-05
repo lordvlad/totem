@@ -38,6 +38,7 @@ export function OptionsPanel() {
                 <Grid.Container>
                     <Grid xs />
                     <Grid >
+                        {/* @ts-expect-error */}
                         <Button onClick={() => setShowOptionsPanel(false)} auto iconRight={<X />}>{i18n`Close`}</Button>
                     </Grid>
                 </Grid.Container>
@@ -71,18 +72,23 @@ export function OptionsPanel() {
                             }} />
                         </OptionsFormField>
                         <OptionsFormField label={i18n`Columns`} >
-                            <Input mt={.75} {...cols.bindings} htmlType="number" req />
+                            {/* @ts-expect-error */}
+                            <Input mt={.75} {...cols.bindings} htmlType="number" required />
                         </OptionsFormField>
                         <OptionsFormField label={i18n`Tile Size`} tooltip={i18n`For the tiled layout: size of each tile. Useful if you want to cut out the tiles and put them somewhere like a CD case.`}>
+                            {/* @ts-expect-error */}
                             <Input mt={.75} {...tileSize.bindings} htmlType="number" />
                         </OptionsFormField>
                         <OptionsFormField label={i18n`OID Code Resolution`} tooltip={i18n`Resolution at which OID codes will be generated.`}>
+                            {/* @ts-expect-error */}
                             <Input mt={.75} {...oidCodeResolution.bindings} htmlType="number" labelRight="DPI" />
                         </OptionsFormField>
                         <OptionsFormField label={i18n`OID Pixel Size`} tooltip={i18n`Number of pixels (squared) for each dot in the OID code.`}>
+                            {/* @ts-expect-error */}
                             <Input mt={.75} {...oidPixelSize.bindings} htmlType="number" labelRight="px" />
                         </OptionsFormField>
                         <OptionsFormField label={i18n`Paper Size`}>
+                            {/* @ts-expect-error */}
                             <Input mt={.75} {...paperSize.bindings} />
                         </OptionsFormField>
                     </Grid.Container>

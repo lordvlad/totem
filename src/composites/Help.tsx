@@ -15,6 +15,7 @@ export function Help() {
                 <Grid.Container>
                     <Grid xs />
                     <Grid >
+                        {/* @ts-expect-error */}
                         <Button onClick={() => setShowHelp(false)} auto iconRight={<X />}>{i18n`Close`}</Button>
                     </Grid>
                 </Grid.Container>

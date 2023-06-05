@@ -10,6 +10,7 @@ export type FormFieldProps = {
 
 export function FormField({ label, children, tooltip, ...props }: FormFieldProps & GridContainerProps) {
     return (
+        // @ts-expect-error
         <Grid.Container {...props}>
             <Grid md={6}>
                 <Text>

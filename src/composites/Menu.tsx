@@ -95,7 +95,7 @@ export function Menu() {
     // }
 
     return (
-        <Flex gap="xs">
+        <Flex gap="xs" wrap="wrap">
             <Button
                 disabled={isBundling}
                 loading={isLoading}

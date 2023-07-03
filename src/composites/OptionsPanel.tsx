@@ -66,7 +66,7 @@ export function OptionsPanel() {
                             <dd>{i18n`Choose this preset for a layout that is optimized for printing CD booklets.`}</dd>
                         </dl>
                     } >
-                    <Radio.Group>
+                    <Radio.Group {...layout.bindings}>
                         <Group >
                             <Radio value="tiles" label={i18n`Tiles`} />
                             <Radio value="table" label={i18n`Table`} />

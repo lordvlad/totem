@@ -1,9 +1,10 @@
-import { render } from 'preact'
+import { createRoot } from 'react-dom/client'
 import { LocaleContext, useLocale } from './i18n/i18n'
 import { useThemeType } from './hooks/useThemeType'
-import { CssBaseline, GeistProvider } from '@geist-ui/core'
 import { App } from './app'
 import { PrintLayout } from './pages/PrintLayout'
+import { LocalStorageOptionsProvider } from './library/options'
+import { MantineProvider } from '@mantine/core'
 
 export function Main() {
     const lang = useLocale()[0]
@@ -11,13 +12,15 @@ export function Main() {
 
     return (
         <LocaleContext.Provider value={lang}>
-            <GeistProvider themeType={theme}>
-                <CssBaseline />
-                <PrintLayout />
-                <App className="no-print" />
-            </GeistProvider >
+            <MantineProvider theme={{ colorScheme: theme }} withGlobalStyles withNormalizeCSS>
+                <LocalStorageOptionsProvider>
+                    <PrintLayout />
+                    <App className="no-print app-inner" />
+                </LocalStorageOptionsProvider>
+            </MantineProvider>
         </LocaleContext.Provider>
     )
 }
 
-render(<Main />, document.getElementById('app') as HTMLElement)
+const root = createRoot(document.getElementById('app') as HTMLElement)
+root.render(<Main />)

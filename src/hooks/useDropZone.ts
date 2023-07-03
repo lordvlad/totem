@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "preact/hooks"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 export function useDropZone({ onDrop }: { onDrop: (files: DataTransferItem[]) => void }) {
     // FIXME fix this any
@@ -9,7 +9,7 @@ export function useDropZone({ onDrop }: { onDrop: (files: DataTransferItem[]) =>
         setIsOver(ref.current?.base?.contains(e.target as Node))
     }, [])
 
-    const onDragLeave = useCallback((e: DragEvent) => {
+    const onDragLeave = useCallback(() => {
         // console.log("leave", ref.current?.base, e.target)
         // if (ref.current?.base?.contains(e.target as Node))
         // setIsOver(false)

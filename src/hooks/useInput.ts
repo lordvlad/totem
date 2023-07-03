@@ -1,10 +1,12 @@
-import { type MutableRef } from "preact/hooks";
+import { MutableRefObject } from "react";
 import { useCurrentState } from "./useCurrentState";
+
+
 
 export type InputHook<T> = {
     state: T;
     setState: (val: T | ((prev: T) => T)) => void;
-    currentRef: MutableRef<T>;
+    currentRef: MutableRefObject<T>;
     reset: () => void;
     bindings: {
         value: T;

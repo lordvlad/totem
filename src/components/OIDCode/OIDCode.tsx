@@ -1,4 +1,4 @@
-import { JSX } from "preact/jsx-runtime";
+import { SVGAttributes } from "react";
 import { useOptions } from "../../library/options";
 
 /**
@@ -97,11 +97,28 @@ export type OIDCodeProps = {
     width: number;
     height: number;
     code: number;
+    dpmm?: number;
 }
 
-export function OIDCode({ code, width, height, ...props }: OIDCodeProps & JSX.SVGAttributes<SVGSVGElement>) {
+// @ts-ignore
+export function oidCodeDataUrl({ code, width, height, dpmm, ...props }: OIDCodeProps & { dpmm: number } & SVGAttributes<SVGSVGElement>) {
+    return ""
+    // const anchor = document.createElement('div')
+    // const root = createRoot(anchor)
+    // anchor.style.visibility = 'none'
+    // document.body.appendChild(anchor)
+    // document.getElementsByClassName('app-inner')[0].appendChild(anchor)
+    // root.render(<OIDCode code={code} width={width} height={height} dpmm={dpmm} {...props} />)
+    // console.log("FOO", anchor)
+    // const s = `data:image/svg+xml;base64,${btoa(new XMLSerializer().serializeToString(anchor.firstChild!))}`
+    // root.unmount()
+    // anchor.remove()
+    // return s
+}
+
+export function OIDCode({ code, width, height, dpmm: dpmmProp, ...props }: OIDCodeProps & SVGAttributes<SVGSVGElement>) {
     // convert dpi to dpmm
-    const dpmm = useOptions()[0].oidCodeResolution * 0.039370079
+    const dpmm = dpmmProp ?? useOptions()[0].oidCodeResolution * 0.039370079
 
     const id = `pattern.${code}`
 

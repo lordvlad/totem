@@ -1,28 +1,48 @@
-import { ComponentChildren, createContext } from "preact"
-import { StateUpdater, useContext } from "preact/hooks"
+import { ReactNode, createContext, useContext, Dispatch, SetStateAction } from "react"
 import { id } from "tsafe/id"
 import { useLocalStorageState } from "../hooks/useLocalStorageState"
 
-export const initialPrintOptions = {
-    layout: id<'list' | 'tiles' | 'booklet'>('list'),
-    cols: 1,
-    tileSize: 1,
+const initialCommonOptions = {
+    oidCodeResolution: 1200,
+    oidPixelSize: 2,
+    paperSize: id<'A4' | 'A4 landscape' | 'letter'>('A4'),
+    penLanguage: 'de',
+
+    // FIXME check if this should be moved into tile or table options
     featureAlbumControls: false,
     featureAlbumInfo: false,
     featureCover: false,
     featureGeneralControls: false,
     featureTracks: false,
-    oidCodeResolution: 1200,
-    oidPixelSize: 2,
-    paperSize: id<'A4' | 'A4 landscape' | 'letter'>('A4'),
-    penLanguage: 'de',
+    layout: id<'tiles' | 'table'>('tiles')
 }
 
-export type Options = typeof initialPrintOptions
+const initialTileOptions = {
+    layout: 'tiles' as (typeof initialCommonOptions)['layout'],
+    cols: 1,
+    tileSize: 1,
+}
 
-export const OptionsContext = createContext(id<readonly [Options, StateUpdater<Options>] | undefined>(undefined))
+const initialTableOptions = {
+    layout: 'table' as (typeof initialCommonOptions)['layout'],
+}
 
-export function LocalStorageOptionsProvider({ children }: { children: ComponentChildren }) {
+type CommonOptions = typeof initialCommonOptions
+export type TileOptions = typeof initialTileOptions
+export type TableOptions = typeof initialTableOptions
+
+
+export type Options = CommonOptions & (TableOptions | TileOptions)
+
+export const initialPrintOptions = id<Options>({
+    ...initialTileOptions,
+    ...initialCommonOptions,
+})
+
+
+export const OptionsContext = createContext(id<readonly [Options, Dispatch<SetStateAction<Options>>] | undefined>(undefined))
+
+export function LocalStorageOptionsProvider({ children }: { children: ReactNode }) {
     const value = useLocalStorageState('options', initialPrintOptions)
     return <OptionsContext.Provider value={value}>{children}</OptionsContext.Provider>
 }

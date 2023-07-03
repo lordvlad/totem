@@ -213,7 +213,9 @@ function readTagSize(view: DataView, off: number) {
 }
 
 function getInt24(view: DataView, offset: number, littleEndian?: boolean) {
-    return 0
+    return littleEndian
+        ? view.getUint8(offset) | (view.getUint8(offset + 1) << 8) | (view.getUint8(offset + 2) << 16)
+        : view.getUint8(offset + 2) | (view.getUint8(offset + 1) << 8) | (view.getUint8(offset) << 16)
 }
 
 function readFrameFlags(view: DataView, offset: number) {

@@ -1,19 +1,25 @@
 /// <reference types="@types/wicg-file-system-access" />
 
-import { Button, Grid, KeyCode, KeyMod, Keyboard, Spacer, useKeyboard, useToasts } from "@geist-ui/core"
-import { Feather, Music, Printer, Settings, Trash } from "@geist-ui/icons"
-import { useCallback, useEffect, useRef, useState } from "preact/hooks"
+import { Button, Flex, Kbd } from '@mantine/core'
+import { useHotkeys } from '@mantine/hooks'
+import { notifications } from '@mantine/notifications'
+import { useCallback, useEffect, useRef, useState } from "react"
+import { GmeBuildConfig } from "../gme/gme"
+import { useGmeBuilder } from "../gme/useGmeBuilder"
+import { useGlobalState } from "../hooks/useGlobalState"
 import { useI18n } from "../i18n/i18n"
+import Feather from '../icons/Feather'
+import Music2 from '../icons/Music2'
+import Printer from '../icons/Printer'
+import Settings from '../icons/Settings'
+import Trash from '../icons/Trash'
+import { initialPrintOptions } from "../library/options"
 import { useLibrary } from "../library/useLibrary"
 import { useSelection } from "../library/useSelection"
-import { initialPrintOptions } from "../library/options"
-import { useGlobalState } from "../hooks/useGlobalState"
-import { useGmeBuilder } from "../gme/useGmeBuilder"
-import { GmeBuildConfig } from "../gme/gme"
+
 
 export function Menu() {
     const i18n = useI18n()
-    const { setToast } = useToasts()
     const { selected, reset } = useSelection()
     const { tracks, load, isLoading, remove, clear } = useLibrary(x => x)
     const [isBundling, setIsBundling] = useState(false)
@@ -60,92 +66,79 @@ export function Menu() {
 
             await build(cfg).pipeTo(stream)
         } catch (e) {
-            setToast({ type: "error", text: String(e), delay: 10 * 1000 })
+            notifications.show({
+                title: "Error",
+                message: String(e),
+                autoClose: 10 * 1000,
+                icon: <Feather />,
+            })
         } finally {
             setIsBundling(false)
         }
     }, [tracks, options])
 
-    useKeyboard(() => setShowOptionsPanel(true), [KeyCode.KEY_O, KeyMod.Alt])
-    useKeyboard(() => onChooseFilesClick(), [KeyCode.KEY_O, KeyMod.CtrlCmd])
-    useKeyboard(() => onBundleClick(), [KeyCode.KEY_S, KeyMod.CtrlCmd])
-    useKeyboard(() => clear(), [KeyCode.Delete, KeyMod.CtrlCmd])
-
-    // use keyboard will be set up ONCE only, so we need to work around it having a stale
+    // useHotkeys will be set up ONCE only, so we need to work around it having a stale
     // reference to onDeleteSelection
     const r = useRef<() => void>()
     useEffect(() => { r.current = onDeleteSelection }, [selected, tracks])
-    useKeyboard(() => r.current?.call(null), [KeyCode.Delete])
 
-    function downloadPdf() {
-        throw new Error("Function not implemented.")
-    }
+    useHotkeys([
+        ['alt+o', () => setShowOptionsPanel(true)],
+        ['mod+o', () => onChooseFilesClick()],
+        ['mod+s', () => onBundleClick()],
+        ['mod+Delete', () => clear()],
+        ['Delete', () => r.current?.call(null)],
+    ])
 
-    return (<Grid.Container gap={1}>
-        <Grid>
-            {/* @ts-expect-error */}
+    // function downloadPdf() {
+    // throw new Error("Function not implemented.")
+    // }
+
+    return (
+        <Flex gap="xs">
             <Button
-                auto
                 disabled={isBundling}
                 loading={isLoading}
+                loaderPosition='center'
                 onClick={onChooseFilesClick}
-                icon={<Music />}
-            >
+                leftIcon={<Music2 />}
+                pr={8} >
                 {tracks.length ? i18n`Add more` : i18n`Choose Files`}
-                <Spacer w={.5} />
-                <Keyboard scale={1 / 3} >{i18n`ctrl+O`}</Keyboard>
+                <Kbd ml={8} >{i18n`ctrl+O`}</Kbd>
             </Button>
-        </Grid>
-        <Grid>
-            {/* @ts-expect-error */}
             <Button
+                pr={8}
                 disabled={isBundling || isLoading || tracks.length === 0}
                 onClick={() => selected.size ? onDeleteSelection() : clear()}
-                auto
-                icon={<Trash />}
-                type="warning">
+                leftIcon={<Trash />}>
                 {selected.size ? i18n`Remove` : i18n`Clear`}
-                <Spacer w={.5} />
-                <Keyboard scale={1 / 3}>{selected.size ? i18n`del` : 'ctrl+del'}</Keyboard>
+                <Kbd ml={8}>{selected.size ? i18n`del` : 'ctrl+del'}</Kbd>
             </Button>
-        </Grid>
-        <Grid>
-            {/* @ts-expect-error */}
             <Button
+                pr={8}
                 disabled={isLoading || tracks.length === 0}
                 onClick={onBundleClick}
                 loading={isBundling}
-                auto
-                icon={<Feather />}
-                type="success">
+                loaderPosition='center'
+                leftIcon={<Feather />} >
                 {i18n`Save to tiptoi`}
-                <Spacer w={.5} />
-                <Keyboard scale={1 / 3} >{i18n`ctrl+S`}</Keyboard>
+                <Kbd ml={8}>{i18n`ctrl+S`}</Kbd>
             </Button>
-        </Grid>
-        <Grid>
-            {/* @ts-expect-error */}
             <Button
-                auto
+                pr={8}
                 onClick={() => setShowOptionsPanel(true)}
-                icon={<Settings />}>
+                leftIcon={<Settings />}>
                 {i18n`Options`}
-                <Spacer w={.5} />
-                <Keyboard scale={1 / 3}>{i18n`alt+O`}</Keyboard>
+                <Kbd ml={8}>{i18n`alt+O`}</Kbd>
             </Button>
-        </Grid>
-        <Grid>
-            {/* @ts-expect-error */}
             <Button
-                auto
+                pr={8}
                 disabled={isBundling || isLoading || tracks.length === 0}
                 onClick={() => window.print()}
-                icon={<Printer />} >
+                leftIcon={<Printer />} >
                 {i18n`Print`}
-                <Spacer w={.5} />
-                <Keyboard scale={1 / 3}>{i18n`ctrl+P`}</Keyboard>
+                <Kbd ml={8}>{i18n`ctrl+P`}</Kbd>
             </Button>
-        </Grid>
-    </Grid.Container>
+        </Flex>
     )
 }

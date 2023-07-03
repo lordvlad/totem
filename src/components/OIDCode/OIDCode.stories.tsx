@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useState } from "react";
 import { OptionsContext, initialPrintOptions } from "../../library/options";
 import { OIDCode, type OIDCodeProps } from "./OIDCode";
 

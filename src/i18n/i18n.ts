@@ -1,12 +1,11 @@
-import { createContext } from "preact"
-import { useCallback, useContext } from "preact/hooks"
+import { createContext, useCallback, useContext } from "react"
 import { useLocalStorageState } from "../hooks/useLocalStorageState"
 
 
 // FIXME find a way to make this lazy
 
-import de_DE from './de_DE.json'
 import { zip } from "../util/zip"
+import de_DE from './de_DE.json'
 
 export const locales = {
     'en-US': 'english', // default

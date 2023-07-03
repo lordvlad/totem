@@ -1,68 +1,54 @@
 import './app.css'
 
-import { Grid, Link, Page, PageProps, Spacer } from '@geist-ui/core'
-import { AlertTriangle, Github } from '@geist-ui/icons'
+import { AppShell, AppShellProps, Box, Button, Container, Flex, Header, Space } from '@mantine/core'
 
-import { Header } from './composites/Header.js'
+import { Header as AppHeader } from './composites/Header'
 import { Help } from './composites/Help'
-import { Menu } from './composites/Menu.js'
+import { Menu } from './composites/Menu'
 import { OptionsPanel } from './composites/OptionsPanel'
-import { Tracks } from './composites/Tracks.js'
+import { Tracks } from './composites/Tracks'
+import { useI18n } from './i18n/i18n'
+import Github from './icons/Github'
+import AlertTriangle from './icons/AlertTriangle'
 
-import { useI18n } from './i18n/i18n.js'
-import { LocalStorageOptionsProvider } from './library/options'
-
-export function App(props: PageProps) {
+function AppFooter() {
   const i18n = useI18n()
+
   return (
-    <LocalStorageOptionsProvider>
-      {/* @ts-expect-error */}
-      <Page {...props}>
+    <Flex>
+      <Button component="a" variant="subtle" target="_blank" href="http://github.com/lordvlad/totem" leftIcon={<Github />}>
+        {i18n`Check it out on github`}
+      </Button>
+      <Button component="a" variant='subtle' target="_blank" href="https://github.com/lordvlad/totem/issues" leftIcon={<AlertTriangle />}>
+        {i18n`File an issue`}
+      </Button>
+      <Box sx={{ flexGrow: 1 }} />
+      {
+        import.meta.env.VITE_GIT_HASH && (
+          <Button component='a' variant='subtle' target="_blank" href={`https://github.com/lordvlad/totem/commit/${import.meta.env.VITE_GIT_HASH}`} >
+            v{`${import.meta.env.VITE_GIT_HASH}`}
+          </Button>
+        )
+      }
+    </Flex>
+  )
+}
+
+export function App(props: Omit<AppShellProps, 'children' | 'header' | 'footer' | 'aside' | 'navbar'>) {
+  return (
+    <AppShell
+      header={<Header withBorder={false} bg={"transparent"} height="93" ><Container><AppHeader /></Container></Header>}
+      {...props}>
+      <Container>
         <Help />
         <OptionsPanel />
-        <Page.Header>
-          <Header />
-        </Page.Header>
-
-        <Page.Content>
-          <Menu />
-          <Spacer />
-          <Tracks />
-        </Page.Content>
-
-        <Page.Footer>
-          <Grid.Container gap={3}>
-            <Grid>
-              {/* @ts-expect-error */}
-              <Link target="_blank" color href="http://github.com/lordvlad/totem" icon className="with-icon">
-                <Github />
-                {i18n`Check it out on github`}
-              </Link>
-            </Grid>
-            <Grid>
-              {/* @ts-expect-error */}
-              <Link target="_blank" color href="https://github.com/lordvlad/totem/issues" icon className="with-icon">
-                <AlertTriangle />
-                {i18n`File an issue`}
-              </Link>
-            </Grid>
-            {
-              import.meta.env.VITE_GIT_HASH && (
-                <>
-                  <Grid md></Grid>
-                  <Grid>
-                    {/* @ts-expect-error */}
-                    <Link target="_blank" color href={`https://github.com/lordvlad/totem/commit/${import.meta.env.VITE_GIT_HASH}`} icon>
-                      v{`${import.meta.env.VITE_GIT_HASH}`}
-                    </Link>
-                  </Grid>
-                </>
-              )
-            }
-          </Grid.Container>
-        </Page.Footer>
-      </Page >
-    </LocalStorageOptionsProvider>
+        <Menu />
+        <Space h="sm" />
+        <Tracks />
+        <Space h="xl" />
+        <AppFooter />
+      </Container>
+    </AppShell>
   )
 }
 

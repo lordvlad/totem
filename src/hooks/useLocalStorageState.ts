@@ -1,4 +1,4 @@
-import { useEffect } from "preact/hooks";
+import { useEffect } from "react";
 import { useGlobalState } from "./useGlobalState";
 
 export function useLocalStorageState<T>(key: string | null, initialValue: T | (() => T)) {

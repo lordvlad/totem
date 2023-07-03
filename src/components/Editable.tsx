@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from "preact/hooks";
+import { useRef, useState, useEffect, useCallback, KeyboardEvent } from "react";
 
 function setCaret(el: HTMLElement, pos = 0, end?: number) {
     const range = document.createRange()
@@ -49,7 +49,7 @@ export function Editable({
             setCaret(ref.current, 0, ref.current.childNodes[0].textContent?.length);
     }, [isFocused, ref.current])
 
-    const keyDown = useCallback((e: KeyboardEvent) => {
+    const keyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
         if (isFocused && ["Enter", "Escape"].includes(e.key)) {
             e.preventDefault()
             e.stopPropagation()
@@ -66,8 +66,9 @@ export function Editable({
             onKeyDown={keyDown}
             onBlur={exit}
             onFocus={() => setIsFocused(true)}
-            ref={ref as any}>
-            {isFocused ? text : (text || <em>{placeholder}</em>)}
+            ref={ref as any}
+            dangerouslySetInnerHTML={{ __html: isFocused ? text : (text || `<em>${placeholder}</em>`) }}
+        >
         </div>
     )
 }

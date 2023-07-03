@@ -1,6 +1,6 @@
 /// <reference types="@types/wicg-file-system-access" />
 
-import { useState as preactUseState, useEffect } from 'preact/hooks';
+import { useState, useEffect } from 'react';
 import { type Mp3WebWorkerRequest, type Mp3WebWorkerResponse } from './decoder';
 import { distinct } from '../util/distinct';
 import { delMany, getMany, keys, setMany } from 'idb-keyval';
@@ -132,11 +132,13 @@ export function dispatch(action: A) {
 }
 
 export function useLibrary<T>(getValue: ((s: S) => T)) {
-    const [value, setValue] = preactUseState(getValue(state));
+    const [value, setValue] = useState(getValue(state));
 
     useEffect(() => {
         listeners.set(getValue, setValue);
-        return () => listeners.delete(getValue);
+        return () => {
+            listeners.delete(getValue);
+        }
     }, [getValue]);
     return {
         ...value,

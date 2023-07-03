@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-
 import { mkdtemp, rm, stat } from "fs/promises"
 import { tmpdir } from "os"
 import { join } from "path"
@@ -14,10 +13,6 @@ import { play, tttool } from "../../util/tttool"
 import { createReadStream, createWriteStream } from "../../util/webStreams"
 import { MediaTableItem, build, type GmeBuildConfig } from "../gme"
 
-
-async function sleep(t: number) {
-    return new Promise<void>((resolve) => setTimeout(() => resolve(), t))
-}
 
 const fetch = async (v: MediaTableItem) => {
     return createReadStream(join(__dirname, v.track.fileName))

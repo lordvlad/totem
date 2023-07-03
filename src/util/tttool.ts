@@ -6,7 +6,7 @@ import { execFile } from "./execFile";
 import { isFile } from "./isFile";
 import { unzip } from "./unzip";
 import { spawn } from "child_process";
-import { Deferred, deferred } from "./deferred";
+import { deferred } from "./deferred";
 
 const version = "1.11"
 const tttoolDir = join(tmpdir(), "totem-tttool")

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useState } from "react";
 
 const query = '(prefers-color-scheme: dark)'
 const mql = window.matchMedia(query)

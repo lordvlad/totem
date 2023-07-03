@@ -10,14 +10,9 @@ type ScriptValue = { value: number; }
 type ScriptRegister = { register: number; }
 type ScriptParameter = ScriptValue | ScriptRegister
 
-function isValue(x: any): x is ScriptValue {
-    return x !== null && typeof x === "object" && "value" in x
-}
-
 function isRegister(x: any): x is ScriptRegister {
     return x !== null && typeof x === "object" && "register" in x
 }
-
 
 const scriptConditionOps = {
     "==": 0xfff9,
@@ -378,8 +373,9 @@ function createHeader({ comment: cfgComment, language: lang, productId }: Omit<G
         }
     }
 }
+
 // FIXME allow multiple playlists
-function createPoweronSoundPlaylistList({ trackIndex, offset }: { trackIndex: number; offset: number }) {
+function createPoweronSoundPlaylistList({ offset }: { trackIndex: number; offset: number }) {
     return {
         size: 2,
         write(buf: Buf) {

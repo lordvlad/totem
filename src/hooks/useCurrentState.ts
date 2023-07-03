@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "react";
 
 export function useCurrentState<T>(initialState: T | (() => T)) {
     const [state, setState] = useState<T>(initialState)

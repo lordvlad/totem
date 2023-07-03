@@ -1,14 +1,13 @@
-import { Button, Card, Checkbox, Code, Table, Text } from "@geist-ui/core"
-import { type CheckboxEvent } from "@geist-ui/core/esm/checkbox"
-import { Trash } from "@geist-ui/icons"
-import { useCallback } from "preact/hooks"
+import { Button, Card, Checkbox, Code, Table, Text, Title } from "@mantine/core"
+import { useCallback, KeyboardEvent } from "react"
 import { Editable } from "../components/Editable"
+import { useDropZone } from "../hooks/useDropZone"
 import { useI18n } from "../i18n/i18n"
+import { Track } from "../library/track"
 import { useLibrary } from "../library/useLibrary"
 import { useSelection } from "../library/useSelection"
-import { Track } from "../library/track"
-import { useDropZone } from "../hooks/useDropZone"
 import { pd } from "../util/preventDefault"
+import Trash from "../icons/Trash"
 
 export function Tracks() {
     const i18n = useI18n()
@@ -43,49 +42,48 @@ export function Tracks() {
         }
     }
 
-    const renderTitle = (_: any, track: Track) =>
+    const renderTitle = (track: Track) =>
         <Editable
             text={track.title}
             placeholder={i18n`unknown`}
             onEscape={onEscape}
             onChange={title => update(Object.assign(track, { title }))} />
-    const renderArtist = (_: any, track: Track) =>
+    const renderArtist = (track: Track) =>
         <Editable
             text={track.artist}
             placeholder={i18n`unknown`}
             onEscape={onEscape}
             onChange={artist => update(Object.assign(track, { artist }))} />
-    const renderAlbum = (_: any, track: Track) =>
+    const renderAlbum = (track: Track) =>
         <Editable
             text={track.album}
             placeholder={i18n`unknown`}
             onEscape={onEscape}
             onChange={album => update(Object.assign(track, { album }))} />
 
-    const renderAction = useCallback((_: any, track: Track) => {
+    const renderAction = useCallback((track: Track) => {
         return (
-            // @ts-expect-error
-            <Button type="error" auto scale={1 / 3} font="12px" onClick={pd(() => remove(track))} icon={<Trash />}>
+            <Button color="red" compact fz="xs" onClick={pd(() => remove(track))} leftIcon={<Trash height="12pt" width="12pt" />}>
                 {i18n`Remove`}
             </Button>
         )
     }, [])
 
-    const renderCheckbox = useCallback((_: any, __: any, idx: number) => (
+    const renderCheckbox = useCallback((idx: number) => (
         <Checkbox onKeyDown={onRowKey} onChange={() => toggle(idx)} checked={selected.has(idx)} />
     ), [selected])
 
     if (!tracks.length) {
         return (
-            <Card shadow ref={ref} type={isOver ? 'success' : undefined}>
-                <Text h4 my={0}>{i18n`Your music files will show up here`}</Text>
+            <Card shadow="md" ref={ref} color={isOver ? 'green' : undefined}>
+                <Title order={4} my={0}>{i18n`Your music files will show up here`}</Title>
                 <Text>{i18n`Use the`} <Code>{i18n`Choose Files`}</Code> {i18n`button to pick some files or simply drag-and-drop them on this card`}.</Text>
             </Card>
         )
     }
 
     const label = (<Checkbox
-        onChange={(e: CheckboxEvent) => {
+        onChange={(e: any) => {
             if (e.target.checked) {
                 select(...tracks.map((_, idx) => idx))
             } else {
@@ -95,22 +93,27 @@ export function Tracks() {
     />)
 
     return (
-        <Table hover
-            ref={ref}
-            data={tracks}
-            type={isOver ? 'success' : undefined} >
-            <Table.Column
-                width={1}
-                prop="select"
-                render={renderCheckbox}
-                /** @ts-ignore docs say its supported, but typing is missing */
-                label={label}
-            />
-            <Table.Column prop="album" label={i18n`Album`} render={renderAlbum} />
-            <Table.Column prop="artist" label={i18n`Artist`} render={renderArtist} />
-            <Table.Column prop="title" label={i18n`Title`} render={renderTitle} />
-            {/** @ts-ignore docs say its supported, but typing is missing */}
-            <Table.Column prop="remove" label={i18n`Actions`} width={150} render={renderAction} />
+        <Table highlightOnHover ref={ref} >
+            <thead>
+                <tr>
+                    <th>{label}</th>
+                    <th>{i18n`Album`}</th>
+                    <th>{i18n`Artist`}</th>
+                    <th>{i18n`Title`}</th>
+                    <th>{i18n`Actions`}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {tracks.map((track, idx) => (
+                    <tr key={`${track.artist}-${track.album}-${track.title}`}>
+                        <td>{renderCheckbox(idx)}</td>
+                        <td>{renderAlbum(track)}</td>
+                        <td>{renderArtist(track)}</td>
+                        <td>{renderTitle(track)}</td>
+                        <td>{renderAction(track)}</td>
+                    </tr>
+                ))}
+            </tbody>
         </Table>
     )
 }

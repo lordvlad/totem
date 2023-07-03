@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "preact/hooks"
-import { type InputHook, useInput } from "./useInput"
+import { useEffect, useRef } from "react"
+import { useInput, type InputHook } from "./useInput"
 import { useLocalStorageState } from "./useLocalStorageState"
 
 type Opts = {

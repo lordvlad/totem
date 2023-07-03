@@ -2,7 +2,7 @@
 
 import { assert, describe, it, expect } from "vitest"
 import { OIDCodePattern, range } from "./OIDCode"
-import { render } from "@testing-library/preact"
+import { render } from "@testing-library/react"
 import { LocalStorageOptionsProvider } from "../../library/options"
 
 describe("range", () => {

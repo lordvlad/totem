@@ -1,34 +1,20 @@
-import { Button, Popover } from "@geist-ui/core"
-import { Globe } from "@geist-ui/icons"
-import { useState } from "preact/hooks"
-import { Locale, isKnownLocale, locales, useLocale } from "../i18n/i18n"
+import { Button, Menu } from "@mantine/core"
+import { isKnownLocale, locales, useLocale } from "../i18n/i18n"
+import Globe from "../icons/Globe"
+
+const sysLocale = navigator.language
 
 export function LocalePicker() {
   const [locale, setLocale] = useLocale()
-  const [isLanguageMenuVisible, setIsLanguageMenuVisible] = useState(false)
 
-  const sysLocale = navigator.language
-  const isSystemLanguageKnown = isKnownLocale(sysLocale)
-
-  const menu = (
-    <>
-      {isKnownLocale(sysLocale) && <Popover.Item onClick={() => setLocale(sysLocale)}>Auto</Popover.Item>}
-      <Popover.Item onClick={() => setLocale('en-US')}>English</Popover.Item>
-      <Popover.Item onClick={() => setLocale('de-DE')}>Deutsch</Popover.Item>
-    </>
-  )
-
-  return (
-    // @ts-expect-error
-    <Popover visible={isLanguageMenuVisible} content={menu}>
-      {/* @ts-expect-error */}
-      <Button
-        auto
-        iconRight={<Globe />}
-        onClick={() => setIsLanguageMenuVisible(v => !v)}
-      >
-        {locales[locale] || locale}
-      </Button>
-    </Popover>
-  )
+  return <Menu shadow="md" width={100}>
+    <Menu.Target>
+      <Button variant="outline" rightIcon={<Globe />} > {locales[locale] || locale} </Button>
+    </Menu.Target>
+    <Menu.Dropdown>
+      {isKnownLocale(sysLocale) && <Menu.Item onClick={() => setLocale(sysLocale)}>Auto</Menu.Item>}
+      <Menu.Item onClick={() => setLocale('en-US')}>English</Menu.Item>
+      <Menu.Item onClick={() => setLocale('de-DE')}>Deutsch</Menu.Item>
+    </Menu.Dropdown>
+  </Menu>
 }

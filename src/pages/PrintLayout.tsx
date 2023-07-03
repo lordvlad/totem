@@ -31,7 +31,7 @@ export function TilePrintLayout() {
     return (
         <Grid gutter={4}>
             {tracks.map(track =>
-                <Grid.Col span={12 / cols}>
+                <Grid.Col key={`${track.artist}${track.album}${track.title}`} span={12 / cols}>
                     <PrintTile track={track} dpmm={dpmm} />
                 </Grid.Col>
             )}

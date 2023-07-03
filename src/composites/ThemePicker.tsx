@@ -11,5 +11,7 @@ export function ThemePicker() {
     const icons = useMemo(() => ({ 'light': <Sun />, 'dark': <Moon />, 'auto': <Moon /> }), [])
     const labels = useMemo(() => ({ 'light': i18n`light`, 'dark': i18n`dark`, 'auto': i18n`auto` }), [i18n])
 
-    return <Button variant="outline" onClick={toggle} rightIcon={icons[chosen]} > {labels[chosen]} </Button>
+    return <Button
+        w={120}
+        variant="outline" onClick={toggle} rightIcon={icons[chosen]} > {labels[chosen]} </Button>
 }

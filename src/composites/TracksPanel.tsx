@@ -14,7 +14,7 @@ export function AlbumArt({ track: { title, art: { mimetype, data } }, ...props }
     return <Image src={url} alt={title} {...props} />
 }
 
-export function Tracks() {
+export function TracksPanel() {
     const i18n = useI18n()
     const { onDrop, remove, tracks, update } = useLibrary(x => x)
 

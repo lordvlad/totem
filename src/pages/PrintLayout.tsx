@@ -3,10 +3,10 @@ import { assert, is } from "tsafe"
 import { oidCodeDataUrl } from "../components/OIDCode/OIDCode"
 // import { OIDCode, oidCodeDataUrl } from "../components/OIDCode/OIDCode"
 // import { useI18n } from "../i18n/i18n"
-import { TableOptions, TileOptions, useOptions } from "../library/options"
+import { Options, TableOptions, TileOptions, useOptions } from "../library/options"
 import { useLibrary } from "../library/useLibrary"
 import { Track } from "../library/track"
-import { AlbumArt } from "../composites/Tracks"
+import { AlbumArt } from "../composites/TracksPanel"
 
 function PrintRow(/* { track, dpmm }: { track: Track; dpmm: number }*/) {
     // const { colorScheme } = useMantineColorScheme()
@@ -102,16 +102,21 @@ export function TablePrintLayout() {
 
 }
 
+const paperDimensions: Record<Options['paperSize'], { height: string, width: string }> = {
+    "A4": { height: "29.7cm", width: "21cm" },
+    "A4 landscape": { height: "21cm", width: "29.7cm" },
+    letter: { height: "27.9cm", width: "21.6cm" }
+}
+
 export function PrintPreview() {
     const { colorScheme } = useMantineColorScheme()
-    const { layout } = useOptions()[0]
+    const { layout, paperSize } = useOptions()[0]
 
     const sx: Sx = {
-        width: '21cm',
-        height: '29.7cm',
         borderColor: colorScheme === 'dark' ? 'white' : 'black',
         borderWidth: '1px',
         borderStyle: 'solid',
+        ...paperDimensions[paperSize],
     }
 
     return <Box sx={sx}>{(() => {

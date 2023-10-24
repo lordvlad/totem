@@ -3,10 +3,10 @@ import './app.css'
 import { AppShell, AppShellProps, Box, Button, Container, Flex, Space } from '@mantine/core'
 
 import { Header as AppHeader } from './composites/Header'
-import { Help } from './composites/Help'
+import { HelpPanel } from './composites/HelpPanel'
 import { Menu } from './composites/Menu'
 import { OptionsPanel } from './composites/OptionsPanel'
-import { Tracks } from './composites/Tracks'
+import { TracksPanel } from './composites/TracksPanel'
 import { useI18n } from './i18n/i18n'
 import Github from './icons/Github'
 import AlertTriangle from './icons/AlertTriangle'
@@ -38,14 +38,14 @@ export function App(props: Omit<AppShellProps, 'children' | 'header' | 'footer' 
   return (
     <AppShell className="no-print app-inner" {...props}>
       <Container>
-        <Help />
+        <HelpPanel />
         <OptionsPanel />
 
         <AppHeader />
         <Space h="xl" />
         <Menu />
         <Space h="sm" />
-        <Tracks />
+        <TracksPanel />
         <Space h="xl" />
         <AppFooter />
       </Container>

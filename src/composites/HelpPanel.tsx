@@ -1,13 +1,15 @@
+import { Center, Loader, Container, Drawer } from '@mantine/core'
+
+import { useGlobalState } from '../hooks/useGlobalState'
 import { Suspense, lazy } from 'react';
 import { useLocale } from '../i18n/i18n';
-import { Center, Loader } from '@mantine/core';
 
 // @ts-ignore
 const Readme_en_EN = lazy(() => import('../../README.md'))
 // @ts-ignore
 const Readme_de_DE = lazy(() => import('../../README.de_DE.md'))
 
-export function Readme() {
+function Readme() {
     const locale = useLocale()[0]
     return (
         <Suspense fallback={<Center><Loader /></Center>} >
@@ -16,5 +18,17 @@ export function Readme() {
                 'de-DE': <Readme_de_DE />
             }[locale] || <Readme_en_EN />)}
         </Suspense>
+    )
+}
+
+export function HelpPanel() {
+    const [showHelp, setShowHelp] = useGlobalState("help", false)
+
+    return (
+        <Drawer opened={showHelp} onClose={() => setShowHelp(false)} position="top" size="100%">
+            <Container>
+                <Readme />
+            </Container>
+        </Drawer>
     )
 }

@@ -10,6 +10,8 @@ export function ThemePicker() {
     const i18n = useI18n()
     const { setTheme, raw } = useColorScheme()
 
+    console.log("raw", raw)
+
     function toggle() {
         setTheme((t: ColorScheme | undefined) => {
             switch (t) {
@@ -21,10 +23,10 @@ export function ThemePicker() {
     }
 
     const labels = useCallback((c: ColorScheme | undefined) => {
-        return c ? { 'light': i18n`light`, 'dark': i18n`dark` }[c] : i18n`auto`
+        return (c ? { 'light': i18n`light`, 'dark': i18n`dark` }[c] : i18n`auto`) || i18n`auto`
     }, [i18n])
     const icons = useCallback((c: ColorScheme | undefined) => {
-        return c ? { 'light': <Sun />, 'dark': <Moon /> }[c] : <Moon />
+        return (c ? { 'light': <Sun />, 'dark': <Moon /> }[c] : <Moon />) || <Moon />
     }, [])
 
     return <Button

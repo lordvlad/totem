@@ -1,5 +1,5 @@
 import { PropsWithChildren, ReactNode } from 'react'
-import { Text, Tooltip, Checkbox, Container, Drawer, Grid, GridProps, Group, NumberInput, Radio, TextInput, Title } from '@mantine/core'
+import { Text, Tooltip, Checkbox, Container, Drawer, Grid, GridProps, Group, NumberInput, Radio, Title, Select } from '@mantine/core'
 
 import { useForm } from '../hooks/useForm'
 import { useGlobalState } from '../hooks/useGlobalState'
@@ -66,7 +66,9 @@ export function OptionsPanel() {
 
                 <Title my="lg" order={2}>{i18n`Layout Settings`}</Title>
                 <FormField label={i18n`Paper Size`}>
-                    <TextInput mt={.75} {...paperSize.bindings} />
+                    <Select mt={.75}{...paperSize.bindings}
+                        data={[i18n`A4`, i18n`A4 landscape`, i18n`letter`]}
+                    />
                 </FormField>
                 <FormField
                     label={i18n`Layout`}

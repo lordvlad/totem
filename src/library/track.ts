@@ -1,4 +1,4 @@
-import { type Frame, type FrameId, type ID3 } from "./id3";
+import { ID3Art, type Frame, type FrameId, type ID3 } from "./id3";
 
 
 export class Track implements Pick<ID3, "fileName" | "frames"> {
@@ -28,5 +28,7 @@ export class Track implements Pick<ID3, "fileName" | "frames"> {
     set artist(data: string) { this.frame("TOA", data) }
     get album() { return this.frame<string>("TALB") }
     set album(data: string) { this.frame("TALB", data) }
+    get art() { return this.frame<ID3Art>("APIC") }
+    set art(data: ID3Art) { this.frame("APIC", data) }
 }
 

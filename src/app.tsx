@@ -1,6 +1,6 @@
 import './app.css'
 
-import { AppShell, AppShellProps, Box, Button, Container, Flex, Header, Space } from '@mantine/core'
+import { AppShell, AppShellProps, Box, Button, Container, Flex, Space } from '@mantine/core'
 
 import { Header as AppHeader } from './composites/Header'
 import { Help } from './composites/Help'
@@ -36,12 +36,13 @@ function AppFooter() {
 
 export function App(props: Omit<AppShellProps, 'children' | 'header' | 'footer' | 'aside' | 'navbar'>) {
   return (
-    <AppShell
-      header={<Header withBorder={false} bg={"transparent"} height="93" ><Container><AppHeader /></Container></Header>}
-      {...props}>
+    <AppShell className="no-print app-inner" {...props}>
       <Container>
         <Help />
         <OptionsPanel />
+
+        <AppHeader />
+        <Space h="xl" />
         <Menu />
         <Space h="sm" />
         <Tracks />

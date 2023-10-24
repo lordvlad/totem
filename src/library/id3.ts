@@ -33,7 +33,7 @@ export type Frame = {
 }
 
 export type ID3 = {
-    version: [number, number];
+    version: [2 | 3 | 4, number];
     unsync: boolean;
     tagSize: number;
     fileName: string;
@@ -185,6 +185,29 @@ export const FRAMES = {
     "WXXX": "User defined URL link frame"
 };
 
+const PICTURE_TYPE = [
+    "32x32 pixels 'file icon' (PNG only)",
+    "Other file icon",
+    "Cover (front)",
+    "Cover (back)",
+    "Leaflet page",
+    "Media (e.g. lable side of CD)",
+    "Lead artist/lead performer/soloist",
+    "Artist/performer",
+    "Conductor",
+    "Band/Orchestra",
+    "Composer",
+    "Lyricist/text writer",
+    "Recording Location",
+    "During recording",
+    "During performance",
+    "Movie/video screen capture",
+    "A bright coloured fish",
+    "Illustration",
+    "Band/artist logotype",
+    "Publisher/Studio logotype"
+] as const;
+
 export type FrameId = keyof typeof FRAMES
 
 export function getFrameData<T = unknown>(id3: ID3, id: FrameId) {
@@ -246,7 +269,36 @@ function getTextDecoder(view: DataView, offset: number) {
     }
 }
 
-function readFrameData(view: DataView, frame: Omit<Frame, 'data'>, offsetParam: number) {
+function readPictureFrame(view: DataView, offsetParam: number, length: number, version: [2 | 3 | 4, number]) {
+    const decoder = getTextDecoder(view, offsetParam);
+
+    const mimetype = (() => {
+        switch (version[0]) {
+            case 2: return decodeText(view, offsetParam + 1, 3, decoder)
+            case 3:
+            case 4: return readNullTerminatedText(view, offsetParam + 1, decoder)
+        }
+    })();
+    let offset = offsetParam + 1 + bytelegth(mimetype);
+    const bite = view.getUint8(offset);
+    const type = PICTURE_TYPE[bite];
+    const description = readNullTerminatedText(view, offset + 1, decoder);
+    offset += 2 + bytelegth(description);
+
+    return { mimetype, type, description, data: view.buffer.slice(offset, offsetParam + length) };
+};
+
+export type ID3Art = ReturnType<typeof readPictureFrame>
+
+function readNullTerminatedText(view: DataView, offset: number, decoder: TextDecoder) {
+    const begin = view.byteOffset + offset
+    const end = view.byteLength
+    let i = begin
+    while (i < end && view.getUint8(i) !== 0) i++
+    return decoder.decode(view.buffer.slice(begin, i))
+}
+
+function readFrameData(view: DataView, frame: Omit<Frame, 'data'>, offsetParam: number, version: [2 | 3 | 4, number]) {
     let offset = offsetParam
     const size = frame.frameDataSize ?? frame.size
 
@@ -255,11 +307,7 @@ function readFrameData(view: DataView, frame: Omit<Frame, 'data'>, offsetParam: 
         const decoder = getTextDecoder(view, offset)
         offset += 1
         const begin = view.byteOffset + offset
-        const slice = view.buffer.slice(begin, begin + size - 1)
-        const text = decoder.decode(
-            new Uint8Array(slice).at(-1) === 0
-                ? slice.slice(0, slice.byteLength - 1)
-                : slice)
+        const text = decodeText(view, begin, size, decoder)
 
         switch (frame.id) {
             case 'TCO':
@@ -272,10 +320,22 @@ function readFrameData(view: DataView, frame: Omit<Frame, 'data'>, offsetParam: 
 
     // other frames
     switch (frame.id) {
+        case 'APIC': {
+            return readPictureFrame(view, offset, size, version)
+        }
 
     }
 
     return null
+}
+
+function decodeText(view: DataView, begin: number, size: number, decoder: TextDecoder) {
+    const slice = view.buffer.slice(begin, begin + size - 1)
+    const text = decoder.decode(
+        new Uint8Array(slice).at(-1) === 0
+            ? slice.slice(0, slice.byteLength - 1)
+            : slice)
+    return text
 }
 
 function isFrameId(s: string): s is FrameId {
@@ -283,7 +343,7 @@ function isFrameId(s: string): s is FrameId {
 }
 
 function readFrame(view: DataView, id3: Omit<ID3, "fileName" | "frames">, offsetParam: number): BrokenFrame | Frame {
-    const major = id3.version[0]
+    const major = id3.version[0] as 2 | 3 | 4
     let offset = offsetParam
 
     const id = asciiDecoder.decode(view.buffer.slice(view.byteOffset + offset, view.byteOffset + offset + (major === 2 ? 3 : 4)))
@@ -319,7 +379,7 @@ function readFrame(view: DataView, id3: Omit<ID3, "fileName" | "frames">, offset
         description: FRAMES[id] ?? 'unknown'
     }
 
-    const data = readFrameData(view, frame, offset)
+    const data = readFrameData(view, frame, offset, id3.version)
 
     return { ...frame, data }
 }
@@ -376,7 +436,7 @@ async function readTags(stream: ReadableStreamDefaultReader<Uint8Array>): Promis
 
     const view = new DataView(buf)
 
-    const major = view.getUint8(3)!
+    const major = view.getUint8(3)! as 2 | 3 | 4
     const minor = view.getUint8(4)!
 
     const id3: Omit<ID3, 'fileName' | 'frames'> = {
@@ -432,4 +492,8 @@ export async function* loadAll(...streams: ReadableStream<Uint8Array>[]) {
     for (const stream of streams) {
         yield await load(stream)
     }
+}
+
+function bytelegth(format: string) {
+    return new TextEncoder().encode(format).length
 }

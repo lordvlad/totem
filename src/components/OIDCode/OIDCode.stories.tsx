@@ -1,22 +1,13 @@
-import { useState } from "react";
-import { OptionsContext, initialPrintOptions } from "../../library/options";
 import { OIDCode, type OIDCodeProps } from "./OIDCode";
 
-type Arg = OIDCodeProps & { dpi?: number, size?: number }
+type Arg = OIDCodeProps & { dpi: number, size?: number }
 
 export default {
   title: 'Components/OIDCode',
   component: ({ size, dpi, ...props }: Arg) => {
-    const value = useState({
-      ...initialPrintOptions,
-      oidCodeResolution: dpi ?? initialPrintOptions.oidCodeResolution,
-      oidPixelSize: size ?? initialPrintOptions.oidPixelSize,
-    })
 
     return (
-      <OptionsContext.Provider value={value}>
-        <div style={{ display: "inline-block", padding: 0, border: 'solid red 1px' }}><OIDCode {...props} /></div>
-      </OptionsContext.Provider>
+      <div style={{ display: "inline-block", padding: 0, border: 'solid red 1px' }}><OIDCode {...props} dpi={dpi} /></div>
     )
   }
 };
@@ -26,6 +17,8 @@ export const Default: { args: Arg } = {
     code: 1499,
     width: 256,
     height: 256,
+    dpi: 1200,
+    oidCodePixelSize: 3
   }
 }
 
@@ -36,6 +29,7 @@ export const DEBUG: { args: Arg } = {
     height: 256,
     dpi: 72,
     size: 3,
+    oidCodePixelSize: 3
   }
 };
 

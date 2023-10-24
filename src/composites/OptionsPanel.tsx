@@ -1,11 +1,12 @@
 import { PropsWithChildren, ReactNode } from 'react'
-import { Text, Tooltip, Checkbox, Container, Drawer, Grid, GridProps, Group, NumberInput, Radio, TextInput } from '@mantine/core'
+import { Text, Tooltip, Checkbox, Container, Drawer, Grid, GridProps, Group, NumberInput, Radio, TextInput, Title } from '@mantine/core'
 
 import { useForm } from '../hooks/useForm'
 import { useGlobalState } from '../hooks/useGlobalState'
 import { useI18n } from '../i18n/i18n'
 import { Options, initialPrintOptions } from '../library/options'
 import HelpCircle from '../icons/HelpCircle'
+import { PrintPreview } from '../pages/PrintLayout'
 
 export type FormFieldProps = PropsWithChildren<{
     label: string;
@@ -14,8 +15,8 @@ export type FormFieldProps = PropsWithChildren<{
 
 function FormField({ label, children, tooltip, ...props }: FormFieldProps & GridProps) {
     return (
-        <Grid {...props}>
-            <Grid.Col span={3}>
+        <Grid {...props} align='center' mih="3.5rem">
+            <Grid.Col span={3} >
                 <Text>
                     {label}
                     {tooltip &&
@@ -47,15 +48,26 @@ export function OptionsPanel() {
         featureGeneralControls,
         featureTracks,
         oidCodeResolution,
-        oidPixelSize,
+        oidCodePixelSize: oidPixelSize,
         paperSize,
-        cols,
         tileSize,
     } = useForm(initialPrintOptions as UnionToIntersection<Options>, { localStorageKey: 'options' })
 
     return (
         <Drawer opened={showOptionsPanel} onClose={() => setShowOptionsPanel(false)} position="top" size="100%">
             <Container>
+                <Title my="lg" order={2}>{i18n`OID Code Settings`}</Title>
+                <FormField label={i18n`OID Code Resolution`} tooltip={i18n`Resolution at which OID codes will be generated.`}>
+                    <NumberInput mt={.75} {...oidCodeResolution.bindings} right="DPI" />
+                </FormField>
+                <FormField label={i18n`OID Pixel Size`} tooltip={i18n`Number of pixels (squared) for each dot in the OID code.`}>
+                    <NumberInput mt={.75} {...oidPixelSize.bindings} right="px" />
+                </FormField>
+
+                <Title my="lg" order={2}>{i18n`Layout Settings`}</Title>
+                <FormField label={i18n`Paper Size`}>
+                    <TextInput mt={.75} {...paperSize.bindings} />
+                </FormField>
                 <FormField
                     label={i18n`Layout`}
                     tooltip={
@@ -86,23 +98,14 @@ export function OptionsPanel() {
                 </FormField>
                 {layout.currentRef.current === "tiles" &&
                     <>
-                        <FormField label={i18n`Columns`} >
-                            <NumberInput mt={.75} {...cols.bindings} required />
-                        </FormField>
                         <FormField label={i18n`Tile Size`} tooltip={i18n`For the tiled layout: size of each tile. Useful if you want to cut out the tiles and put them somewhere like a CD case.`}>
                             <NumberInput mt={.75} {...tileSize.bindings} />
                         </FormField>
                     </>
                 }
-                <FormField label={i18n`OID Code Resolution`} tooltip={i18n`Resolution at which OID codes will be generated.`}>
-                    <NumberInput mt={.75} {...oidCodeResolution.bindings} right="DPI" />
-                </FormField>
-                <FormField label={i18n`OID Pixel Size`} tooltip={i18n`Number of pixels (squared) for each dot in the OID code.`}>
-                    <NumberInput mt={.75} {...oidPixelSize.bindings} right="px" />
-                </FormField>
-                <FormField label={i18n`Paper Size`}>
-                    <TextInput mt={.75} {...paperSize.bindings} />
-                </FormField>
+
+                <Title my="lg" order={2}>{i18n`Print Preview`}</Title>
+                <PrintPreview />
             </Container>
         </Drawer >
     )

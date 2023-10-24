@@ -4,7 +4,7 @@ import { useLocalStorageState } from "../hooks/useLocalStorageState"
 
 const initialCommonOptions = {
     oidCodeResolution: 1200,
-    oidPixelSize: 2,
+    oidCodePixelSize: 2,
     paperSize: id<'A4' | 'A4 landscape' | 'letter'>('A4'),
     penLanguage: 'de',
 
@@ -19,7 +19,6 @@ const initialCommonOptions = {
 
 const initialTileOptions = {
     layout: 'tiles' as (typeof initialCommonOptions)['layout'],
-    cols: 1,
     tileSize: 1,
 }
 
@@ -28,11 +27,11 @@ const initialTableOptions = {
 }
 
 type CommonOptions = typeof initialCommonOptions
-export type TileOptions = typeof initialTileOptions
-export type TableOptions = typeof initialTableOptions
+export type TileOptions = CommonOptions & (typeof initialTileOptions)
+export type TableOptions = CommonOptions & (typeof initialTableOptions)
 
 
-export type Options = CommonOptions & (TableOptions | TileOptions)
+export type Options = TableOptions | TileOptions
 
 export const initialPrintOptions = id<Options>({
     ...initialTileOptions,

@@ -1,21 +1,63 @@
-import { Card, Grid, Text, Title } from "@mantine/core"
+import { Box, Card, ColorSchemeProvider, Grid, MantineProvider, Sx, Text, Title, useMantineColorScheme } from "@mantine/core"
 import { assert, is } from "tsafe"
-import { OIDCode, oidCodeDataUrl } from "../components/OIDCode/OIDCode"
-import { useI18n } from "../i18n/i18n"
-import { TileOptions, useOptions } from "../library/options"
+import { oidCodeDataUrl } from "../components/OIDCode/OIDCode"
+// import { OIDCode, oidCodeDataUrl } from "../components/OIDCode/OIDCode"
+// import { useI18n } from "../i18n/i18n"
+import { TableOptions, TileOptions, useOptions } from "../library/options"
 import { useLibrary } from "../library/useLibrary"
 import { Track } from "../library/track"
+import { AlbumArt } from "../composites/Tracks"
+
+function PrintRow(/* { track, dpmm }: { track: Track; dpmm: number }*/) {
+    // const { colorScheme } = useMantineColorScheme()
+    // const fill = colorScheme === 'dark' ? 'white' : 'black'
+    // const { oidCodePixelSize, oidCodeResolution } = useOptions()[0] as TileOptions
+
+    // const backgroundImage = oidCodeDataUrl({ dpmm, code: 10, width: 32, height: 32, fill, dpi: oidCodeResolution, oidCodePixelSize: oidCodePixelSize })
+
+    return (
+        <tr>
+            {/* <td><OIDCode code={10} width={32} height={32} dpi={dpi} oidCodePixelSize={oidCodePixelSize} /></td> */}
+            {/* <td>{track.album}</td> */}
+            {/* <td>{track.artist || (<em>{i18n`unknown`}</em>)}</td> */}
+            {/* <td>{track.title}</td> */}
+        </tr>
+    )
+    //return (
+    //    <tr key={`${track.artist}${track.album}${track.title}`} sx={{ backgroundImage: `url(${backgroundImage})` }}>
+    //         <td>
+    //             <Box display="inline-block" w={64}>
+    //                 <AlbumArt track={track} />
+    //             </Box>
+    //             <Box display="inline-block" ml="md">
+    //                 <Title order={4} sx={{ textTransform: 'uppercase', textOverflow: 'ellipsis' }}>{track.title}</Title>
+    //                 <Text>{track.album}</Text>
+    //                 <Text>{track.artist}</Text>
+    //             </Box>
+    //         </td>
+    //     </tr>
+    //)
+
+}
 
 function PrintTile({ track, dpmm }: { track: Track; dpmm: number }) {
-    const i18n = useI18n()
+    const { colorScheme } = useMantineColorScheme()
+    const fill = colorScheme === 'dark' ? 'white' : 'black'
+    const { oidCodePixelSize, oidCodeResolution } = useOptions()[0] as TileOptions
 
-    return (<Card style={{ width: 100, backgroundImage: oidCodeDataUrl({ dpmm, code: 10, width: 32, height: 32 }) }}>
-        {/* <OIDCode code={10} width={32} height={32} /> */}
-        <Title order={4} style={{ textTransform: 'uppercase' }}>{track.title}</Title>
-        <Text>{track.album}</Text>
-        <Text>{track.artist || (<em>{i18n`unknown`}</em>)}</Text>
-    </Card>)
+    const backgroundImage = oidCodeDataUrl({ dpmm, code: 10, width: 32, height: 32, fill, dpi: oidCodeResolution, oidCodePixelSize: oidCodePixelSize })
 
+    return (
+        <Card key={`${track.artist}${track.album}${track.title}`} >
+            <Card.Section>
+                <Box style={{ zIndex: 999, position: 'absolute', bottom: 0, right: 0, left: 0, top: 0, backgroundImage: `url(${backgroundImage})` }} />
+            </Card.Section>
+            <Card.Section><AlbumArt track={track} /></Card.Section>
+            <Title order={4} sx={{ textTransform: 'uppercase', textOverflow: 'ellipsis' }}>{track.title}</Title>
+            <Text>{track.album}</Text>
+            <Text>{track.artist}</Text>
+        </Card>
+    )
 }
 
 export function TilePrintLayout() {
@@ -23,7 +65,7 @@ export function TilePrintLayout() {
 
     assert(is<TileOptions>(options))
 
-    const { cols, oidCodeResolution } = options
+    const { oidCodeResolution } = options
     const dpmm = oidCodeResolution * 0.039370079
 
     const { tracks } = useLibrary(x => x)
@@ -31,7 +73,7 @@ export function TilePrintLayout() {
     return (
         <Grid gutter={4}>
             {tracks.map(track =>
-                <Grid.Col key={`${track.artist}${track.album}${track.title}`} span={12 / cols}>
+                <Grid.Col key={`${track.artist}${track.album}${track.title}`} span={12}>
                     <PrintTile track={track} dpmm={dpmm} />
                 </Grid.Col>
             )}
@@ -43,36 +85,56 @@ export function TilePrintLayout() {
 
 export function TablePrintLayout() {
     const { tracks } = useLibrary(x => x)
-    const i18n = useI18n()
+    const [options, _] = useOptions()
+    assert(is<TableOptions>(options))
+
+    // const { oidCodeResolution } = options
+    // const dpmm = oidCodeResolution * 0.039370079
+
     return (
-        <>
-            <h1>Lorem Ipsum</h1>
-            <table>
-                <tbody>
-                    {tracks.map(track =>
-                        <tr>
-                            <td><OIDCode code={10} width={32} height={32} /></td>
-                            <td>{track.album}</td>
-                            <td>{track.artist || (<em>{i18n`unknown`}</em>)}</td>
-                            <td>{track.title}</td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-        </>
+        <table>
+            <tbody>
+                {/* {tracks.map(track => <PrintRow track={track} dpmm={dpmm} />)} */}
+                {tracks.map(() => <PrintRow />)}
+            </tbody>
+        </table>
     )
 
 }
 
-export function PrintLayout() {
-    const [{ layout }, _] = useOptions()
-    const inner = (() => {
+export function PrintPreview() {
+    const { colorScheme } = useMantineColorScheme()
+    const { layout } = useOptions()[0]
+
+    const sx: Sx = {
+        width: '21cm',
+        height: '29.7cm',
+        borderColor: colorScheme === 'dark' ? 'white' : 'black',
+        borderWidth: '1px',
+        borderStyle: 'solid',
+    }
+
+    return <Box sx={sx}>{(() => {
         switch (layout) {
             case "tiles": return <TilePrintLayout />
             case "table": return <TablePrintLayout />
         }
-    })();
+    })()}</Box>
+}
 
-    return <div className="print-only" > {inner} </div>
+export function PrintLayout() {
+    const { layout } = useOptions()[0]
 
+    return (
+        <ColorSchemeProvider colorScheme="light" toggleColorScheme={_ => void 0} >
+            <MantineProvider theme={{ colorScheme: 'light' }} >
+                <Box className="print-only">{(() => {
+                    switch (layout) {
+                        case "tiles": return <TilePrintLayout />
+                        case "table": return <TablePrintLayout />
+                    }
+                })()}</Box>
+            </MantineProvider>
+        </ColorSchemeProvider >
+    )
 }

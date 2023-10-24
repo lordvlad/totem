@@ -3,7 +3,6 @@
 import { assert, describe, it, expect } from "vitest"
 import { OIDCodePattern, range } from "./OIDCode"
 import { render } from "@testing-library/react"
-import { LocalStorageOptionsProvider } from "../../library/options"
 
 describe("range", () => {
     it("should work with end only", () => {
@@ -22,11 +21,7 @@ describe("range", () => {
 describe("OIDCode components", () => {
 
     it("should create pattern content", () => {
-        const { container } = render(
-            <LocalStorageOptionsProvider>
-                <OIDCodePattern id="foo" code={20} />
-            </LocalStorageOptionsProvider>
-        )
+        const { container } = render(<OIDCodePattern id="foo" code={20} oidCodePixelSize={3} />)
 
         expect(container.innerHTML).toContain('<pattern')
         expect(container.innerHTML).toContain('id="foo"')

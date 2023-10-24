@@ -1,4 +1,4 @@
-import { Button, Card, Checkbox, Code, Table, Text, Title } from "@mantine/core"
+import { Button, Card, Checkbox, Code, Table, Text, Title, Image, ImageProps } from "@mantine/core"
 import { useCallback, KeyboardEvent } from "react"
 import { Editable } from "../components/Editable"
 import { useDropZone } from "../hooks/useDropZone"
@@ -8,6 +8,11 @@ import { useLibrary } from "../library/useLibrary"
 import { useSelection } from "../library/useSelection"
 import { pd } from "../util/preventDefault"
 import Trash from "../icons/Trash"
+
+export function AlbumArt({ track: { title, art: { mimetype, data } }, ...props }: { track: Track } & ImageProps) {
+    const url = `data:${mimetype};base64,${btoa(String.fromCharCode(...new Uint8Array(data)))}`
+    return <Image src={url} alt={title} {...props} />
+}
 
 export function Tracks() {
     const i18n = useI18n()
@@ -97,6 +102,7 @@ export function Tracks() {
             <thead>
                 <tr>
                     <th>{label}</th>
+                    <th>{i18n`Cover`}</th>
                     <th>{i18n`Album`}</th>
                     <th>{i18n`Artist`}</th>
                     <th>{i18n`Title`}</th>
@@ -107,6 +113,7 @@ export function Tracks() {
                 {tracks.map((track, idx) => (
                     <tr key={`${track.artist}-${track.album}-${track.title}`}>
                         <td>{renderCheckbox(idx)}</td>
+                        <td><AlbumArt height={64} track={track} /></td>
                         <td>{renderAlbum(track)}</td>
                         <td>{renderArtist(track)}</td>
                         <td>{renderTitle(track)}</td>

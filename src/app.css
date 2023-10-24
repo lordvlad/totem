@@ -18,6 +18,10 @@
     .print-only {
         display: initial !important;
     }
+
+    body {
+        background-color: white !important;
+    }
 }
 
 .editable {

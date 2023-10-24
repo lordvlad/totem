@@ -1,5 +1,6 @@
 import { SVGAttributes } from "react";
-import { useOptions } from "../../library/options";
+// import { createRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 
 /**
  * translated using chatgpt from https://github.com/entropia/tip-toi-reveng/blob/master/src/OidCode.hs#L30
@@ -51,23 +52,21 @@ function zip<T, S>(a: Iterable<T>, b: Iterable<S>) {
     }()
 }
 
-type Coords = { x: number; y: number }
+type PxArgs = { x: number; y: number; size: number }
 
-type Px = (arg: Coords) => JSX.Element;
+type Px = (arg: PxArgs) => JSX.Element;
 
-function Pixel({ x, y }: Coords) {
-    const size = useOptions()[0].oidPixelSize
+function Pixel({ x, y, size }: PxArgs) {
     return <path d={`M ${x + size * 2 + 1},${y + size * 2 + 1} h${size} v${size} h-${size} z`} />
 }
 
-function at({ x = 0, y = 0 }: Partial<Coords>, F: Px) {
-    return ({ x: x1, y: y1 }: Coords) => <F x={x + x1} y={y + y1} />
+function at({ x = 0, y = 0 }: Partial<Pick<PxArgs, 'x' | 'y'>>, F: Px) {
+    return ({ x: x1, y: y1, size }: PxArgs) => <F x={x + x1} y={y + y1} size={size} />
 }
 
 const Special = at({ x: 3 }, Pixel)
 
-function shift(n: number) {
-    const size = useOptions()[0].oidPixelSize
+function shift(n: number, size: number) {
     return assertNotUndefined(({
         0: at({ x: size, y: size }, Pixel),
         1: at({ x: -size, y: size }, Pixel),
@@ -83,12 +82,12 @@ const frame = [
     ...([[[0, 2] as C, Special] as const])
 ]
 
-export function OIDCodePattern({ id, code }: { id: string; code: number }) {
+export function OIDCodePattern({ id, code, oidCodePixelSize }: { id: string; code: number; oidCodePixelSize: number; }) {
     const quart = (n: number) => n === 8 ? checksum(code) : Math.floor((code / (4 ** n)) % 4)
     const data = zip(cartesianProduct([3, 2, 1], [3, 2, 1]), range(8).map(quart).map(shift))
     return (
-        <pattern id={id} width={48} height={48} patternUnits="userSpaceOnUse" >
-            {[...data, ...frame].map(([[x, y], F]) => <F x={x * 12} y={y * 12} />)}
+        <pattern id={id} width={48} height={48} patternUnits="userSpaceOnUse">
+            {[...data, ...frame].map(([[x, y], F]) => <F key={`${x}${y}`} x={x * 12} y={y * 12} size={oidCodePixelSize} />)}
         </pattern >
     )
 }
@@ -97,30 +96,18 @@ export type OIDCodeProps = {
     width: number;
     height: number;
     code: number;
-    dpmm?: number;
+    oidCodePixelSize: number;
+} & ({ dpmm: number; } | { dpi: number; })
+
+export function oidCodeDataUrl(props: OIDCodeProps & SVGAttributes<SVGSVGElement>) {
+    const xml = renderToString(<OIDCode  {...props} />)
+    return `data:image/svg+xml;base64,${btoa(xml)}`
 }
 
-// @ts-ignore
-export function oidCodeDataUrl({ code, width, height, dpmm, ...props }: OIDCodeProps & { dpmm: number } & SVGAttributes<SVGSVGElement>) {
-    return ""
-    // const anchor = document.createElement('div')
-    // const root = createRoot(anchor)
-    // anchor.style.visibility = 'none'
-    // document.body.appendChild(anchor)
-    // document.getElementsByClassName('app-inner')[0].appendChild(anchor)
-    // root.render(<OIDCode code={code} width={width} height={height} dpmm={dpmm} {...props} />)
-    // console.log("FOO", anchor)
-    // const s = `data:image/svg+xml;base64,${btoa(new XMLSerializer().serializeToString(anchor.firstChild!))}`
-    // root.unmount()
-    // anchor.remove()
-    // return s
-}
-
-export function OIDCode({ code, width, height, dpmm: dpmmProp, ...props }: OIDCodeProps & SVGAttributes<SVGSVGElement>) {
-    // convert dpi to dpmm
-    const dpmm = dpmmProp ?? useOptions()[0].oidCodeResolution * 0.039370079
-
+export function OIDCode({ code, width, height, oidCodePixelSize, ...props }: OIDCodeProps & SVGAttributes<SVGSVGElement>) {
     const id = `pattern.${code}`
+    const dpmm = "dpi" in props ? props.dpi / 25.4 : props.dpmm
+
 
     return (
         <svg xmlns="http://www.w3.org/2000/svg"
@@ -129,7 +116,7 @@ export function OIDCode({ code, width, height, dpmm: dpmmProp, ...props }: OIDCo
             viewBox={`0 0 ${width * dpmm} ${height * dpmm}`}
             {...props} >
             <defs>
-                <OIDCodePattern code={code} id={id} />
+                <OIDCodePattern code={code} id={id} oidCodePixelSize={oidCodePixelSize} />
             </defs>
             <rect width={width * dpmm} height={height * dpmm} fill={`url(#${id})`} />
         </svg>

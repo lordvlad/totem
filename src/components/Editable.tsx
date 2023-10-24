@@ -1,12 +1,12 @@
 import { useRef, useState, useEffect, useCallback, KeyboardEvent } from "react";
 
-function setCaret(el: HTMLElement, pos = 0, end?: number) {
+function setCaret(el: Node, pos = 0, end?: number) {
     const range = document.createRange()
 
-    range.setStart(el.childNodes[0], pos)
+    range.setStart(el, pos)
 
     try {
-        if (typeof end !== "undefined") range.setEnd(el.childNodes[0], end)
+        if (typeof end !== "undefined") range.setEnd(el, end)
         else range.collapse(true)
     } catch (e) {
         range.collapse(true)
@@ -45,8 +45,9 @@ export function Editable({
     }, [text, onChange]);
 
     useEffect(() => {
-        if (isFocused && ref.current)
-            setCaret(ref.current, 0, ref.current.childNodes[0].textContent?.length);
+        if (isFocused && ref.current && ref.current.childNodes.length) {
+            setCaret(ref.current.childNodes[0], 0, ref.current.childNodes[0].textContent?.length);
+        }
     }, [isFocused, ref.current])
 
     const keyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {

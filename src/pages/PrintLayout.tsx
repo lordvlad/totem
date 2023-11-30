@@ -1,12 +1,12 @@
-import { Box, Card, ColorSchemeProvider, Grid, MantineProvider, Sx, Text, Title, useMantineColorScheme } from "@mantine/core"
+import { Box, Card, Grid, Text, Title, useMantineColorScheme } from "@mantine/core"
 import { assert, is } from "tsafe"
 import { oidCodeDataUrl } from "../components/OIDCode/OIDCode"
 // import { OIDCode, oidCodeDataUrl } from "../components/OIDCode/OIDCode"
 // import { useI18n } from "../i18n/i18n"
-import { Options, TableOptions, TileOptions, useOptions } from "../library/options"
-import { useLibrary } from "../library/useLibrary"
-import { Track } from "../library/track"
 import { AlbumArt } from "../composites/TracksPanel"
+import { useLibrary } from "../stores/library"
+import { Options, TableOptions, TileOptions, useOptions } from "../stores/options"
+import { Track } from "../util/mp3/track"
 
 function PrintRow(/* { track, dpmm }: { track: Track; dpmm: number }*/) {
     // const { colorScheme } = useMantineColorScheme()
@@ -53,7 +53,7 @@ function PrintTile({ track, dpmm }: { track: Track; dpmm: number }) {
                 <Box style={{ zIndex: 999, position: 'absolute', bottom: 0, right: 0, left: 0, top: 0, backgroundImage: `url(${backgroundImage})` }} />
             </Card.Section>
             <Card.Section><AlbumArt track={track} /></Card.Section>
-            <Title order={4} sx={{ textTransform: 'uppercase', textOverflow: 'ellipsis' }}>{track.title}</Title>
+            <Title order={4} style={{ textTransform: 'uppercase', textOverflow: 'ellipsis' }}>{track.title}</Title>
             <Text>{track.album}</Text>
             <Text>{track.artist}</Text>
         </Card>
@@ -109,37 +109,20 @@ const paperDimensions: Record<Options['paperSize'], { height: string, width: str
 }
 
 export function PrintPreview() {
-    const { colorScheme } = useMantineColorScheme()
     const { layout, paperSize } = useOptions()[0]
 
-    const sx: Sx = {
-        borderColor: colorScheme === 'dark' ? 'white' : 'black',
+    const sx = {
+        background: 'white',
         borderWidth: '1px',
         borderStyle: 'solid',
         ...paperDimensions[paperSize],
     }
 
-    return <Box sx={sx}>{(() => {
-        switch (layout) {
-            case "tiles": return <TilePrintLayout />
-            case "table": return <TablePrintLayout />
-        }
-    })()}</Box>
+    return <Box style={sx}>{layout === 'tiles' ? <TilePrintLayout /> : <TablePrintLayout />}</Box>
 }
 
 export function PrintLayout() {
     const { layout } = useOptions()[0]
 
-    return (
-        <ColorSchemeProvider colorScheme="light" toggleColorScheme={_ => void 0} >
-            <MantineProvider theme={{ colorScheme: 'light' }} >
-                <Box className="print-only">{(() => {
-                    switch (layout) {
-                        case "tiles": return <TilePrintLayout />
-                        case "table": return <TablePrintLayout />
-                    }
-                })()}</Box>
-            </MantineProvider>
-        </ColorSchemeProvider >
-    )
+    return <Box className="print-only">{layout === 'tiles' ? <TilePrintLayout /> : <TablePrintLayout />}</Box>
 }

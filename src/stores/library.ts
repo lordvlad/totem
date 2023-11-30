@@ -1,13 +1,13 @@
 /// <reference types="@types/wicg-file-system-access" />
 
-import { useState, useEffect } from 'react';
-import { type Mp3WebWorkerRequest, type Mp3WebWorkerResponse } from './decoder';
-import { distinct } from '../util/distinct';
 import { delMany, getMany, keys, setMany } from 'idb-keyval';
-import { Track } from './track';
+import { useEffect, useState } from 'react';
+import { distinct } from '../util/distinct';
 import { hydrate } from '../util/hydrate';
+import { type Mp3WebWorkerRequest, type Mp3WebWorkerResponse } from '../util/mp3/decoder';
+import { Track } from '../util/mp3/track';
 
-const worker = new Worker(new URL('./decoder.worker.ts', import.meta.url), { type: 'module' })
+const worker = new Worker(new URL('../util/mp3/decoder.worker.ts', import.meta.url), { type: 'module' })
 
 const listeners = new Map();
 
@@ -117,7 +117,7 @@ function reduce(s: typeof state, action: A): S {
 }
 
 
-worker.addEventListener("error", e => console.error(e, JSON.stringify(e), e.message))
+worker.addEventListener("error", e => console.error(e, JSON.stringify(e), e.message), { capture: true })
 worker.addEventListener("messageerror", e => console.error(e))
 worker.addEventListener("message", ({ data }) => dispatch(data))
 

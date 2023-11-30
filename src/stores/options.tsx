@@ -1,6 +1,6 @@
-import { ReactNode, createContext, useContext, Dispatch, SetStateAction } from "react"
+import { useLocalStorage } from "@mantine/hooks"
+import { Dispatch, ReactNode, SetStateAction, createContext, useContext, useEffect, useState, useCallback } from "react"
 import { id } from "tsafe/id"
-import { useLocalStorageState } from "../hooks/useLocalStorageState"
 
 const initialCommonOptions = {
     oidCodeResolution: 1200,
@@ -42,12 +42,31 @@ export const initialPrintOptions = id<Options>({
 export const OptionsContext = createContext(id<readonly [Options, Dispatch<SetStateAction<Options>>] | undefined>(undefined))
 
 export function LocalStorageOptionsProvider({ children }: { children: ReactNode }) {
-    const value = useLocalStorageState('options', initialPrintOptions)
-    return <OptionsContext.Provider value={value}>{children}</OptionsContext.Provider>
+    const [opt, setOpt] = useLocalStorage({ key: 'options', defaultValue: initialPrintOptions })
+    return <OptionsContext.Provider value={[opt||initialPrintOptions, setOpt]}>{children}</OptionsContext.Provider>
 }
 
 export function useOptions() {
     const val = useContext(OptionsContext)
     if (typeof val === "undefined") throw new Error("Option context missing")
     return val
+}
+
+const state = { open: false }
+const listeners = new Set<Dispatch<SetStateAction<boolean>>>()
+
+export function useOptionsPanel() {
+    const [s, _setS] = useState(state.open)
+
+    useEffect(() => {
+        listeners.add(_setS)
+        return () => { listeners.delete(_setS) }
+    }, [])
+
+    const setS: Dispatch<SetStateAction<boolean>> = useCallback((n: SetStateAction<boolean>) => {
+        const v = state.open= typeof n === 'function' ? n(state.open) : n
+        listeners.forEach(l => l(v))
+    }, [])
+
+    return [s, setS] as const
 }

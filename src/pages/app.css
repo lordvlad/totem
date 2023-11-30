@@ -16,7 +16,7 @@
     }
 
     .print-only {
-        display: initial !important;
+        display: block !important;
     }
 
     body {
@@ -50,4 +50,9 @@
 
 footer>.item {
     margin: 0 !important;
+}
+
+button.mantine-CloseButton-root.mantine-Drawer-close {
+    margin-left: 0;
+    margin-right: auto;
 }

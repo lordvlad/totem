@@ -1,6 +1,6 @@
 import { Button, Menu } from "@mantine/core"
-import { isKnownLocale, locales, useLocale } from "../i18n/i18n"
-import Globe from "../icons/Globe"
+import Globe from "../components/icons/Globe"
+import { isKnownLocale, locales, useLocale } from "../util/i18n/i18n"
 
 const sysLocale = navigator.language
 
@@ -9,7 +9,7 @@ export function LocalePicker() {
 
   return <Menu shadow="md" width={100}>
     <Menu.Target>
-      <Button variant="outline" rightIcon={<Globe />} > {locales[locale] || locale} </Button>
+      <Button variant="outline" rightSection={<Globe />} > {locales[locale || 'en-US'] || locale} </Button>
     </Menu.Target>
     <Menu.Dropdown>
       {isKnownLocale(sysLocale) && <Menu.Item onClick={() => setLocale(sysLocale)}>Auto</Menu.Item>}

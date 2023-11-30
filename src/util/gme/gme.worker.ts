@@ -7,7 +7,7 @@ declare const self: WorkerGlobalScope;
 import { fromWritablePort } from "remote-web-streams";
 import { get } from "idb-keyval";
 import { isReq, build, type MediaTableItem, Req } from "./gme";
-import { singleChunkStream } from "../util/singleChunkStream";
+import { singleChunkStream } from "../singleChunkStream";
 
 
 async function fetchMedia({ track }: MediaTableItem) {
@@ -19,7 +19,7 @@ async function fetchMedia({ track }: MediaTableItem) {
 function doBuild({ event: ignored, writablePort, ...cfg }: Req) {
     build(cfg, fetchMedia)
         .pipeTo(fromWritablePort<Uint8Array>(writablePort) as WritableStream<Uint8Array>)
-        .catch(e => postMessage({ event: "error", error: String(e) }))
+        .catch((e: unknown) => postMessage({ event: "error", error: String(e) }))
 }
 
 self.addEventListener("error", e => console.error(e))

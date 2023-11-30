@@ -1,37 +1,34 @@
-import { Button, ColorScheme } from "@mantine/core"
-import { useCallback } from "react"
-import { useColorScheme } from "../hooks/useThemeType"
-import { useI18n } from "../i18n/i18n"
-import Moon from "../icons/Moon"
-import Sun from "../icons/Sun"
+import { Button, useMantineColorScheme } from "@mantine/core"
+import { useCallback, useEffect } from "react"
+import Moon from "../components/icons/Moon"
+import Sun from "../components/icons/Sun"
+import { useI18n } from "../util/i18n/i18n"
 
 
 export function ThemePicker() {
     const i18n = useI18n()
-    const { setTheme, raw } = useColorScheme()
+    const { colorScheme, setColorScheme } = useMantineColorScheme()
 
-    console.log("raw", raw)
-
-    function toggle() {
-        setTheme((t: ColorScheme | undefined) => {
-            switch (t) {
-                case 'dark': return 'light'
-                case 'light': return undefined
-                default: return 'dark'
-            }
-        })
-    }
-
-    const labels = useCallback((c: ColorScheme | undefined) => {
-        return (c ? { 'light': i18n`light`, 'dark': i18n`dark` }[c] : i18n`auto`) || i18n`auto`
-    }, [i18n])
-    const icons = useCallback((c: ColorScheme | undefined) => {
-        return (c ? { 'light': <Sun />, 'dark': <Moon /> }[c] : <Moon />) || <Moon />
+    useEffect(() => {
+        setTimeout(() => setColorScheme('auto'), 0)
+        setTimeout(() => setColorScheme(colorScheme), 0)
     }, [])
 
-    return <Button
-        w={120}
-        variant="outline"
-        onClick={toggle}
-        rightIcon={icons(raw)}> {labels(raw)} </Button>
+    const toggle = useCallback(() => {
+        setColorScheme(({ "light": "dark", "dark": "auto", "auto": "light" } as const)[colorScheme])
+    }, [colorScheme])
+
+    const labels = useCallback((c: "light" | "dark" | "auto") => {
+        return { 'light': i18n`light`, 'dark': i18n`dark`, 'auto': i18n`auto` }[c]
+    }, [i18n])
+
+    const icons = useCallback((c: "light" | "dark" | "auto") => {
+        return { 'light': <Sun />, 'dark': <Moon />, 'auto': <Moon /> }[c]
+    }, [])
+
+    return (
+        <Button w={120} variant="outline" onClick={toggle} rightSection={icons(colorScheme)}>
+            {labels(colorScheme)}
+        </Button>
+    )
 }

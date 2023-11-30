@@ -13,14 +13,14 @@ export class Deferred<T = any>  {
     readonly promise: Promise<T>;
     // @ts-ignore resolve _is_ initialized in constructor
     readonly resolve: (value: T | PromiseLike<T>) => void;
-    // @ts-ignore resolve _is_ initialized in constructor
+    // @ts-ignore reject _is_ initialized in constructor
     readonly reject: (reason?: any) => void;
 
     constructor() {
         this.promise = new Promise((resolve, reject) => {
             // @ts-ignore resolve _is_ initialized in constructor
             this.resolve = resolve;
-            // @ts-ignore resolve _is_ initialized in constructor
+            // @ts-ignore reject _is_ initialized in constructor
             this.reject = reject;
         })
     }

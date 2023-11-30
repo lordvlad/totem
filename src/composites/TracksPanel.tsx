@@ -1,24 +1,46 @@
-import { Button, Card, Checkbox, Code, Table, Text, Title, Image, ImageProps } from "@mantine/core"
-import { useCallback, KeyboardEvent } from "react"
-import { Editable } from "../components/Editable"
-import { useDropZone } from "../hooks/useDropZone"
-import { useI18n } from "../i18n/i18n"
-import { Track } from "../library/track"
-import { useLibrary } from "../library/useLibrary"
-import { useSelection } from "../library/useSelection"
-import { pd } from "../util/preventDefault"
-import Trash from "../icons/Trash"
+import '@mantine/dropzone/styles.css';
 
-export function AlbumArt({ track: { title, art: { mimetype, data } }, ...props }: { track: Track } & ImageProps) {
+import { Button, Card, Checkbox, Code, Table, Text, Title, Image, ImageProps } from "@mantine/core"
+import { Dropzone } from "@mantine/dropzone"
+import { useCallback, KeyboardEvent, useState } from "react"
+import { Editable } from "../components/Editable/Editable"
+import { useI18n } from "../util/i18n/i18n"
+import { Track } from "../util/mp3/track"
+import { useLibrary } from "../stores/library"
+import { useSelection } from "../stores/selection"
+import { pd } from "../util/preventDefault"
+import Trash from "../components/icons/Trash"
+
+type AlbumArtProps = ImageProps & {
+    width?: number;
+    height?: number;
+    track: Track;
+}
+export function AlbumArt({ track: { title, art: { mimetype, data } }, ...props }: AlbumArtProps) {
     const url = `data:${mimetype};base64,${btoa(String.fromCharCode(...new Uint8Array(data)))}`
     return <Image src={url} alt={title} {...props} />
 }
 
 export function TracksPanel() {
-    const i18n = useI18n()
-    const { onDrop, remove, tracks, update } = useLibrary(x => x)
+    const { onDrop } = useLibrary(x => x)
+    const [isOver, setOver] = useState(false)
+    return (
+        <Dropzone
+            enablePointerEvents={true}
+            activateOnClick={false}
+            onDragOver={() => setOver(true)}
+            onDragLeave={() => setOver(false)}
+            onAbort={() => setOver(false)}
+            onDrop={items => onDrop(items as unknown as DataTransferItem[])}>
+            <TracksPanelInner isOver={isOver} />
+        </Dropzone>
+    )
+}
 
-    const { ref, isOver } = useDropZone({ onDrop })
+function TracksPanelInner({ isOver }: { isOver: boolean }) {
+    const i18n = useI18n()
+    const { remove, tracks, update } = useLibrary(x => x)
+
     const { selected, toggle, reset, select } = useSelection()
 
     const onEscape = (e: KeyboardEvent) => {
@@ -68,7 +90,7 @@ export function TracksPanel() {
 
     const renderAction = useCallback((track: Track) => {
         return (
-            <Button color="red" compact fz="xs" onClick={pd(() => remove(track))} leftIcon={<Trash height="12pt" width="12pt" />}>
+            <Button color="red" fz="xs" onClick={pd(() => remove(track))} leftSection={<Trash height="12pt" width="12pt" />}>
                 {i18n`Remove`}
             </Button>
         )
@@ -80,7 +102,7 @@ export function TracksPanel() {
 
     if (!tracks.length) {
         return (
-            <Card shadow="md" ref={ref} color={isOver ? 'green' : undefined}>
+            <Card shadow="md" color={isOver ? 'green' : undefined}>
                 <Title order={4} my={0}>{i18n`Your music files will show up here`}</Title>
                 <Text>{i18n`Use the`} <Code>{i18n`Choose Files`}</Code> {i18n`button to pick some files or simply drag-and-drop them on this card`}.</Text>
             </Card>
@@ -98,7 +120,7 @@ export function TracksPanel() {
     />)
 
     return (
-        <Table highlightOnHover ref={ref} >
+        <Table highlightOnHover  >
             <thead>
                 <tr>
                     <th>{label}</th>

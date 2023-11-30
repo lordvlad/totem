@@ -1,25 +1,23 @@
+import '@mantine/core/styles.css';
+
+import { MantineProvider } from '@mantine/core'
 import { createRoot } from 'react-dom/client'
-import { LocaleContext, useLocale } from './i18n/i18n'
-import { useColorScheme } from './hooks/useThemeType'
-import { App } from './app'
+import { App } from './pages/App'
 import { PrintLayout } from './pages/PrintLayout'
-import { LocalStorageOptionsProvider } from './library/options'
-import { ColorSchemeProvider, MantineProvider } from '@mantine/core'
+import { LocalStorageOptionsProvider } from './stores/options'
+import { LocaleContext, useLocale } from './util/i18n/i18n'
 
 export function Main() {
     const lang = useLocale()[0]
-    const { theme, setTheme } = useColorScheme()
 
     return (
-        <LocaleContext.Provider value={lang}>
-            <ColorSchemeProvider colorScheme={theme} toggleColorScheme={setTheme}>
-                <MantineProvider theme={{ colorScheme: theme }} withGlobalStyles withNormalizeCSS>
-                    <LocalStorageOptionsProvider>
-                        <App />
-                        <PrintLayout />
-                    </LocalStorageOptionsProvider>
-                </MantineProvider>
-            </ColorSchemeProvider>
+        <LocaleContext.Provider value={lang || "en-US"}>
+            <MantineProvider>
+                <LocalStorageOptionsProvider>
+                    <App />
+                    <PrintLayout />
+                </LocalStorageOptionsProvider>
+            </MantineProvider>
         </LocaleContext.Provider>
     )
 }

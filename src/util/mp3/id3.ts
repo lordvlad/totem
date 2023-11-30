@@ -1,4 +1,4 @@
-import { concatBuffers } from "../util/concatBuffers"
+import { concatBuffers } from "../concatBuffers"
 
 const asciiDecoder = new TextDecoder("ascii")
 const utf8Decoder = new TextDecoder("utf8")

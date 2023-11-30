@@ -1,10 +1,8 @@
 import { createContext, useCallback, useContext } from "react"
-import { useLocalStorageState } from "../hooks/useLocalStorageState"
-
+import { useLocalStorage } from "@mantine/hooks"
+import { zip } from "../zip"
 
 // FIXME find a way to make this lazy
-
-import { zip } from "../util/zip"
 import de_DE from './de_DE.json'
 
 export const locales = {
@@ -31,7 +29,7 @@ function getLocalizedLiterals(locale: Locale, literals: string[] | TemplateStrin
 
 export function useLocale() {
     const initialLocale = (((navigator.language as Locale) in locales) ? navigator.language : 'en-US') as Locale
-    return useLocalStorageState('lang', initialLocale)
+    return useLocalStorage({key:'lang', defaultValue: initialLocale})
 }
 
 export const LocaleContext = createContext<Locale>("en-US")

@@ -7,10 +7,10 @@ import { join } from "path"
 import { id } from "tsafe"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
-import { Track } from "../../library/track"
-import { hydrate } from "../../util/hydrate"
-import { play, tttool } from "../../util/tttool"
-import { createReadStream, createWriteStream } from "../../util/webStreams"
+import { hydrate } from "../../hydrate"
+import { Track } from "../../mp3/track"
+import { play, tttool } from "../../tttool"
+import { createReadStream, createWriteStream } from "../../webStreams"
 import { MediaTableItem, build, type GmeBuildConfig } from "../gme"
 
 

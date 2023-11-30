@@ -1,10 +1,10 @@
 // mostly informed by https://raw.githubusercontent.com/entropia/tip-toi-reveng/master/GME-Format.md
 
-import { type Track } from "../library/track";
+import { type Track } from "../mp3/track";
 import { id } from "tsafe"
-import { concatStreams } from "../util/concatStreams";
-import { singleChunkStream } from "../util/singleChunkStream";
-import { concatBuffers } from "../util/concatBuffers";
+import { concatStreams } from "../concatStreams";
+import { singleChunkStream } from "../singleChunkStream";
+import { concatBuffers } from "../concatBuffers";
 
 type ScriptValue = { value: number; }
 type ScriptRegister = { register: number; }

@@ -12,7 +12,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: 1.0.0
+          bun-version: latest
       - name: Install dependencies
         run: bun install
       - name: Test project

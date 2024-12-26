@@ -1,6 +1,8 @@
 import { Center, Container, Drawer, Loader } from '@mantine/core'
 import { Suspense } from 'react'
+// @ts-ignore
 import Readme_de_DE from '../../../README.de_DE.md'
+// @ts-ignore
 import Readme_en_EN from '../../../README.md'
 import { useLocale } from '../../hooks/useI18n'
 import { useHelpPanel } from './useHelpPanel'

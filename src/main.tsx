@@ -1,25 +1,20 @@
-import '@mantine/core/styles.css';
+import '@mantine/core/styles.css'
 
 import { MantineProvider } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
 import { createRoot } from 'react-dom/client'
-import { App } from './pages/App'
-import { PrintLayout } from './pages/PrintLayout'
-import { LocalStorageOptionsProvider } from './stores/options'
-import { LocaleContext, useLocale } from './util/i18n/i18n'
+import { App } from './components/App'
+import { PrintLayout } from './components/PrintLayout'
 
 export function Main() {
-    const lang = useLocale()[0]
 
-    return (
-        <LocaleContext.Provider value={lang || "en-US"}>
-            <MantineProvider>
-                <LocalStorageOptionsProvider>
-                    <App />
-                    <PrintLayout />
-                </LocalStorageOptionsProvider>
-            </MantineProvider>
-        </LocaleContext.Provider>
-    )
+  return (
+    <MantineProvider>
+      <Notifications style={{ position: 'fixed', top: '1em', left: '25%', right: '25%' }} />
+      <App />
+      <PrintLayout />
+    </MantineProvider>
+  )
 }
 
 const root = createRoot(document.getElementById('app') as HTMLElement)

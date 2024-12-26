@@ -1,16 +1,15 @@
-import { OIDCode, type OIDCodeProps } from "./OIDCode";
+import { OIDCode, type OIDCodeProps } from './OIDCode'
 
 type Arg = OIDCodeProps & { dpi: number, size?: number }
 
 export default {
   title: 'Components/OIDCode',
   component: ({ size, dpi, ...props }: Arg) => {
-
     return (
-      <div style={{ display: "inline-block", padding: 0, border: 'solid red 1px' }}><OIDCode {...props} dpi={dpi} /></div>
+      <div style={{ display: 'inline-block', padding: 0, border: 'solid red 1px' }}><OIDCode {...props} dpi={dpi} /></div>
     )
   }
-};
+}
 
 export const Default: { args: Arg } = {
   args: {
@@ -31,5 +30,4 @@ export const DEBUG: { args: Arg } = {
     size: 3,
     oidCodePixelSize: 3
   }
-};
-
+}

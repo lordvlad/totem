@@ -1,10 +1,9 @@
 import { Center, Container, Drawer, Loader } from '@mantine/core'
-import { Suspense, lazy } from 'react'
-import { useHelpPanel } from './useHelpPanel'
+import { Suspense } from 'react'
+import Readme_de_DE from '../../../README.de_DE.md'
+import Readme_en_EN from '../../../README.md'
 import { useLocale } from '../../hooks/useI18n'
-
-const Readme_en_EN = lazy(async () => await import('../../../README.md'))
-const Readme_de_DE = lazy(async () => await import('../../../README.de_DE.md'))
+import { useHelpPanel } from './useHelpPanel'
 
 export function HelpPanel() {
   const [open, setOpen] = useHelpPanel()

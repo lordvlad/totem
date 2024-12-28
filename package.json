@@ -32,6 +32,8 @@
     "lodash.omit": "^4.5.0",
     "musicmetadata": "^2.0.5",
     "node-hmr": "^1.4.0",
+    "prettier": "^3.4.2",
+    "prettier-eslint": "^16.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "remote-web-streams": "^0.2.0",
@@ -44,6 +46,7 @@
     "vite": "^6.0.5",
     "vite-plugin-checker": "^0.8.0",
     "vitest": "^2.1.8",
+    "webworker": "^0.8.4",
     "whatwg-streams": "^0.1.1",
     "yauzl": "^3.2.0"
   },
@@ -60,9 +63,5 @@
     "test:debug": "vitest run -t 'gme should produce a valid gme file'"
   },
   "type": "module",
-  "dependencies": {
-    "prettier": "^3.4.2",
-    "prettier-eslint": "^16.3.0",
-    "webworker": "^0.8.4"
-  }
+  "dependencies": {}
 }

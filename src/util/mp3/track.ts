@@ -9,6 +9,8 @@ export class Track implements Pick<ID3, "fileName" | "frames"> {
   readonly data: Uint8Array | null = null;
 
   frame<T = unknown>(id: FrameId, data?: T) {
+    // @ts-expect-error
+    if (!this.frames) this.frames = {}
     const f1 = this.frames[id];
     const f2: Frame | undefined = Array.isArray(f1) ? f1[0] : f1;
     if (arguments.length === 2) {

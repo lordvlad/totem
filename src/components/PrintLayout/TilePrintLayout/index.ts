@@ -1,2 +1,2 @@
-export { TilePrintLayout } from './TilePrintLayout'
-export { PrintTile } from './PrintTile'
+export { TilePrintLayout } from "./TilePrintLayout";
+export { PrintTile } from "./PrintTile";

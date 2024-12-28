@@ -1,61 +1,60 @@
 body {
-    overflow-y: scroll;
+  overflow-y: scroll;
 }
 .foot {
-    vertical-align: middle;
+  vertical-align: middle;
 }
 
 .print-only {
-    display: none !important;
+  display: none !important;
 }
 
 @media print {
+  .no-print,
+  #geist-ui-drawer,
+  #geist-ui-tooltip,
+  #geist-ui-toast {
+    display: none !important;
+  }
 
-    .no-print,
-    #geist-ui-drawer,
-    #geist-ui-tooltip,
-    #geist-ui-toast {
-        display: none !important;
-    }
+  .print-only {
+    display: block !important;
+  }
 
-    .print-only {
-        display: block !important;
-    }
-
-    body {
-        background-color: white !important;
-    }
+  body {
+    background-color: white !important;
+  }
 }
 
 .editable {
-    width: 100%;
+  width: 100%;
 }
 
-.editable>input {
-    margin-left: -4px;
-    margin-right: -4px;
-    width: 100%;
+.editable > input {
+  margin-left: -4px;
+  margin-right: -4px;
+  width: 100%;
 }
 
 .checkbox:focus-within {
-    outline: -webkit-focus-ring-color auto 1px;
+  outline: -webkit-focus-ring-color auto 1px;
 }
 
 #geist-ui-drawer .content {
-    overflow: scroll;
-    max-height: 100vh;
+  overflow: scroll;
+  max-height: 100vh;
 }
 
-.link.with-icon>svg:first-child {
-    align-self: center;
-    margin-right: .5em;
+.link.with-icon > svg:first-child {
+  align-self: center;
+  margin-right: 0.5em;
 }
 
-footer>.item {
-    margin: 0 !important;
+footer > .item {
+  margin: 0 !important;
 }
 
 button.mantine-CloseButton-root.mantine-Drawer-close {
-    margin-left: 0;
-    margin-right: auto;
+  margin-left: 0;
+  margin-right: auto;
 }

@@ -1,3 +1,3 @@
 export function AlbumInfo() {
-  return <>TODO ...</>
+  return <>TODO ...</>;
 }

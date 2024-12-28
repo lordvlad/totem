@@ -1,1 +1,6 @@
-export { OIDCode, oidCodeDataUrl, OIDCodePattern, type OIDCodeProps } from './OIDCode';
+export {
+  OIDCode,
+  oidCodeDataUrl,
+  OIDCodePattern,
+  type OIDCodeProps,
+} from "./OIDCode";

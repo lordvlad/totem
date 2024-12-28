@@ -1,1 +1,1 @@
-export {Editable} from './Editable';
+export { Editable } from "./Editable";

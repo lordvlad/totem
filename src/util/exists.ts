@@ -1,12 +1,13 @@
-import { type PathLike } from 'fs'
-import { stat } from 'fs/promises'
+import type { PathLike } from "fs";
+import { stat } from "fs/promises";
 
-export async function exists (path: PathLike) {
+export async function exists(path: PathLike) {
   try {
-    await stat(path)
-    return true
+    await stat(path);
+    return true;
   } catch (e) {
-    if ((e as any).code === 'ENOENT') return false
-    throw e
+    if (!(e instanceof Error)) throw new Error(String(e));
+    if ("code" in e && e.code === "ENOENT") return false;
+    throw e;
   }
 }

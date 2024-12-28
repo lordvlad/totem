@@ -13,6 +13,8 @@
     "@mantine/nprogress": "^7.15.1",
     "@pity/vite-plugin-react-markdown": "^0.1.1",
     "@testing-library/react": "^14.0.0",
+    "@types/lodash.debounce": "^4.0.9",
+    "@types/lodash.merge": "^4.6.9",
     "@types/lodash.omit": "^4.5.8",
     "@types/musicmetadata": "^2.0.8",
     "@types/node": "^20.8.9",
@@ -21,9 +23,12 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/ui": "^2.1.8",
     "buffer": "^6.0.3",
+    "eslint": "^9.17.0",
+    "eslint-config-love": "^113.0.0",
     "idb-keyval": "^6.2.1",
     "jsdom": "^25.0.1",
     "lodash.debounce": "^4.0.8",
+    "lodash.merge": "^4.6.2",
     "lodash.omit": "^4.5.0",
     "musicmetadata": "^2.0.5",
     "node-hmr": "^1.4.0",
@@ -31,7 +36,6 @@
     "react-dom": "^19.0.0",
     "remote-web-streams": "^0.2.0",
     "svg2img": "^1.0.0-beta.2",
-    "ts-standard": "^12.0.2",
     "tsafe": "^1.8.5",
     "tsc-watch": "^6.2.1",
     "typed-web-workers": "^4.0.0",
@@ -47,7 +51,8 @@
   "scripts": {
     "prestart": "npm run build",
     "dev": "vite dev",
-    "lint": "ts-standard --fix",
+    "lint": "prettier src --check && eslint src",
+    "lint:fix": "prettier src --write && eslint src --fix",
     "test": "vitest run",
     "test:dev": "vitest watch --ui",
     "build": "vite build",
@@ -56,8 +61,8 @@
   },
   "type": "module",
   "dependencies": {
-    "@types/lodash.debounce": "^4.0.9",
-    "@types/lodash.merge": "^4.6.9",
-    "lodash.merge": "^4.6.2"
+    "prettier": "^3.4.2",
+    "prettier-eslint": "^16.3.0",
+    "webworker": "^0.8.4"
   }
 }

@@ -1,1 +1,1 @@
-export { useConfirm } from './useConfirm';
+export { useConfirm } from "./useConfirm";

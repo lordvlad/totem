@@ -6,69 +6,69 @@ language: de
 
 scripts:
   feldOL:
-  - $OL == 0? $OL := $turn J(here_now)
-  - $OL == 1? P(here_cross) J(next)
-  - $OL == 2? P(here_circle) J(next)
+    - $OL == 0? $OL := $turn J(here_now)
+    - $OL == 1? P(here_cross) J(next)
+    - $OL == 2? P(here_circle) J(next)
   feldOM:
-  - $OM == 0? $OM := $turn J(here_now)
-  - $OM == 1? P(here_cross) J(next)
-  - $OM == 2? P(here_circle) J(next)
+    - $OM == 0? $OM := $turn J(here_now)
+    - $OM == 1? P(here_cross) J(next)
+    - $OM == 2? P(here_circle) J(next)
   feldOR:
-  - $OR == 0? $OR := $turn J(here_now)
-  - $OR == 1? P(here_cross) J(next)
-  - $OR == 2? P(here_circle) J(next)
+    - $OR == 0? $OR := $turn J(here_now)
+    - $OR == 1? P(here_cross) J(next)
+    - $OR == 2? P(here_circle) J(next)
   feldML:
-  - $ML == 0? $ML := $turn J(here_now)
-  - $ML == 1? P(here_cross) J(next)
-  - $ML == 2? P(here_circle) J(next)
+    - $ML == 0? $ML := $turn J(here_now)
+    - $ML == 1? P(here_cross) J(next)
+    - $ML == 2? P(here_circle) J(next)
   feldMM:
-  - $MM == 0? $MM := $turn J(here_now)
-  - $MM == 1? P(here_cross) J(next)
-  - $MM == 2? P(here_circle) J(next)
+    - $MM == 0? $MM := $turn J(here_now)
+    - $MM == 1? P(here_cross) J(next)
+    - $MM == 2? P(here_circle) J(next)
   feldMR:
-  - $MR == 0? $MR := $turn J(here_now)
-  - $MR == 1? P(here_cross) J(next)
-  - $MR == 2? P(here_circle) J(next)
+    - $MR == 0? $MR := $turn J(here_now)
+    - $MR == 1? P(here_cross) J(next)
+    - $MR == 2? P(here_circle) J(next)
   feldUL:
-  - $UL == 0? $UL := $turn J(here_now)
-  - $UL == 1? P(here_cross) J(next)
-  - $UL == 2? P(here_circle) J(next)
+    - $UL == 0? $UL := $turn J(here_now)
+    - $UL == 1? P(here_cross) J(next)
+    - $UL == 2? P(here_circle) J(next)
   feldUM:
-  - $UM == 0? $UM := $turn J(here_now)
-  - $UM == 1? P(here_cross) J(next)
-  - $UM == 2? P(here_circle) J(next)
+    - $UM == 0? $UM := $turn J(here_now)
+    - $UM == 1? P(here_cross) J(next)
+    - $UM == 2? P(here_circle) J(next)
   feldUR:
-  - $UR == 0? $UR := $turn J(here_now)
-  - $UR == 1? P(here_cross) J(next)
-  - $UR == 2? P(here_circle) J(next)
+    - $UR == 0? $UR := $turn J(here_now)
+    - $UR == 1? P(here_cross) J(next)
+    - $UR == 2? P(here_circle) J(next)
 
   here_now:
-  - $turn == 1? $set += 1 P(here_now_cross) J(win_check)
-  - $turn == 2? $set += 1 P(here_now_circle) J(win_check)
+    - $turn == 1? $set += 1 P(here_now_cross) J(win_check)
+    - $turn == 2? $set += 1 P(here_now_circle) J(win_check)
 
   win_check:
-  - $OL == $turn? $ML == $turn? $UL == $turn? J(win)
-  - $OM == $turn? $MM == $turn? $UM == $turn? J(win)
-  - $OR == $turn? $MR == $turn? $UR == $turn? J(win)
-  - $OL == $turn? $OM == $turn? $OR == $turn? J(win)
-  - $ML == $turn? $MM == $turn? $MR == $turn? J(win)
-  - $UL == $turn? $UM == $turn? $UR == $turn? J(win)
-  - $OL == $turn? $MM == $turn? $UR == $turn? J(win)
-  - $OR == $turn? $MM == $turn? $UL == $turn? J(win)
-  - $set == 9? P(draw) J(reset)
-  - $turn == 1? $turn := 2 J(next)
-  - $turn == 2? $turn := 1 J(next)
+    - $OL == $turn? $ML == $turn? $UL == $turn? J(win)
+    - $OM == $turn? $MM == $turn? $UM == $turn? J(win)
+    - $OR == $turn? $MR == $turn? $UR == $turn? J(win)
+    - $OL == $turn? $OM == $turn? $OR == $turn? J(win)
+    - $ML == $turn? $MM == $turn? $MR == $turn? J(win)
+    - $UL == $turn? $UM == $turn? $UR == $turn? J(win)
+    - $OL == $turn? $MM == $turn? $UR == $turn? J(win)
+    - $OR == $turn? $MM == $turn? $UL == $turn? J(win)
+    - $set == 9? P(draw) J(reset)
+    - $turn == 1? $turn := 2 J(next)
+    - $turn == 2? $turn := 1 J(next)
 
   win:
-  - $turn == 1? P(player1wins) $turn := 2 J(reset)
-  - $turn == 2? P(player2wins) $turn := 1 J(reset)
+    - $turn == 1? P(player1wins) $turn := 2 J(reset)
+    - $turn == 2? P(player2wins) $turn := 1 J(reset)
 
   reset: $set:=0 $OL:=0 $OM:=0 $OR:=0 $ML:=0 $MM:=0 $MR:=0 J(reset2)
   reset2: $UL:=0 $UM:=0 $UR:=0 J(next)
 
   next:
-  - $turn == 1? P(player1)
-  - $turn == 2? P(player2)
+    - $turn == 1? P(player1)
+    - $turn == 2? P(player2)
 
 speak:
   welcome: "Willkommen bei Tic-Tac-Tiptoi."

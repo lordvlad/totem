@@ -9,23 +9,23 @@
  *     return promise
  * @returns a Deferred
  */
-export class Deferred<T = any> {
-  readonly promise: Promise<T>
+export class Deferred<T> {
+  readonly promise: Promise<T>;
   // @ts-expect-error resolve _is_ initialized in constructor
-  readonly resolve: (value: T | PromiseLike<T>) => void
+  readonly resolve: (value: T | PromiseLike<T>) => void;
   // @ts-expect-error reject _is_ initialized in constructor
-  readonly reject: (reason?: any) => void
+  readonly reject: (reason?: unknown) => void;
 
-  constructor () {
-    this.promise = new Promise((resolve, reject) => {
+  constructor() {
+    this.promise = new Promise<T>((resolve, reject) => {
       // @ts-expect-error resolve _is_ initialized in constructor
-      this.resolve = resolve
+      this.resolve = resolve;
       // @ts-expect-error reject _is_ initialized in constructor
-      this.reject = reject
-    })
+      this.reject = reject;
+    });
   }
 }
 
-export function deferred<T = any> () {
-  return new Deferred<T>()
+export function deferred<T = void>() {
+  return new Deferred<T>();
 }

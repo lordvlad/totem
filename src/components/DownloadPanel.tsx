@@ -13,28 +13,40 @@ import { type GmeBuildConfig } from "../util/gme/gme";
 import { useGmeBuilder } from "../util/gme/useGmeBuilder";
 
 export function DownloadPanel() {
-  const { productId, playAllOid, stopOid, replayOid, penLanguage: language, projectName } = useOptions()[0]
-  const i18n = useI18n()
-  const { value: { tracks } } = useLibrary()
-  const [isBundling, setIsBundling] = useState(false)
+  const {
+    productId,
+    playAllOid,
+    stopOid,
+    replayOid,
+    penLanguage: language,
+    projectName,
+  } = useOptions()[0];
+  const i18n = useI18n();
+  const {
+    value: { tracks },
+  } = useLibrary();
+  const [isBundling, setIsBundling] = useState(false);
 
-  const { build } = useGmeBuilder()
+  const { build } = useGmeBuilder();
   const onBundleClick = useCallback(async () => {
-    if (tracks.length === 0) return
+    if (tracks.length === 0) return;
 
-    setIsBundling(true)
+    setIsBundling(true);
     try {
-      const scripts: GmeBuildConfig['scripts'] = {
+      const scripts: GmeBuildConfig["scripts"] = {
         [playAllOid]: [
           {
             conditions: [],
             actions: [
-              { cmd: 'playAllRange', param: { value: tracks.length + 1 | (1 << 8) } }
+              {
+                cmd: "playAllRange",
+                param: { value: (tracks.length + 1) | (1 << 8) },
+              },
             ],
             playlist: [],
-          }
-        ]
-      }
+          },
+        ],
+      };
 
       const cfg: GmeBuildConfig = {
         tracks,
@@ -43,52 +55,67 @@ export function DownloadPanel() {
         scripts,
         stopOid: stopOid,
         replayOid: replayOid,
-      }
+      };
 
       const handle: FileSystemFileHandle = await window.showSaveFilePicker({
         suggestedName: `Totem - ${projectName}.gme`,
         types: [
           {
-            description: 'GME',
+            description: "GME",
             accept: {
-              'application/gme': ['.gme']
-            }
-          }
-        ]
-      })
+              "application/gme": [".gme"],
+            },
+          },
+        ],
+      });
 
-      const stream = await handle.createWritable()
-      await build(cfg).pipeTo(stream)
+      const stream = await handle.createWritable();
+      await build(cfg).pipeTo(stream);
       notifications.show({
-        title: 'Success',
-        message: 'Saved to disk',
+        title: "Success",
+        message: "Saved to disk",
         autoClose: 10 * 1000,
-        icon: <Feather />
-      })
+        icon: <Feather />,
+      });
     } catch (e) {
       notifications.show({
-        title: 'Error',
+        title: "Error",
         message: String(e),
         autoClose: 10 * 1000,
-        icon: <AlertTriangle />
-      })
+        icon: <AlertTriangle />,
+      });
     } finally {
-      setIsBundling(false)
+      setIsBundling(false);
     }
-  }, [tracks, playAllOid, stopOid, replayOid, productId, language, projectName])
+  }, [
+    tracks,
+    playAllOid,
+    stopOid,
+    replayOid,
+    productId,
+    language,
+    projectName,
+  ]);
 
-  const [printHintRead, setPrintHintRead] = useLocalStorage({ key: 'print-hint-read', defaultValue: false })
-  const [printHintOpened, { open: openPrintHint, close: closePrintHint }] = useDisclosure(false);
-
+  const [printHintRead, setPrintHintRead] = useLocalStorage({
+    key: "print-hint-read",
+    defaultValue: false,
+  });
+  const [printHintOpened, { open: openPrintHint, close: closePrintHint }] =
+    useDisclosure(false);
 
   const onPrintClick = useCallback(() => {
-    if (printHintRead) { window.print() } else { openPrintHint() }
-  }, [printHintRead])
+    if (printHintRead) {
+      window.print();
+    } else {
+      openPrintHint();
+    }
+  }, [printHintRead]);
 
   const onPrintHintClose = useCallback(() => {
-    closePrintHint()
-    setTimeout(() => window.print(), 1)
-  }, [closePrintHint])
+    closePrintHint();
+    setTimeout(() => window.print(), 1);
+  }, [closePrintHint]);
 
   return (
     <>
@@ -106,25 +133,34 @@ export function DownloadPanel() {
           pr={8}
           disabled={isBundling || tracks.length === 0}
           onClick={onPrintClick}
-          leftSection={<Printer {...iconStyle} />} >
+          leftSection={<Printer {...iconStyle} />}
+        >
           {i18n`Print`}
         </Button>
       </Group>
 
-
-      <Modal withCloseButton={false} opened={printHintOpened} onClose={onPrintHintClose} title={i18n`Print`} centered>
+      <Modal
+        withCloseButton={false}
+        opened={printHintOpened}
+        onClose={onPrintHintClose}
+        title={i18n`Print`}
+        centered
+      >
         {i18n`For optimal results in chrome, make sure to open 'More Settings' in the print dialog and then:`}
         <ul>
           <li>{i18n`Uncheck 'Headers and footers'`}</li>
           <li>{i18n`Check 'Background graphics'`}</li>
         </ul>
 
-        <Flex gap="xs" align={'center'}>
-          <Checkbox label={i18n`Do not show again`} onChange={(e) => setPrintHintRead(e.target.checked)}></Checkbox>
+        <Flex gap="xs" align={"center"}>
+          <Checkbox
+            label={i18n`Do not show again`}
+            onChange={(e) => setPrintHintRead(e.target.checked)}
+          ></Checkbox>
           <Flex style={{ flexGrow: 1 }}></Flex>
           <Button onClick={onPrintHintClose}>OK</Button>
         </Flex>
       </Modal>
     </>
-  )
+  );
 }

@@ -1,2 +1,2 @@
-export { PrintRow } from './PrintRow'
-export { TablePrintLayout } from './TablePrintLayout'
+export { PrintRow } from "./PrintRow";
+export { TablePrintLayout } from "./TablePrintLayout";

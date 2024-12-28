@@ -1,4 +1,3 @@
-
 export function PrintRow(/* { track, dpmm }: { track: Track; dpmm: number } */) {
   // const { colorScheme } = useMantineColorScheme()
   // const fill = colorScheme === 'dark' ? 'white' : 'black'
@@ -13,7 +12,7 @@ export function PrintRow(/* { track, dpmm }: { track: Track; dpmm: number } */) 
       {/* <td>{track.artist || (<em>{i18n`unknown`}</em>)}</td> */}
       {/* <td>{track.title}</td> */}
     </tr>
-  )
+  );
   // return (
   //    <tr key={`${track.artist}${track.album}${track.title}`} sx={{ backgroundImage: `url(${backgroundImage})` }}>
   //         <td>

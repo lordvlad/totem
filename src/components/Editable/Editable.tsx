@@ -1,63 +1,72 @@
-import { useRef, useState, useEffect, useCallback, KeyboardEvent } from 'react'
+import { useRef, useState, useEffect, useCallback, KeyboardEvent } from "react";
 
-function setCaret (el: Node, pos = 0, end?: number) {
-  const range = document.createRange()
+function setCaret(el: Node, pos = 0, end?: number) {
+  const range = document.createRange();
 
-  range.setStart(el, pos)
+  range.setStart(el, pos);
 
   try {
-    if (typeof end !== 'undefined') range.setEnd(el, end)
-    else range.collapse(true)
+    if (typeof end !== "undefined") range.setEnd(el, end);
+    else range.collapse(true);
   } catch (e) {
-    range.collapse(true)
+    range.collapse(true);
   }
 
-  const sel = window.getSelection()!
-  sel.removeAllRanges()
-  sel.addRange(range)
+  const sel = window.getSelection()!;
+  sel.removeAllRanges();
+  sel.addRange(range);
 }
 
 interface EditableProps {
-  text: string
-  placeholder: string
-  onChange: (v: string) => void
-  tabbable?: boolean
-  tabIndex?: number
-  onEscape?: (e: KeyboardEvent) => void
+  text: string;
+  placeholder: string;
+  onChange: (v: string) => void;
+  tabbable?: boolean;
+  tabIndex?: number;
+  onEscape?: (e: KeyboardEvent) => void;
 }
 
-export function Editable ({
+export function Editable({
   text,
   placeholder,
   onChange,
   tabIndex,
   tabbable = true,
-  onEscape
+  onEscape,
 }: EditableProps) {
-  const [isFocused, setIsFocused] = useState(false)
-  const ref = useRef<HTMLElement>()
+  const [isFocused, setIsFocused] = useState(false);
+  const ref = useRef<HTMLElement>();
   const exit = useCallback(() => {
-    const val = ref.current?.innerText!
-    if (text !== val) { onChange(val) }
-    setIsFocused(false)
-    window.getSelection()?.removeAllRanges()
-  }, [text, onChange])
+    const val = ref.current?.innerText!;
+    if (text !== val) {
+      onChange(val);
+    }
+    setIsFocused(false);
+    window.getSelection()?.removeAllRanges();
+  }, [text, onChange]);
 
   useEffect(() => {
-    if (isFocused && (ref.current != null) && ref.current.childNodes.length) {
-      setCaret(ref.current.childNodes[0], 0, ref.current.childNodes[0].textContent?.length)
+    if (isFocused && ref.current != null && ref.current.childNodes.length) {
+      setCaret(
+        ref.current.childNodes[0],
+        0,
+        ref.current.childNodes[0].textContent?.length,
+      );
     }
-  }, [isFocused, ref.current])
+  }, [isFocused, ref.current]);
 
-  const keyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
-    if (isFocused && ['Enter', 'Escape'].includes(e.key)) {
-      e.preventDefault()
-      e.stopPropagation()
-      ref.current?.blur()
+  const keyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (isFocused && ["Enter", "Escape"].includes(e.key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        ref.current?.blur();
 
-      if (e.key === 'Escape' && (onEscape != null)) onEscape(e)
-    }
-  }, [onEscape, isFocused])
+        if (e.key === "Escape" && onEscape != null) onEscape(e);
+      }
+    },
+    [onEscape, isFocused],
+  );
 
   return (
     <div
@@ -67,7 +76,9 @@ export function Editable ({
       onBlur={exit}
       onFocus={() => setIsFocused(true)}
       ref={ref as any}
-      dangerouslySetInnerHTML={{ __html: isFocused ? text : (text || `<em>${placeholder}</em>`) }}
+      dangerouslySetInnerHTML={{
+        __html: isFocused ? text : text || `<em>${placeholder}</em>`,
+      }}
     />
-  )
+  );
 }

@@ -29,7 +29,6 @@
   },
   "include": [
     "src",
-    "./index.ts",
-    "vite.config.ts"
+    "./index.ts"
   ],
 }

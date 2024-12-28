@@ -15,5 +15,7 @@ jobs:
           bun-version: latest
       - name: Install dependencies
         run: bun install
+      - name: Lint project
+        run: bun lint
       - name: Test project
         run: bun run test

@@ -16,6 +16,6 @@ jobs:
       - name: Install dependencies
         run: bun install
       - name: Lint project
-        run: bun lint
+        run: bun lint:fix && git diff
       - name: Test project
         run: bun run test

@@ -17,9 +17,9 @@ export class Track implements Pick<ID3, "fileName" | "frames"> {
       if (typeof f2 !== "undefined") {
         f2.data = data;
         return data;
-      } else {
-        throw new Error(`Creating new Frame not implemented`);
       }
+      this.frames[id] = { data, id } as Frame;
+      return data
     }
     if (f2 == null || typeof f2 === "undefined") return undefined;
     const d = f2.data;

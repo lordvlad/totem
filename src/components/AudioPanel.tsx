@@ -29,10 +29,12 @@ type AlbumArtProps = ImageProps & {
 export function AlbumArt({
   track: {
     title,
-    art: { mimetype, data },
+    art,
   },
   ...props
 }: AlbumArtProps) {
+  if (!art) return null
+  const { mimetype, data } = art
   const url = `data:${mimetype};base64,${btoa(String.fromCharCode(...new Uint8Array(data)))}`;
   return <Image src={url} alt={title} {...props} />;
 }
@@ -100,7 +102,7 @@ function AudioPanelInner({ isOver }: { isOver: boolean }) {
 
   const renderTitle = (track: Track) => (
     <Editable
-      text={track.title}
+      text={track.title ?? ''}
       placeholder={i18n`unknown`}
       onEscape={onEscape}
       onChange={(title) => update(Object.assign(track, { title }))}
@@ -108,7 +110,7 @@ function AudioPanelInner({ isOver }: { isOver: boolean }) {
   );
   const renderArtist = (track: Track) => (
     <Editable
-      text={track.artist}
+      text={track.artist ?? ''}
       placeholder={i18n`unknown`}
       onEscape={onEscape}
       onChange={(artist) => update(Object.assign(track, { artist }))}
@@ -116,7 +118,7 @@ function AudioPanelInner({ isOver }: { isOver: boolean }) {
   );
   const renderAlbum = (track: Track) => (
     <Editable
-      text={track.album}
+      text={track.album ?? ''}
       placeholder={i18n`unknown`}
       onEscape={onEscape}
       onChange={(album) => update(Object.assign(track, { album }))}

@@ -19,7 +19,7 @@ export class Track implements Pick<ID3, "fileName" | "frames"> {
         return data;
       }
       // FIXME fix typing
-      /* eslint-disable-next-line typescript-eslint/no-unsafe-type-assertion, typescript-eslint/consistent-type-assertions -- allow this for now, fix later */
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/consistent-type-assertions -- allow this for now, fix later */
       this.frames[id] = { data, id } as Frame;
       return data
     }

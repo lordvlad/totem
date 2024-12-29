@@ -9,8 +9,8 @@ export class Track implements Pick<ID3, "fileName" | "frames"> {
   readonly data: Uint8Array | null = null;
 
   frame<T = unknown>(id: FrameId, data?: T) {
-    // @ts-expect-error -- need this to support hydration 
-    if (!this.frames) this.frames = {}
+    // @ts-expect-error -- need this to support hydration
+    this.frames ||= {};
     const f1 = this.frames[id];
     const f2: Frame | undefined = Array.isArray(f1) ? f1[0] : f1;
     if (arguments.length === 2) {
@@ -21,7 +21,7 @@ export class Track implements Pick<ID3, "fileName" | "frames"> {
       // FIXME fix typing
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/consistent-type-assertions -- allow this for now, fix later */
       this.frames[id] = { data, id } as Frame;
-      return data
+      return data;
     }
     if (f2 == null || typeof f2 === "undefined") return undefined;
     const d = f2.data;

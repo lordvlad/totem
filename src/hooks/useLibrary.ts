@@ -1,5 +1,5 @@
 import { delMany, getMany, keys, setMany } from "idb-keyval";
-import { useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { distinct } from "../util/distinct";
 import { hydrate } from "../util/hydrate";
 import type {
@@ -11,12 +11,8 @@ import DecoderWorker from "../util/mp3/decoder.worker?worker";
 import { assert, is } from "tsafe";
 
 const worker = new DecoderWorker();
-// const worker = new Worker(
-//   new URL("../util/mp3/decoder.worker.ts", import.meta.url),
-//   { type: "module" },
-// );
 
-const listeners = new Map();
+const listeners = new Map<() => unknown, Dispatch<SetStateAction<unknown>>>();
 
 let state = {
   isLoading: false,
@@ -154,18 +150,17 @@ worker.addEventListener(
   { capture: true },
 );
 worker.addEventListener("messageerror", (e) => console.error(e));
-// eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- we know what we're doing
-worker.addEventListener("message", ({ data }) => dispatch(data));
+worker.addEventListener("message", ({ data }) => {
+  assert(is<A>(data));
+  dispatch(data);
+});
 
 export function dispatch(action: A) {
   let i = 0;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call -- we know what we're doing
-  const prevValues = Array.from(listeners, ([getValue]) => getValue(state));
+  const prevValues = Array.from(listeners, ([getValue]) => getValue());
   state = reduce(state, action);
   listeners.forEach((setValue, getValue) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- we know what we're doing
-    const value = getValue(state);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- we know what we're doing
+    const value = getValue();
     if (value !== prevValues[i++]) setValue(value);
   });
 }
@@ -182,24 +177,25 @@ const r = {
 
 type R = typeof r;
 
+function toGetter(getValue: unknown): () => unknown {
+  if (typeof getValue === "string") {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- we know what we're doing
+    return () => state[getValue as keyof S];
+  }
+  if (typeof getValue === "function") {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- we know what we're doing
+    return getValue as () => unknown;
+  }
+  throw new Error("FOO");
+}
+
 export function useLibrary<K extends keyof S>(key: K): R & { value: S[K] };
 export function useLibrary<T>(getter: (s: S) => T): R & { value: T };
 export function useLibrary(): R & { value: S };
-
 export function useLibrary(getValue?: unknown) {
   const getter =
-    typeof getValue === "undefined"
-      ? () => state
-      : typeof getValue === "string"
-        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- we're checking
-          () => state[getValue as keyof S]
-        : typeof getValue === "function"
-          ? getValue
-          : () => {
-              throw new Error("FOO");
-            };
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- we know what we're doing
-  const [value, setValue] = useState<unknown>(getter(state));
+    typeof getValue === "undefined" ? () => state : toGetter(getValue);
+  const [value, setValue] = useState<unknown>(getter());
 
   useEffect(() => {
     listeners.set(getter, setValue);

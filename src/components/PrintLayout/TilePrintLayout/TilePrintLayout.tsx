@@ -26,12 +26,12 @@ export function TilePrintLayout() {
       <Controls />
       {featureTracks && (
         <Grid gutter={4}>
-          {tracks.map((track, i) => (
+          {tracks.map((track) => (
             <Grid.Col
               key={`${track.artist}${track.album}${track.title}`}
               span={span}
             >
-              <PrintTile code={3944 + i} track={track} />
+              <PrintTile track={track} />
             </Grid.Col>
           ))}
         </Grid>

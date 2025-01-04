@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { useBackgroundImage } from "./useOidCodeBackgroundImage";
+import { useOidCodeBackgroundImage } from "./useOidCodeBackgroundImage";
 
-export function useBackgroundStyle({ code }: { code: number }) {
-  const backgroundImage = useBackgroundImage({ code });
+export function useOidCodeBackgroundStyle({ code }: { code: number }) {
+  const backgroundImage = useOidCodeBackgroundImage({ code });
   return useMemo(
     () => ({
       zIndex: 999,

@@ -1,9 +1,9 @@
 import { useMantineColorScheme } from "@mantine/core";
 import { useMemo } from "react";
-import { oidCodeDataUrl } from "../components/OIDCode";
-import { useOptions } from "./useOptions";
+import { oidCodeDataUrl } from ".";
+import { useOptions } from "../../hooks/useOptions";
 
-export function useBackgroundImage({
+export function useOidCodeBackgroundImage({
   code,
   width = 32,
   height = 32,

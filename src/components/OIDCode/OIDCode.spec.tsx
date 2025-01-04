@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
-import { assert, describe, it, expect } from "vitest";
-import { OIDCodePattern, range } from "./OIDCode";
 import { render } from "@testing-library/react";
+import { assert, describe, expect, it } from "vitest";
+import { OIDCodePattern } from "./OIDCodePattern";
+import { range } from "./util";
 
 describe("range", () => {
   it("should work with end only", () => {

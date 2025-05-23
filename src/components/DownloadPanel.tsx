@@ -72,14 +72,14 @@ export function DownloadPanel() {
       const stream = await handle.createWritable();
       await build(cfg).pipeTo(stream);
       notifications.show({
-        title: "Success",
-        message: "Saved to disk",
+        title: i18n`Success`,
+        message: i18n`Saved to disk`,
         autoClose: 10 * 1000,
         icon: <Feather />,
       });
     } catch (e) {
       notifications.show({
-        title: "Error",
+        title: i18n`Error`,
         message: String(e),
         autoClose: 10 * 1000,
         icon: <AlertTriangle />,
@@ -158,7 +158,7 @@ export function DownloadPanel() {
             onChange={(e) => setPrintHintRead(e.target.checked)}
           ></Checkbox>
           <Flex style={{ flexGrow: 1 }}></Flex>
-          <Button onClick={onPrintHintClose}>OK</Button>
+          <Button onClick={onPrintHintClose}>{i18n`OK`}</Button>
         </Flex>
       </Modal>
     </>

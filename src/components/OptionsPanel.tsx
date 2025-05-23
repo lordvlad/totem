@@ -68,7 +68,7 @@ export function OptionsPanel() {
 
     const notificationId = notifications.show({
       loading: true,
-      message: "Downloading...",
+      message: i18n`Downloading...`,
     });
 
     const stream = await handle.createWritable();
@@ -92,8 +92,8 @@ export function OptionsPanel() {
 
     notifications.hide(notificationId);
 
-    notifications.show({ message: `Project downloaded to '${handle.name}'` });
-  }, [tracks, options]);
+    notifications.show({ message: i18n`Project downloaded to ${handle.name}` });
+  }, [tracks, options, i18n]);
 
   const openProject = useCallback(async () => {
     try {
@@ -110,7 +110,7 @@ export function OptionsPanel() {
 
       notifications.show({
         loading: true,
-        message: `Loading ${fileHandle.name}`,
+        message: i18n`Loading ${fileHandle.name}`,
       });
 
       const file = await fileHandle.getFile();

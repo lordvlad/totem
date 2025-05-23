@@ -39,5 +39,14 @@
   "Custom": "Benutzerdefiniert",
   "Album Controls": "Album Steuerung",
   "General Control": "Allgemeine Steuerung",
-  "Settings": "Einstellungen"
+  "Settings": "Einstellungen",
+  "Audio": "Audio",
+  "Success": "Erfolg",
+  "Saved to disk": "Auf Festplatte gespeichert",
+  "Error": "Fehler",
+  "OK": "OK",
+  "Auto (language)": "Automatisch (Sprache)",
+  "Downloading...": "Wird heruntergeladen...",
+  "Project downloaded to {}": "Projekt heruntergeladen nach {}",
+  "Loading {}": "Lade {}"
 }

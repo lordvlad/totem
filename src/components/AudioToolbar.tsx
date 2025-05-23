@@ -30,7 +30,7 @@ export function AudioToolbar() {
     const opts = {
       multiple: true,
       types: [
-        { description: "Audio", accept: { "audio/*": [".mp3" as const] } },
+        { description: i18n`Audio`, accept: { "audio/*": [".mp3" as const] } },
       ],
     };
     const handles: FileSystemFileHandle[] =

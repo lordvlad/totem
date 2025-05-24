@@ -31,7 +31,9 @@ type A =
   | { event: "update"; tracks: Track[] }
   | { event: "updated"; tracks: Track[] }
   | { event: "remove"; tracks: Track[] }
-  | { event: "removed"; tracks: Track[] };
+  | { event: "removed"; tracks: Track[] }
+  | { event: "add_recording"; track: Track; blob: Blob }
+  | { event: "recording_added"; track: Track };
 
 const distinctByName = distinct("fileName");
 
@@ -68,6 +70,80 @@ function load(handles: FileSystemFileHandle[]) {
 function update(...tracks: Track[]) {
   dispatch({ event: "update", tracks });
 }
+
+// Helper function to get audio duration from a Blob
+async function getAudioDuration(blob: Blob): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const audio = document.createElement('audio');
+    audio.preload = 'metadata';
+    const objectURL = URL.createObjectURL(blob);
+
+    let timer: NodeJS.Timeout | null = null;
+
+    const cleanup = () => {
+      URL.revokeObjectURL(objectURL);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('error', handleError);
+      if (timer) clearTimeout(timer);
+    };
+
+    const handleLoadedMetadata = () => {
+      cleanup();
+      resolve(audio.duration);
+    };
+
+    const handleError = (e?: Event | string) => {
+      cleanup();
+      console.error("Error loading audio for duration:", e || "Unknown error");
+      reject(new Error("Could not get audio duration."));
+    };
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('error', handleError);
+
+    audio.src = objectURL;
+    
+    timer = setTimeout(() => {
+      // Check if metadata is already loaded by any chance or if src is still not processed.
+      if (audio.readyState === 0 || !audio.duration) { 
+        handleError("Timeout getting audio duration: No metadata loaded within 10s.");
+      } else {
+        // If duration is available by now, resolve. This case might be redundant if loadedmetadata always fires.
+        cleanup();
+        resolve(audio.duration);
+      }
+    }, 10000); // 10 seconds timeout
+  });
+}
+
+// New function to add a recording
+async function addRecording(mp3Blob: Blob, filename: string) {
+  try {
+    const duration = await getAudioDuration(mp3Blob);
+    // Ensure filename has .mp3 extension
+    const finalFilename = filename.endsWith('.mp3') ? filename : `${filename}.mp3`;
+    const title = finalFilename.substring(0, finalFilename.lastIndexOf('.')) || finalFilename;
+
+    const trackData = {
+      fileName: finalFilename,
+      title: title,
+      artist: "Unknown Artist", 
+      album: "Recorded Tracks",  
+      duration: duration,
+      // bpm, year, pictureMimeType, pictureData, lyrics will use Track class defaults or be undefined
+    };
+    // The Track class might initialize other fields to defaults if not provided.
+    // hydrate is used elsewhere for plain objects from IDB, direct instantiation for new objects.
+    const newTrack = new Track(trackData.fileName, trackData.title, trackData.artist, trackData.album, trackData.duration, undefined, undefined, undefined, undefined, undefined);
+
+
+    dispatch({ event: "add_recording", track: newTrack, blob: mp3Blob });
+  } catch (error) {
+    console.error("Error preparing recording for dispatch:", error);
+    dispatch({ event: "error", error: error instanceof Error ? error : new Error(String(error)), message: "Failed to prepare recording." });
+  }
+}
+
 
 function reduce(s: typeof state, action: A): S {
   switch (action.event) {
@@ -141,8 +217,36 @@ function reduce(s: typeof state, action: A): S {
       return { ...s, isLoading: true };
     case "updated":
       return { ...s, isLoading: false };
-  }
-}
+    case "add_recording":
+      setMany([
+        [`track:${action.track.fileName}`, action.track.toPlainObject()], // Store plain object for Track
+        [`data:${action.track.fileName}`, action.blob],
+      ])
+        .then(() => {
+          dispatch({ event: "recording_added", track: action.track });
+        })
+        .catch((e1: unknown) => {
+          console.error("Error saving recording to IndexedDB:", e1);
+          dispatch({ event: "error", error: e1 instanceof Error ? e1 : new Error(String(e1)), message: "Failed to save recording to database." });
+           return { ...s, isLoading: false, error: e1 instanceof Error ? e1 : new Error(String(e1)) }; // Set loading false and error
+        });
+      return { ...s, isLoading: true, error: null }; // Set loading true and clear previous error
+    case "recording_added":
+      // Ensure no duplicate tracks by filename before adding
+      if (s.tracks.some(t => t.fileName === action.track.fileName)) {
+        console.warn(`Track with filename ${action.track.fileName} already exists. Skipping addition.`);
+        return { ...s, isLoading: false }; // Already exists, do nothing or update
+      }
+      return {
+        ...s,
+        isLoading: false,
+        tracks: distinctByName<Track>([...s.tracks, action.track]), 
+        error: null, // Clear error on success
+      };
+    // Ensure existing error case also sets isLoading to false
+    case "error":
+      console.error(action.message, action.error); // Log the message and error object
+      return { ...s, isLoading: false, error: action.error }; // Update state with error and set loading to false
 
 worker.addEventListener(
   "error",
@@ -173,6 +277,7 @@ const r = {
   clear,
   load,
   update,
+  addRecording, // Export new function
 };
 
 type R = typeof r;
@@ -211,6 +316,7 @@ export function useLibrary(getValue?: unknown) {
     clear,
     load,
     update,
+    addRecording, // Add to returned object
   };
 }
 

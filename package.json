@@ -63,5 +63,7 @@
     "test:debug": "vitest run -t 'gme should produce a valid gme file'"
   },
   "type": "module",
-  "dependencies": {}
+  "dependencies": {
+    "lamejs": "^1.2.1"
+  }
 }

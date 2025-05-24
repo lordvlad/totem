@@ -1,9 +1,10 @@
 /// <reference types="@types/wicg-file-system-access" />
 
-import { Button, Flex, Kbd } from "@mantine/core";
+import { Button, Flex, Kbd, Tooltip } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
 import { useCallback, useEffect, useRef } from "react";
 import Music2 from "../components/icons/Music2";
+import Microphone from "../components/icons/Microphone"; // Import Microphone icon
 import Trash from "../components/icons/Trash";
 import { useLibrary } from "../hooks/useLibrary";
 import { useSelection } from "../hooks/selection";
@@ -49,6 +50,7 @@ export function AudioToolbar() {
     ["mod+o", async () => await onChooseFilesClick()],
     ["mod+Delete", () => clear()],
     ["Delete", () => r.current?.call(null)],
+    ["r", () => console.log("Record audio")], // Placeholder for record functionality
   ]);
 
   return (
@@ -63,6 +65,17 @@ export function AudioToolbar() {
         {tracks.length > 0 ? i18n`Add more` : i18n`Choose Files`}
         <Kbd ml={8}>{i18n`ctrl + O`}</Kbd>
       </Button>
+      <Tooltip label={i18n`Record audio`} withArrow>
+        <Button
+          disabled={isLoading}
+          onClick={() => console.log("Record audio")} // Placeholder for record functionality
+          leftSection={<Microphone {...iconStyle} />}
+          pr={8}
+        >
+          {i18n`Record`}
+          <Kbd ml={8}>{i18n`R`}</Kbd>
+        </Button>
+      </Tooltip>
       <Button
         pr={8}
         disabled={isLoading || tracks.length === 0}

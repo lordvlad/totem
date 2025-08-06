@@ -1,7 +1,7 @@
 /// <reference types="@types/wicg-file-system-access" />
 
 import { Button, Flex, Kbd } from "@mantine/core";
-import { useHotkeys } from "@mantine/hooks";
+import { useHotkeys, useDisclosure } from "@mantine/hooks";
 import { useCallback, useEffect, useRef } from "react";
 import Music2 from "../components/icons/Music2";
 import Trash from "../components/icons/Trash";
@@ -9,6 +9,8 @@ import { useLibrary } from "../hooks/useLibrary";
 import { useSelection } from "../hooks/selection";
 import { iconStyle, kbdStyle } from "../util/constants";
 import { useI18n } from "../hooks/useI18n";
+import { RecordModal } from "./RecordModal";
+import { Record } from "./icons/Record";
 
 export function AudioToolbar() {
   const i18n = useI18n();
@@ -19,6 +21,7 @@ export function AudioToolbar() {
     remove,
     clear,
   } = useLibrary();
+  const [opened, { open, close }] = useDisclosure(false);
 
   const onDeleteSelection = useCallback(() => {
     const selectedTracks = tracks.filter((_, idx) => selected.has(idx));
@@ -49,29 +52,37 @@ export function AudioToolbar() {
     ["mod+o", async () => await onChooseFilesClick()],
     ["mod+Delete", () => clear()],
     ["Delete", () => r.current?.call(null)],
+    ["ctrl+shift+r", () => open()],
   ]);
 
   return (
-    <Flex gap="xs" wrap="wrap">
-      <Button
-        disabled={isLoading}
-        loading={isLoading}
-        onClick={onChooseFilesClick}
-        leftSection={<Music2 {...iconStyle} />}
-        pr={8}
-      >
-        {tracks.length > 0 ? i18n`Add more` : i18n`Choose Files`}
-        <Kbd ml={8}>{i18n`ctrl + O`}</Kbd>
-      </Button>
-      <Button
-        pr={8}
-        disabled={isLoading || tracks.length === 0}
-        onClick={() => (selected.size ? onDeleteSelection() : clear())}
-        leftSection={<Trash {...iconStyle} />}
-      >
-        {selected.size ? i18n`Remove` : i18n`Clear`}
-        <Kbd {...kbdStyle}>{selected.size ? i18n`del` : "ctrl + del"}</Kbd>
-      </Button>
-    </Flex>
+    <>
+      <RecordModal opened={opened} onClose={close} />
+      <Flex gap="xs" wrap="wrap">
+        <Button
+          disabled={isLoading}
+          loading={isLoading}
+          onClick={onChooseFilesClick}
+          leftSection={<Music2 {...iconStyle} />}
+          pr={8}
+        >
+          {tracks.length > 0 ? i18n`Add more` : i18n`Choose Files`}
+          <Kbd ml={8}>{i18n`ctrl + O`}</Kbd>
+        </Button>
+        <Button onClick={open} leftSection={<Record {...iconStyle} />} pr={8}>
+          {i18n`Record Audio`}
+          <Kbd ml={8}>{i18n`ctrl + shift + r`}</Kbd>
+        </Button>
+        <Button
+          pr={8}
+          disabled={isLoading || tracks.length === 0}
+          onClick={() => (selected.size ? onDeleteSelection() : clear())}
+          leftSection={<Trash {...iconStyle} />}
+        >
+          {selected.size ? i18n`Remove` : i18n`Clear`}
+          <Kbd {...kbdStyle}>{selected.size ? i18n`del` : "ctrl + del"}</Kbd>
+        </Button>
+      </Flex>
+    </>
   );
 }

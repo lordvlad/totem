@@ -48,5 +48,14 @@
   "Auto (language)": "Automatique (langue)",
   "Downloading...": "Téléchargement en cours...",
   "Project downloaded to {}": "Projet téléchargé vers {}",
-  "Loading {}": "Chargement de {}"
+  "Loading {}": "Chargement de {}",
+  "Record Audio": "Record Audio",
+  "Start Recording": "Start Recording",
+  "Stop Recording": "Stop Recording",
+  "Play Recording": "Play Recording",
+  "Pause Recording": "Pause Recording",
+  "Reset": "Reset",
+  "Add": "Add",
+  "Add and record again": "Add and record again",
+  "ctrl + shift + r": "ctrl + shift + r"
 }

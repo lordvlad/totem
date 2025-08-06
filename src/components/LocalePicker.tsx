@@ -26,7 +26,9 @@ export function LocalePicker() {
       </Menu.Target>
       <Menu.Dropdown>
         {isKnownLocale(sysLocale) && (
-          <Menu.Item onClick={() => setLocale(sysLocale)}>{i18n`Auto (language)`}</Menu.Item>
+          <Menu.Item
+            onClick={() => setLocale(sysLocale)}
+          >{i18n`Auto (language)`}</Menu.Item>
         )}
         {Object.entries(locales).map(([key, value]) => (
           <Menu.Item key={key} onClick={() => setLocale(key as Locale)}>

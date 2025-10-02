@@ -1,0 +1,122 @@
+name: Copilot Setup Steps
+
+# This workflow documents the setup steps for GitHub Copilot agents
+# It does not run automatically - it serves as a reference for agents
+# working on this repository
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Install Bun (required package manager)
+      - name: Install Bun
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          source ~/.bash_profile
+          bun --version
+
+      # Step 2: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 3: Install project dependencies
+      - name: Install dependencies
+        run: |
+          source ~/.bash_profile
+          bun install
+
+      # Step 4: Verify linting
+      - name: Run linter
+        run: |
+          source ~/.bash_profile
+          bun run lint
+
+      # Step 5: Fix linting issues (if any)
+      - name: Fix linting issues
+        run: |
+          source ~/.bash_profile
+          bun run lint:fix
+
+      # Step 6: Run tests
+      - name: Run tests
+        run: |
+          source ~/.bash_profile
+          bun run test
+
+      # Step 7: Build the project
+      - name: Build project
+        run: |
+          source ~/.bash_profile
+          bun run build
+
+      # Step 8: Preview the build
+      - name: Preview build (optional)
+        run: |
+          source ~/.bash_profile
+          bun run preview &
+          sleep 5
+
+  development-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      # Common development tasks
+      - name: Development server
+        run: |
+          # Start development server with hot reload
+          # bun run dev
+          echo "Development server runs on http://localhost:5173"
+
+      - name: Test in watch mode
+        run: |
+          # Run tests with UI in watch mode
+          # bun run test:dev
+          echo "Test UI available for interactive testing"
+
+  important-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Project requirements
+        run: |
+          echo "=== Totem Project Setup Requirements ==="
+          echo ""
+          echo "Prerequisites:"
+          echo "  - Bun v1.2 or later (REQUIRED)"
+          echo "  - Node.js v20 or later (for tool compatibility)"
+          echo ""
+          echo "Technology Stack:"
+          echo "  - Bundler: Vite 6.x"
+          echo "  - Framework: React 19"
+          echo "  - UI Library: Mantine 7.x"
+          echo "  - TypeScript: 5.7.x (strict mode)"
+          echo "  - Testing: Vitest 2.x with jsdom"
+          echo "  - Linting: ESLint 9.x + Prettier 3.x"
+          echo ""
+          echo "Key Commands (all require 'bun run' prefix):"
+          echo "  - dev        : Start development server"
+          echo "  - lint       : Check code style"
+          echo "  - lint:fix   : Fix linting issues (REQUIRED before commit)"
+          echo "  - test       : Run test suite (~3-4s after first run)"
+          echo "  - test:dev   : Run tests in watch mode with UI"
+          echo "  - build      : Build for production (~7s)"
+          echo "  - preview    : Preview production build"
+          echo ""
+          echo "Pre-commit Checklist:"
+          echo "  1. Run 'bun run lint:fix' (REQUIRED)"
+          echo "  2. Run 'bun run test' (all tests must pass)"
+          echo "  3. Run 'bun run build' (verify no errors)"
+          echo "  4. Check 'git diff' after lint:fix (should be empty)"
+          echo ""
+          echo "Special Notes:"
+          echo "  - Tests download tttool binary on first run (60s timeout)"
+          echo "  - Subsequent test runs take only 3-4 seconds"
+          echo "  - Web Workers must be imported with '?worker' suffix"
+          echo "  - Build output goes to 'dist/' directory"
+          echo "  - CI requires clean lint:fix before merge"
+          echo ""
+          echo "Documentation:"
+          echo "  - README.md          : User-facing documentation"
+          echo "  - CONTRIBUTING.md    : Development setup and guidelines"
+          echo "  - .github/copilot-instructions.md : Detailed developer instructions"

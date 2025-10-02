@@ -71,7 +71,7 @@ export function AudioToolbar() {
 
   // useHotkeys will be set up ONCE only, so we need to work around it having a stale
   // reference to onDeleteSelection
-  const r = useRef<() => void>();
+  const r = useRef<(() => void) | null>(null);
   useEffect(() => {
     r.current = onDeleteSelection;
   }, [selected, tracks]);
@@ -79,7 +79,7 @@ export function AudioToolbar() {
   useHotkeys([
     ["mod+o", async () => await onChooseFilesClick()],
     ["mod+Delete", () => clear()],
-    ["Delete", () => r.current?.call(null)],
+    ["Delete", () => r.current?.()],
     ["mod+shift+r", () => openRecordingModal()],
   ]);
 

@@ -1,12 +1,4 @@
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Flex,
-  Group,
-  Modal,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Box, Button, Group, Modal, Tooltip } from "@mantine/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "../hooks/useI18n";
 import Mic from "./icons/Mic";
@@ -184,7 +176,15 @@ export function RecordingModal({
 
     await audioContext.close();
 
-    return new Blob(mp3Data, { type: "audio/mp3" });
+    const totalLength = mp3Data.reduce((acc, arr) => acc + arr.length, 0);
+    const concatenated = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const arr of mp3Data) {
+      concatenated.set(new Uint8Array(arr.buffer), offset);
+      offset += arr.length;
+    }
+
+    return new Blob([concatenated], { type: "audio/mp3" });
   };
 
   const playRecording = useCallback(() => {
@@ -316,10 +316,11 @@ export function RecordingModal({
   }, [handleReset, onClose]);
 
   const getActionIcon = () => {
-    if (recordingState === "idle") return <Mic size={64} />;
-    if (recordingState === "recording") return <CircleStop size={64} />;
-    if (playbackState === "playing") return <Pause size={64} />;
-    return <CirclePlay size={64} />;
+    const iconSize = { width: 64, height: 64 };
+    if (recordingState === "idle") return <Mic {...iconSize} />;
+    if (recordingState === "recording") return <CircleStop {...iconSize} />;
+    if (playbackState === "playing") return <Pause {...iconSize} />;
+    return <CirclePlay {...iconSize} />;
   };
 
   const getTooltip = () => {

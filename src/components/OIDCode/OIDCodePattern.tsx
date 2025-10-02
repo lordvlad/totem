@@ -5,6 +5,7 @@ import {
   range,
   zip,
 } from "./util";
+import { ReactElement } from "react";
 
 interface PxArgs {
   x: number;
@@ -12,7 +13,7 @@ interface PxArgs {
   size: number;
 }
 
-type Px = (arg: PxArgs) => JSX.Element;
+type Px = (arg: PxArgs) => ReactElement;
 
 function Pixel({ x, y, size }: PxArgs) {
   return (

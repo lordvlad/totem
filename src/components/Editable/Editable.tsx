@@ -35,7 +35,7 @@ export function Editable({
   onEscape,
 }: EditableProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const ref = useRef<HTMLElement>();
+  const ref = useRef<HTMLElement>(null!);
   const exit = useCallback(() => {
     const val = ref.current?.innerText!;
     if (text !== val) {

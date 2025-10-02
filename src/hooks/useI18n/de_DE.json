@@ -48,5 +48,15 @@
   "Auto (language)": "Automatisch (Sprache)",
   "Downloading...": "Wird heruntergeladen...",
   "Project downloaded to {}": "Projekt heruntergeladen nach {}",
-  "Loading {}": "Lade {}"
+  "Loading {}": "Lade {}",
+  "Record": "Aufnehmen",
+  "ctrl + shift + R": "strg + umschalt + R",
+  "Record Audio": "Audio aufnehmen",
+  "Start recording": "Aufnahme starten",
+  "Stop recording": "Aufnahme stoppen",
+  "Pause playback": "Wiedergabe pausieren",
+  "Play recording": "Aufnahme abspielen",
+  "Reset": "Zurücksetzen",
+  "Add and record again": "Hinzufügen und erneut aufnehmen",
+  "Add": "Hinzufügen"
 }

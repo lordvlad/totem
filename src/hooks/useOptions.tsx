@@ -18,6 +18,7 @@ const initialCommonOptions = {
   stopOid: 7778,
   replayOid: 7779,
   debug: false,
+  powerOnSoundIndex: null as number | null,
 };
 
 export type CommonOptions = typeof initialCommonOptions;

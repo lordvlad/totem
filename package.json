@@ -24,6 +24,7 @@
     "eslint-config-love": "^113.0.0",
     "idb-keyval": "^6.2.1",
     "jsdom": "^25.0.1",
+    "lamejs": "^1.2.1",
     "lodash.debounce": "^4.0.8",
     "lodash.merge": "^4.6.2",
     "marked": "^16.3.0",
@@ -61,6 +62,5 @@
     "preview": "vite preview",
     "test:debug": "vitest run -t 'gme should produce a valid gme file'"
   },
-  "type": "module",
-  "dependencies": {}
+  "type": "module"
 }

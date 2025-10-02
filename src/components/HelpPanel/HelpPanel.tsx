@@ -1,9 +1,10 @@
 import { Center, Container, Drawer, Loader } from "@mantine/core";
 import { Suspense } from "react";
-// @ts-ignore
-import Readme_de_DE from "../../../README.de_DE.md";
-// @ts-ignore
-import Readme_en_EN from "../../../README.md";
+import Markdown from "react-markdown";
+// @ts-expect-error - vite-plugin-markdown provides markdown as named export
+import { markdown as Readme_de_DE } from "../../../README.de_DE.md";
+// @ts-expect-error - vite-plugin-markdown provides markdown as named export
+import { markdown as Readme_en_EN } from "../../../README.md";
 import { useLocale } from "../../hooks/useI18n";
 import { useHelpPanel } from "./useHelpPanel";
 
@@ -29,9 +30,9 @@ export function HelpPanel() {
           {(() => {
             switch (locale) {
               case "de-DE":
-                return <Readme_de_DE />;
+                return <Markdown>{Readme_de_DE}</Markdown>;
               default:
-                return <Readme_en_EN />;
+                return <Markdown>{Readme_en_EN}</Markdown>;
             }
           })()}
         </Suspense>

@@ -20,6 +20,7 @@ export function DownloadPanel() {
     replayOid,
     penLanguage: language,
     projectName,
+    powerOnSoundIndex,
   } = useOptions()[0];
   const i18n = useI18n();
   const {
@@ -55,6 +56,8 @@ export function DownloadPanel() {
         scripts,
         stopOid: stopOid,
         replayOid: replayOid,
+        powerOnSounds:
+          powerOnSoundIndex !== null ? [powerOnSoundIndex] : undefined,
       };
 
       const handle: FileSystemFileHandle = await window.showSaveFilePicker({
@@ -95,6 +98,7 @@ export function DownloadPanel() {
     productId,
     language,
     projectName,
+    powerOnSoundIndex,
   ]);
 
   const [printHintRead, setPrintHintRead] = useLocalStorage({

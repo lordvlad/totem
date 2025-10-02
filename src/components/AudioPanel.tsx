@@ -10,6 +10,8 @@ import {
   Title,
   Image,
   ImageProps,
+  Tooltip,
+  ActionIcon,
 } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { useCallback, KeyboardEvent, useState } from "react";
@@ -20,6 +22,8 @@ import { useLibrary } from "../hooks/useLibrary";
 import { useSelection } from "../hooks/selection";
 import { pd } from "../util/preventDefault";
 import Trash from "../components/icons/Trash";
+import { CirclePower } from "../components/icons/CirclePower";
+import { useOptions } from "../hooks/useOptions";
 
 type AlbumArtProps = ImageProps & {
   width?: number;
@@ -55,6 +59,7 @@ export function AudioPanel() {
 function AudioPanelInner({ isOver }: { isOver: boolean }) {
   const i18n = useI18n();
   const { remove, value: tracks, update } = useLibrary("tracks");
+  const [options, setOptions] = useOptions();
 
   const { selected, toggle, reset, select } = useSelection();
 
@@ -119,18 +124,57 @@ function AudioPanelInner({ isOver }: { isOver: boolean }) {
     />
   );
 
-  const renderAction = useCallback((track: Track) => {
-    return (
-      <Button
-        color="red"
-        fz="xs"
-        onClick={pd(() => remove(track))}
-        leftSection={<Trash height="12pt" width="12pt" />}
-      >
-        {i18n`Remove`}
-      </Button>
-    );
-  }, []);
+  const renderAction = useCallback(
+    (track: Track, idx: number) => {
+      const isPowerOnSound = options.powerOnSoundIndex === idx;
+
+      return (
+        <>
+          <Tooltip
+            label={
+              isPowerOnSound
+                ? i18n`Remove as power-on sound`
+                : i18n`Set as power-on sound`
+            }
+          >
+            <ActionIcon
+              color={isPowerOnSound ? "green" : "gray"}
+              variant={isPowerOnSound ? "filled" : "subtle"}
+              onClick={pd(() =>
+                setOptions({ powerOnSoundIndex: isPowerOnSound ? null : idx }),
+              )}
+              mr="xs"
+            >
+              <CirclePower height="16pt" width="16pt" />
+            </ActionIcon>
+          </Tooltip>
+          <Button
+            color="red"
+            fz="xs"
+            onClick={pd(() => {
+              // If removing the power-on sound track, clear the powerOnSoundIndex
+              if (isPowerOnSound) {
+                setOptions({ powerOnSoundIndex: null });
+              } else if (
+                options.powerOnSoundIndex !== null &&
+                options.powerOnSoundIndex > idx
+              ) {
+                // If removing a track before the power-on sound, decrement the index
+                setOptions({
+                  powerOnSoundIndex: options.powerOnSoundIndex - 1,
+                });
+              }
+              remove(track);
+            })}
+            leftSection={<Trash height="12pt" width="12pt" />}
+          >
+            {i18n`Remove`}
+          </Button>
+        </>
+      );
+    },
+    [options.powerOnSoundIndex, i18n, setOptions],
+  );
 
   const renderCheckbox = useCallback(
     (idx: number) => (
@@ -188,14 +232,23 @@ function AudioPanelInner({ isOver }: { isOver: boolean }) {
         {tracks.map((track, idx) => (
           <tr key={`${track.artist}-${track.album}-${track.title}`}>
             <td>{renderCheckbox(idx)}</td>
-            <td>{idx}</td>
+            <td>
+              {idx}
+              {options.powerOnSoundIndex === idx && (
+                <Tooltip label={i18n`Power-on sound`}>
+                  <span style={{ marginLeft: "4px" }}>
+                    <CirclePower height="12pt" width="12pt" color="green" />
+                  </span>
+                </Tooltip>
+              )}
+            </td>
             <td>
               <AlbumArt height={64} track={track} />
             </td>
             <td>{renderAlbum(track)}</td>
             <td>{renderArtist(track)}</td>
             <td>{renderTitle(track)}</td>
-            <td>{renderAction(track)}</td>
+            <td>{renderAction(track, idx)}</td>
           </tr>
         ))}
       </tbody>

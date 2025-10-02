@@ -83,6 +83,7 @@ export interface GmeBuildConfig {
   scripts?: Record<number, ScriptLine[]>;
   replayOid?: number;
   stopOid?: number;
+  powerOnSounds?: number[];
 }
 
 export type Req = {
@@ -584,17 +585,42 @@ function createHeader({
 // FIXME allow multiple playlists
 function createPoweronSoundPlaylistList({
   offset,
+  trackIndices = [],
 }: {
-  trackIndex: number;
+  trackIndices?: number[];
   offset: number;
 }) {
+  if (trackIndices.length === 0) {
+    return {
+      size: 2,
+      write(buf: Buf) {
+        buf.view.setUint16(offset, 0);
+      },
+    };
+  }
+
+  // Playlist structure:
+  // - 2 bytes: number of playlists (1 in this case)
+  // - 4 bytes: offset to first playlist
+  // - playlist:
+  //   - 2 bytes: number of tracks
+  //   - 2 bytes per track: track index
+  const playlistSize = 2 + trackIndices.length * 2;
+  const size = 2 + 4 + playlistSize;
+
   return {
-    size: 2,
+    size,
     write(buf: Buf) {
-      buf.view.setUint16(offset, 0);
-      // buf.view.setUint32(offset + 2, offset + 6)
-      // buf.view.setUint16(offset + 6, 1)
-      // buf.view.setUint16(offset + 8, trackIndex)
+      // Number of playlists
+      buf.view.setUint16(offset, 1, true);
+      // Offset to first playlist
+      buf.view.setUint32(offset + 2, offset + 6, true);
+      // Number of tracks in playlist
+      buf.view.setUint16(offset + 6, trackIndices.length, true);
+      // Track indices
+      for (let i = 0; i < trackIndices.length; i++) {
+        buf.view.setUint16(offset + 8 + i * 2, trackIndices[i], true);
+      }
     },
   };
 }
@@ -623,7 +649,7 @@ export function createLayout({ tracks, ...cfg }: GmeBuildConfig) {
     offset + initialRegisterValues.size;
   const powerOnSoundPlayListList = createPoweronSoundPlaylistList({
     offset,
-    trackIndex: 0,
+    trackIndices: cfg.powerOnSounds,
   });
 
   offset = header.items.additionalScriptTableOffset.val =

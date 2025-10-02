@@ -162,4 +162,37 @@ Script for OID 1406:
     },
     10 * 1000,
   );
+
+  it(
+    "should support power on sounds",
+    async () => {
+      const gme = join(tmpDir, "data3.gme");
+      await buildTo(
+        { ...cfg, tracks: await getTestMedia(), powerOnSounds: [0, 1] },
+        gme,
+      );
+
+      {
+        const { stdout, stderr } = await tttool("info", gme);
+        console.log("stdout", stdout);
+        console.log("stderr", stderr);
+
+        expect(stderr).toBeFalsy();
+        expect(stdout).toContain(`Product ID: ${cfg.productId}`);
+        expect(stdout).toContain("Initial sounds: [[0,1]]");
+      }
+
+      {
+        const { stdout, stderr } = await tttool("lint", gme);
+        expect(stderr).toBeFalsy();
+        expect(stdout).toContain(
+          'All lines do satisfy hypothesis "play indicies are correct"!',
+        );
+        expect(stdout).toContain(
+          'All lines do satisfy hypothesis "media indicies are correct"!',
+        );
+      }
+    },
+    10 * 1000,
+  );
 });

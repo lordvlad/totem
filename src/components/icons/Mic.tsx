@@ -1,5 +1,6 @@
 import { SVGProps } from "react";
 
+// https://icones.js.org/collection/lucide?s=mic
 export default function Mic(props: SVGProps<SVGSVGElement>) {
   return (
     <svg

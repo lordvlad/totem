@@ -58,17 +58,20 @@ bun run preview
 ### Workers
 
 The project uses Web Workers for computationally intensive tasks:
+
 - `gme.worker.ts` - GME file building
 - `decoder.worker.ts` - MP3 decoding
 
 Workers are imported using Vite's `?worker` suffix:
+
 ```typescript
-import Worker from './worker?worker'
+import Worker from "./worker?worker";
 ```
 
 ### Markdown Support
 
 Markdown files are processed using `vite-plugin-markdown` and rendered with `react-markdown`:
+
 ```typescript
 import { markdown as content } from './README.md'
 <Markdown>{content}</Markdown>
@@ -81,9 +84,21 @@ import { markdown as content } from './README.md'
 - TypeScript strict mode is enabled
 - All code must pass type checking, linting, and tests before submission
 
+### Icons
+
+When adding new icon components, use the [Lucide icon collection](https://icones.js.org/collection/lucide) as the source. Each icon component should include a comment referencing its source URL:
+
+```typescript
+// https://icones.js.org/collection/lucide?s=icon-name
+export default function IconName(props: SVGProps<SVGSVGElement>) {
+  // ... icon SVG
+}
+```
+
 ## Testing
 
 Tests use Vitest with jsdom for React component testing. The test suite includes:
+
 - Component tests using `@testing-library/react`
 - GME file generation validation using the `tttool` binary
 

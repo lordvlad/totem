@@ -1,5 +1,6 @@
 import { SVGProps } from "react";
 
+// https://icones.js.org/collection/lucide?s=pause
 export default function Pause(props: SVGProps<SVGSVGElement>) {
   return (
     <svg

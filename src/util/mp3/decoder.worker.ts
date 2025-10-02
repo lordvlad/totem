@@ -11,11 +11,12 @@ function loadAll(handles: FileSystemFileHandle[]) {
         n++;
         const file = await handle.getFile();
         const { data, ...meta } = await load(file.stream());
-        await set(`data:${handle.name}`, data);
-        await set(`track:${handle.name}`, { ...meta, fileName: handle.name });
+        const uuid = crypto.randomUUID();
+        await set(`data:${uuid}`, data);
+        await set(`track:${uuid}`, { ...meta, fileName: handle.name, uuid });
         emit({
           event: "loaded",
-          meta: { ...meta, fileName: handle.name },
+          meta: { ...meta, fileName: handle.name, uuid },
           file: handle.name,
           n,
           total,

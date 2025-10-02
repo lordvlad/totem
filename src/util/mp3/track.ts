@@ -3,6 +3,7 @@ import { assert, is } from "tsafe/assert";
 import type { ID3Art, Frame, FrameId, ID3 } from "./id3";
 
 export class Track implements Pick<ID3, "fileName" | "frames"> {
+  readonly uuid = "";
   readonly fileName = "";
   readonly frames: ID3["frames"] = {};
   readonly size = 0;

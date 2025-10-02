@@ -5,7 +5,7 @@ import { isReq, build, type MediaTableItem, type Req } from "./gme";
 import { singleChunkStream } from "../singleChunkStream";
 
 async function fetchMedia({ track }: MediaTableItem) {
-  const data = await get<Uint8Array>(`data:${track.fileName}`);
+  const data = await get<Uint8Array>(`data:${track.uuid}`);
   if (data == null) throw new Error(`Missing track data for ${track.fileName}`);
   return singleChunkStream(data);
 }

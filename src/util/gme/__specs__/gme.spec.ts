@@ -47,6 +47,7 @@ async function getTestMedia() {
             title: fileName,
             artist: "Joachim Breitner",
             fileName,
+            uuid: crypto.randomUUID(),
             size,
           },
           Track,

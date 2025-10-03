@@ -97,5 +97,9 @@
   "show artist name": "mostrar nombre del artista",
   "For optimal results in chrome, make sure to open 'More Settings' in the print dialog and then:": "Para obtener resultados óptimos en Chrome, asegúrese de abrir 'Más opciones' en el diálogo de impresión y luego:",
   "Check 'Background graphics'": "Marcar 'Gráficos de fondo'",
-  "Uncheck 'Headers and footers'": "Desmarcar 'Encabezados y pies de página'"
+  "Uncheck 'Headers and footers'": "Desmarcar 'Encabezados y pies de página'",
+  "Load from URL": "Cargar desde URL",
+  "Project URL": "URL del proyecto",
+  "Enter a public URL to a .ndjson project file": "Ingrese una URL pública a un archivo de proyecto .ndjson",
+  "Loading project from URL...": "Cargando proyecto desde URL..."
 }

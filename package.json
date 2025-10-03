@@ -53,6 +53,9 @@
     "yauzl": "^3.2.0"
   },
   "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "prestart": "bun run build",
     "dev": "vite dev",

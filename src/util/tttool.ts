@@ -6,7 +6,6 @@ import { execFile } from "./execFile";
 import { isFile } from "./isFile";
 import { unzip } from "./unzip";
 import { type ExecOptionsWithStringEncoding, spawn } from "child_process";
-import { deferred } from "./deferred";
 
 const version = "1.11";
 const tttoolDir = join(tmpdir(), "totem-tttool");
@@ -61,8 +60,8 @@ export async function play(path: string) {
   const out: string[] = [];
   const err: string[] = [];
 
-  const outDeferredRef = { val: deferred<string>() };
-  const errDeferredRef = { val: deferred<string>() };
+  const outDeferredRef = { val: Promise.withResolvers<string>() };
+  const errDeferredRef = { val: Promise.withResolvers<string>() };
 
   let resolveTimer: NodeJS.Timeout | null = null;
 
@@ -107,8 +106,8 @@ export async function play(path: string) {
     },
     touch(oid: number) {
       out.splice(0, out.length);
-      outDeferredRef.val = deferred<string>();
-      errDeferredRef.val = deferred<string>();
+      outDeferredRef.val = Promise.withResolvers<string>();
+      errDeferredRef.val = Promise.withResolvers<string>();
       child.stdin.cork();
       child.stdin.write(`${oid}\n`);
       child.stdin.uncork();

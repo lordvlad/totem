@@ -119,7 +119,7 @@ function buildAcceptAttribute(types: FilePickerAcceptType[]): string {
 
     for (const mimeType of Object.keys(type.accept)) {
       acceptValues.push(mimeType);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- accept values can be string or string[]
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- mimeType comes from Object.keys
       const extensions = type.accept[mimeType as keyof typeof type.accept];
       if (Array.isArray(extensions)) {
         acceptValues.push(...extensions);

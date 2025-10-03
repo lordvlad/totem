@@ -9,6 +9,7 @@ import type {
 import { Track } from "../util/mp3/track";
 import DecoderWorker from "../util/mp3/decoder.worker?worker";
 import { assert, is } from "tsafe";
+import { getAsFileSystemHandle } from "../util/fileSystemFallback";
 
 const worker = new DecoderWorker();
 
@@ -38,8 +39,8 @@ const distinctByName = distinct("uuid");
 async function onDrop(items: DataTransferItem[]) {
   const handlePromises = items.map(async (item) => {
     if (item.kind === "file") {
-      const handle = await item.getAsFileSystemHandle();
-      if (handle != null && handle.kind === "file") return handle;
+      const handle = await getAsFileSystemHandle(item);
+      if (handle != null) return handle;
     }
     console.error("Item dropped is not a file", item);
     return null;

@@ -11,6 +11,7 @@ import { useSelection } from "../hooks/selection";
 import { iconStyle, kbdStyle } from "../util/constants";
 import { useI18n } from "../hooks/useI18n";
 import { RecordingModal } from "./RecordingModal";
+import { showOpenFilePicker } from "../util/fileSystemFallback";
 
 export function AudioToolbar() {
   const i18n = useI18n();
@@ -42,8 +43,7 @@ export function AudioToolbar() {
         { description: i18n`Audio`, accept: { "audio/*": [".mp3" as const] } },
       ],
     };
-    const handles: FileSystemFileHandle[] =
-      await window.showOpenFilePicker(opts);
+    const handles: FileSystemFileHandle[] = await showOpenFilePicker(opts);
     load(handles);
   };
 

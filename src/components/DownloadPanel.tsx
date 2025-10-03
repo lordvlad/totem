@@ -11,6 +11,7 @@ import { useI18n } from "../hooks/useI18n";
 import { iconStyle } from "../util/constants";
 import { type GmeBuildConfig } from "../util/gme/gme";
 import { useGmeBuilder } from "../util/gme/useGmeBuilder";
+import { showSaveFilePicker } from "../util/fileSystemFallback";
 
 export function DownloadPanel() {
   const {
@@ -60,7 +61,7 @@ export function DownloadPanel() {
           powerOnSoundIndex !== null ? [powerOnSoundIndex] : undefined,
       };
 
-      const handle: FileSystemFileHandle = await window.showSaveFilePicker({
+      const handle = await showSaveFilePicker({
         suggestedName: `Totem - ${projectName}.gme`,
         types: [
           {

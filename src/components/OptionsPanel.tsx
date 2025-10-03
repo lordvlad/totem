@@ -14,6 +14,10 @@ import { useOptions } from "../hooks/useOptions";
 import { iconStyle } from "../util/constants";
 import { useAlert } from "./Alert";
 import { useConfirm } from "./Confirm";
+import {
+  showSaveFilePicker,
+  showOpenFilePicker,
+} from "../util/fileSystemFallback";
 
 function uInt8ArrayToBase64(typedArray: Uint8Array): string {
   let binary = "";
@@ -54,7 +58,7 @@ export function OptionsPanel() {
   }, [options]);
 
   const saveProject = useCallback(async () => {
-    const handle: FileSystemFileHandle = await window.showSaveFilePicker({
+    const handle = await showSaveFilePicker({
       suggestedName: `Totem - ${options.projectName}.ndjson`,
       types: [
         {
@@ -92,12 +96,14 @@ export function OptionsPanel() {
 
     notifications.hide(notificationId);
 
-    notifications.show({ message: i18n`Project downloaded to ${handle.name}` });
+    const handleName =
+      "name" in handle ? handle.name : options.projectName + ".ndjson";
+    notifications.show({ message: i18n`Project downloaded to ${handleName}` });
   }, [tracks, options, i18n]);
 
   const openProject = useCallback(async () => {
     try {
-      const [fileHandle] = await window.showOpenFilePicker({
+      const [fileHandle] = await showOpenFilePicker({
         types: [
           {
             description: "Json Lines",
@@ -108,9 +114,11 @@ export function OptionsPanel() {
         ],
       });
 
+      const handleName =
+        "name" in fileHandle ? fileHandle.name : "project.ndjson";
       notifications.show({
         loading: true,
-        message: i18n`Loading ${fileHandle.name}`,
+        message: i18n`Loading ${handleName}`,
       });
 
       const file = await fileHandle.getFile();

@@ -7,7 +7,7 @@ This project uses [Bun](https://bun.sh) as its package manager and runtime for o
 ### Prerequisites
 
 - [Bun](https://bun.sh) v1.2 or later
-- Node.js v20 or later (for compatibility with some tools)
+- Node.js v22 or later (required for Promise.withResolvers support)
 
 ### Installation
 

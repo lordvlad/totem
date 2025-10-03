@@ -16,4 +16,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['fsevents'],
   },
+  test: {
+    setupFiles: ['./vitest.setup.ts'],
+  },
 })

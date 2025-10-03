@@ -4,6 +4,7 @@ export default [
   {
     ...love,
     files: ['**/*.js', '**/*.ts'],
+    ignores: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.test.ts', '**/*.test.tsx'],
     rules: {
       ...love.rules,
       "promise/avoid-new": "off",

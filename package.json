@@ -12,6 +12,7 @@
     "@mantine/notifications": "^8.3.3",
     "@mantine/nprogress": "^8.3.3",
     "@testing-library/react": "^14.0.0",
+    "@types/bun": "^1.2.23",
     "@types/lodash.debounce": "^4.0.9",
     "@types/lodash.merge": "^4.6.9",
     "@types/node": "^20.8.9",

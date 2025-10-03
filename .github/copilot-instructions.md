@@ -366,3 +366,67 @@ source ~/.bash_profile
 - Linting is not clean (run `bun run lint:fix`)
 - Tests don't pass
 - Build fails
+
+## Copilot Agent Guidelines
+
+### Principle: Make Minimal Changes
+
+When working on issues:
+- **Make surgical edits** - change only what's necessary to fix the issue
+- **Preserve working code** - don't refactor or "improve" code unless that's the task
+- **Keep formatting consistent** - match existing code style
+- **Don't fix unrelated issues** - stay focused on the task at hand
+
+### Efficient Tool Usage
+
+**Explore the codebase efficiently:**
+```
+# Read multiple files simultaneously
+view(file1), view(file2), view(file3)
+
+# Check related files in one call
+view(component), view(test), view(types)
+```
+
+**Validate changes thoroughly:**
+```
+# After making changes, validate in one go
+bash("bun run lint:fix && bun run test && bun run build")
+```
+
+### Common Task Patterns
+
+**Adding a new React component:**
+1. Create component file in appropriate directory (e.g., `src/components/`)
+2. Use existing components as templates for structure
+3. Import icon from Lucide collection if needed (add source comment)
+4. Export from `index.ts` in the same directory
+5. Run `bun run lint:fix` to ensure formatting
+6. Test if component has user-facing changes
+
+**Updating internationalization:**
+1. Add keys to all locale files in `src/hooks/useI18n/` (de_DE, es_ES, fr_FR, it_IT)
+2. Keep translations consistent across locales
+3. Use the `useI18n()` hook in components
+
+**Modifying GME generation:**
+1. Changes likely go in `src/util/gme/gme.ts`
+2. Run tests with `bun run test` - the GME test validates with tttool
+3. Be aware of max-lines eslint disable for this file
+4. Don't modify the tttool version (1.11) unless specifically needed
+
+**Adding Web Workers:**
+1. Create `*.worker.ts` file
+2. Import with `?worker` suffix: `import Worker from "./file?worker"`
+3. Follow existing patterns in `gme.worker.ts` or `decoder.worker.ts`
+4. Never import workers as regular modules
+
+### What NOT to Do
+
+❌ Don't add new dependencies unless absolutely necessary
+❌ Don't change Bun version or update lock file manually
+❌ Don't modify CI/CD workflows unless that's the task
+❌ Don't add new linting rules or configurations
+❌ Don't fix TODO/FIXME comments unless that's the issue
+❌ Don't try to reduce the chunk size warning (it's expected)
+❌ Don't modify test timeout values without understanding why they exist

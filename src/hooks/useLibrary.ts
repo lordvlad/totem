@@ -33,7 +33,7 @@ type A =
   | { event: "remove"; tracks: Track[] }
   | { event: "removed"; tracks: Track[] };
 
-const distinctByName = distinct("fileName");
+const distinctByName = distinct("uuid");
 
 async function onDrop(items: DataTransferItem[]) {
   const handlePromises = items.map(async (item) => {
@@ -91,8 +91,8 @@ function reduce(s: typeof state, action: A): S {
       return s;
     case "remove":
       Promise.all([
-        delMany(action.tracks.map((t) => `track:${t.fileName}`)),
-        delMany(action.tracks.map((t) => `data:${t.fileName}`)),
+        delMany(action.tracks.map((t) => `track:${t.uuid}`)),
+        delMany(action.tracks.map((t) => `data:${t.uuid}`)),
       ])
         .then(() => dispatch({ event: "removed", tracks: action.tracks }))
         .catch((e1: unknown) => console.error(e1));
@@ -102,13 +102,13 @@ function reduce(s: typeof state, action: A): S {
         ...s,
         isLoading: false,
         tracks: s.tracks.filter(
-          (t) => !new Set(action.tracks.map((t) => t.fileName)).has(t.fileName),
+          (t) => !new Set(action.tracks.map((t) => t.uuid)).has(t.uuid),
         ),
       };
     case "clear":
       Promise.all([
-        delMany(s.tracks.map((t) => `track:${t.fileName}`)),
-        delMany(s.tracks.map((t) => `data:${t.fileName}`)),
+        delMany(s.tracks.map((t) => `track:${t.uuid}`)),
+        delMany(s.tracks.map((t) => `data:${t.uuid}`)),
       ])
         .then(() => dispatch({ event: "cleared" }))
         .catch((e1: unknown) => console.error(e1));
@@ -135,7 +135,7 @@ function reduce(s: typeof state, action: A): S {
     case "initialized":
       return { ...s, isLoading: false, tracks: action.tracks };
     case "update":
-      setMany(action.tracks.map((track) => [`track:${track.fileName}`, track]))
+      setMany(action.tracks.map((track) => [`track:${track.uuid}`, track]))
         .then(() => dispatch({ event: "updated", tracks: action.tracks }))
         .catch((e1: unknown) => console.error(e1));
       return { ...s, isLoading: true };

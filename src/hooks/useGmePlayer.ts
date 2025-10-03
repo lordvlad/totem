@@ -22,16 +22,16 @@ export function useGmePlayer() {
 
     if (code >= 1401 && code <= 1401 + tracks.length) {
       const track = tracks[code - 1401];
-      return await play(track.fileName);
+      return await play(track.uuid);
     }
 
     throw new Error(`Unknown code: ${code}`);
   }
 
-  const play = async (path: string) => {
-    const data = await get<Uint8Array>(`data:${path}`);
+  const play = async (uuid: string) => {
+    const data = await get<Uint8Array>(`data:${uuid}`);
     if (data == null) {
-      throw new Error(`No data found for track: ${path}`);
+      throw new Error(`No data found for track: ${uuid}`);
     }
     const chunkSize = 0x8000;
     let base64String = "";

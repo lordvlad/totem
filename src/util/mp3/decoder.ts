@@ -11,7 +11,7 @@ export type Mp3WebWorkerResponse =
       n: number;
       total: number;
       file: string;
-      meta: ID3;
+      meta: ID3 & { uuid: string };
     }
   | {
       event: "error";

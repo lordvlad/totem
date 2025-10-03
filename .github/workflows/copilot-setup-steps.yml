@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup:
+  copilot-setup-steps:
     runs-on: ubuntu-latest
     steps:
       # Step 1: Install Bun (required package manager)

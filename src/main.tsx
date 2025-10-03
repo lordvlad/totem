@@ -10,9 +10,7 @@ import { PrintLayout } from "./components/PrintLayout";
 export function Main() {
   return (
     <MantineProvider>
-      <Notifications
-        style={{ position: "fixed", top: "1em", left: "25%", right: "25%" }}
-      />
+      <Notifications position={"top-center"} />
       <App />
       <PrintLayout />
     </MantineProvider>

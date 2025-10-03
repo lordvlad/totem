@@ -20,7 +20,7 @@ const fetch = async (v: MediaTableItem): Promise<ReadableStream<Uint8Array>> =>
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- we know what we're doing
   createReadStream(
     join(__dirname, v.track.fileName),
-  ) as ReadableStream<Uint8Array>;
+  ) as unknown as ReadableStream<Uint8Array>;
 
 async function buildTo(cfg: Parameters<typeof build>[0], path: string) {
   await build(cfg, fetch)

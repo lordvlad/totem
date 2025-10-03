@@ -34,9 +34,6 @@ bun run lint:fix
 # Run tests
 bun run test
 
-# Run tests in watch mode with UI
-bun run test:dev
-
 # Build for production
 bun run build
 
@@ -52,7 +49,7 @@ bun run preview
 - **Framework**: React 19
 - **UI Library**: Mantine 8.x
 - **TypeScript**: 5.7.x
-- **Testing**: Vitest 2.x
+- **Testing**: Bun's native test runner
 - **Linting**: ESLint 9.x + Prettier 3.x
 
 ### Workers
@@ -97,10 +94,18 @@ export default function IconName(props: SVGProps<SVGSVGElement>) {
 
 ## Testing
 
-Tests use Vitest with jsdom for React component testing. The test suite includes:
+Tests use Bun's native test runner with jsdom for React component testing. The test suite includes:
 
 - Component tests using `@testing-library/react`
 - GME file generation validation using the `tttool` binary
+
+Test files use the `bun:test` module for test utilities:
+
+```typescript
+import { describe, it, expect, beforeAll, afterAll } from "bun:test";
+```
+
+The jsdom environment is set up globally via `bunfig.toml` and `test-setup.ts` for DOM testing.
 
 ## Building for Production
 

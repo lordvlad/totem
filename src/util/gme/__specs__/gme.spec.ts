@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/require-await -- this is only a test file */
 /* eslint-disable @typescript-eslint/init-declarations -- this is only a test file */
-// @vitest-environment jsdom
+/* eslint-disable @typescript-eslint/no-unsafe-call -- expect is typed as error in bun:test */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access -- expect is typed as error in bun:test */
 
 import { mkdtemp, rm, stat } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 
 import { id } from "tsafe";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 
 import { hydrate } from "../../hydrate";
 import { Track } from "../../mp3/track";
@@ -71,7 +72,7 @@ describe("gme", async () => {
   beforeAll(async () => {
     // initialize tttool with a large timeout so we can keep low timeouts for following calls
     await tttool("--help");
-  }, 60 * 1000);
+  });
 
   beforeAll(async () => {
     // tmpDir = await mkdtemp(join("totem-vitest-"))
@@ -88,43 +89,41 @@ describe("gme", async () => {
     await buildTo(cfg, join(tmpDir, "data1.gme"));
   });
 
-  it(
-    "should produce a valid gme file",
-    async () => {
-      const gme = join(tmpDir, "data2.gme");
-      await buildTo({ ...cfg, tracks: await getTestMedia() }, gme);
+  it("should produce a valid gme file", async () => {
+    const gme = join(tmpDir, "data2.gme");
+    await buildTo({ ...cfg, tracks: await getTestMedia() }, gme);
 
-      {
-        const { stdout, stderr } = await tttool("info", gme);
-        console.log("stdout", stdout);
-        console.log("stderr", stderr);
+    {
+      const { stdout, stderr } = await tttool("info", gme);
+      console.log("stdout", stdout);
+      console.log("stderr", stderr);
 
-        expect(stderr).toBeFalsy();
-        expect(stdout).toContain(`Product ID: ${cfg.productId}`);
-        expect(stdout).toContain(`Language: ${cfg.language.substring(0, 6)}`);
-        expect(stdout).toContain("Number of registers: 0");
-        expect(stdout).toContain("Initial registers: []");
-        expect(stdout).toContain("Initial sounds: []");
-        expect(stdout).toContain("Audio table entries: 6");
-        expect(stdout).toContain("Audio table copy: Absent");
-        expect(stdout).toContain("Special OIDs: 7779, 7778");
-      }
+      expect(stderr).toBeFalsy();
+      expect(stdout).toContain(`Product ID: ${cfg.productId}`);
+      expect(stdout).toContain(`Language: ${cfg.language.substring(0, 6)}`);
+      expect(stdout).toContain("Number of registers: 0");
+      expect(stdout).toContain("Initial registers: []");
+      expect(stdout).toContain("Initial sounds: []");
+      expect(stdout).toContain("Audio table entries: 6");
+      expect(stdout).toContain("Audio table copy: Absent");
+      expect(stdout).toContain("Special OIDs: 7779, 7778");
+    }
 
-      {
-        const { stdout, stderr } = await tttool("lint", gme);
-        expect(stderr).toBeFalsy();
-        expect(stdout).toContain(
-          'All lines do satisfy hypothesis "play indicies are correct"!',
-        );
-        expect(stdout).toContain(
-          'All lines do satisfy hypothesis "media indicies are correct"!',
-        );
-      }
+    {
+      const { stdout, stderr } = await tttool("lint", gme);
+      expect(stderr).toBeFalsy();
+      expect(stdout).toContain(
+        'All lines do satisfy hypothesis "play indicies are correct"!',
+      );
+      expect(stdout).toContain(
+        'All lines do satisfy hypothesis "media indicies are correct"!',
+      );
+    }
 
-      {
-        const { stdout, stderr } = await tttool("scripts", gme);
-        expect(stderr).toBeFalsy();
-        expect(stdout.split(/\r?\n/).join("\n")).toContain(`Script for OID 1401:
+    {
+      const { stdout, stderr } = await tttool("scripts", gme);
+      expect(stderr).toBeFalsy();
+      expect(stdout.split(/\r?\n/).join("\n")).toContain(`Script for OID 1401:
     0==0? P(0)
 Script for OID 1402:
     0==0? P(1)
@@ -136,64 +135,58 @@ Script for OID 1405:
     0==0? P(4)
 Script for OID 1406:
     0==0? P(5)`);
-      }
+    }
 
-      {
-        const { stdout, stderr } = await tttool(
-          "media",
-          "--dir",
-          join(tmpDir, "media"),
-          gme,
-        );
-        expect(stderr).toBeFalsy();
-        expect(stdout).toContain("Audio Table entries: 6");
-
-        // TODO compare audio files byte-by-byte
-      }
-
-      {
-        const game = await play(gme);
-        expect(await game.out).toContain("Initial");
-        expect(await game.err).toBeFalsy();
-        game.touch(1401);
-        expect(await game.out).toContain("Playing audio sample 0");
-
-        await game.exit();
-      }
-    },
-    10 * 1000,
-  );
-
-  it(
-    "should support power on sounds",
-    async () => {
-      const gme = join(tmpDir, "data3.gme");
-      await buildTo(
-        { ...cfg, tracks: await getTestMedia(), powerOnSounds: [0, 1] },
+    {
+      const { stdout, stderr } = await tttool(
+        "media",
+        "--dir",
+        join(tmpDir, "media"),
         gme,
       );
+      expect(stderr).toBeFalsy();
+      expect(stdout).toContain("Audio Table entries: 6");
 
-      {
-        const { stdout, stderr } = await tttool("info", gme);
-        console.log("stdout", stdout);
-        console.log("stderr", stderr);
+      // TODO compare audio files byte-by-byte
+    }
 
-        expect(stderr).toBeFalsy();
-        expect(stdout).toContain(`Product ID: ${cfg.productId}`);
-        expect(stdout).toContain("Initial sounds: [[0,1]]");
-      }
+    {
+      const game = await play(gme);
+      expect(await game.out).toContain("Initial");
+      expect(await game.err).toBeFalsy();
+      game.touch(1401);
+      expect(await game.out).toContain("Playing audio sample 0");
 
-      {
-        const { stdout, stderr } = await tttool("lint", gme);
-        expect(stderr).toBeFalsy();
-        expect(stdout).toContain(
-          'All lines do satisfy hypothesis "play indicies are correct"!',
-        );
-        expect(stdout).toContain(
-          'All lines do satisfy hypothesis "media indicies are correct"!',
-        );
-      }
-    },
-    10 * 1000,
-  );
+      await game.exit();
+    }
+  }, 10000);
+
+  it("should support power on sounds", async () => {
+    const gme = join(tmpDir, "data3.gme");
+    await buildTo(
+      { ...cfg, tracks: await getTestMedia(), powerOnSounds: [0, 1] },
+      gme,
+    );
+
+    {
+      const { stdout, stderr } = await tttool("info", gme);
+      console.log("stdout", stdout);
+      console.log("stderr", stderr);
+
+      expect(stderr).toBeFalsy();
+      expect(stdout).toContain(`Product ID: ${cfg.productId}`);
+      expect(stdout).toContain("Initial sounds: [[0,1]]");
+    }
+
+    {
+      const { stdout, stderr } = await tttool("lint", gme);
+      expect(stderr).toBeFalsy();
+      expect(stdout).toContain(
+        'All lines do satisfy hypothesis "play indicies are correct"!',
+      );
+      expect(stdout).toContain(
+        'All lines do satisfy hypothesis "media indicies are correct"!',
+      );
+    }
+  }, 10000);
 });

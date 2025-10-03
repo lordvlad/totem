@@ -20,7 +20,6 @@
     "@types/wicg-file-system-access": "^2023.10.2",
     "@types/yauzl": "^2.10.3",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/ui": "^2.1.8",
     "buffer": "^6.0.3",
     "eslint": "^9.17.0",
     "eslint-config-love": "^113.0.0",
@@ -47,7 +46,6 @@
     "vite": "^6.0.5",
     "vite-plugin-checker": "^0.8.0",
     "vite-plugin-markdown": "^2.2.0",
-    "vitest": "^2.1.8",
     "webworker": "^0.8.4",
     "whatwg-streams": "^0.1.1",
     "yauzl": "^3.2.0"
@@ -61,11 +59,10 @@
     "dev": "vite dev",
     "lint": "prettier src --check && eslint src",
     "lint:fix": "prettier src --write && eslint src --fix",
-    "test": "vitest run",
-    "test:dev": "vitest watch --ui",
+    "test": "bun test --timeout 60000",
     "build": "vite build",
     "preview": "vite preview",
-    "test:debug": "vitest run -t 'gme should produce a valid gme file'"
+    "test:debug": "bun test --timeout 60000 -t 'gme should produce a valid gme file'"
   },
   "type": "module"
 }

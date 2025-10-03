@@ -95,7 +95,7 @@
   "Item details": "Détails de l'élément",
   "show album name": "afficher le nom de l'album",
   "show artist name": "afficher le nom de l'artiste",
-  "For optimal results in chrome, make sure to open 'More Settings' in the print dialog and then:": "Pour des résultats optimaux dans Chrome, assurez-vous d'ouvrir 'Plus de paramètres' dans la boîte de dialogue d'impression, puis :",
-  "Check 'Background graphics'": "Cocher 'Graphiques d'arrière-plan'",
+  "For optimal results in chrome, make sure to open 'More Settings' in the print dialog and then:": "Pour des résultats optimaux dans Chrome, assurez-vous d'ouvrir 'Plus d'options' dans la boîte de dialogue d'impression, puis :",
+  "Check 'Background graphics'": "Cocher 'Images d'arrière-plan'",
   "Uncheck 'Headers and footers'": "Décocher 'En-têtes et pieds de page'"
 }

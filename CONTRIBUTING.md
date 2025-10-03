@@ -50,7 +50,7 @@ bun run preview
 
 - **Bundler**: Vite 6.x (with Bun as package manager)
 - **Framework**: React 19
-- **UI Library**: Mantine 7.x
+- **UI Library**: Mantine 8.x
 - **TypeScript**: 5.7.x
 - **Testing**: Vitest 2.x
 - **Linting**: ESLint 9.x + Prettier 3.x

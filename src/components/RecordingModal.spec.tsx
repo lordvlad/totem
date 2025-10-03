@@ -1,6 +1,4 @@
-// @vitest-environment jsdom
-
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, mock, beforeEach, afterEach } from "bun:test";
 
 describe("RecordingModal playback behavior", () => {
   let mockAudioContext: any;
@@ -11,44 +9,44 @@ describe("RecordingModal playback behavior", () => {
 
     // Mock AudioContext
     mockAudioContext = {
-      createMediaElementSource: vi.fn((audio) => {
+      createMediaElementSource: mock((audio) => {
         audioContextCreateMediaElementSourceCalls.push(audio);
         return {
-          connect: vi.fn(),
+          connect: mock(),
         };
       }),
-      createAnalyser: vi.fn(() => ({
+      createAnalyser: mock(() => ({
         fftSize: 0,
         frequencyBinCount: 1024,
-        getByteFrequencyData: vi.fn(),
-        connect: vi.fn(),
+        getByteFrequencyData: mock(),
+        connect: mock(),
       })),
       destination: {},
       state: "running",
-      close: vi.fn(() => Promise.resolve()),
+      close: mock(() => Promise.resolve()),
     };
 
-    global.AudioContext = vi.fn(() => mockAudioContext) as any;
+    global.AudioContext = mock(() => mockAudioContext) as any;
 
     // Mock Audio element to create unique instances
-    global.Audio = vi.fn(() => ({
-      play: vi.fn(() => Promise.resolve()),
-      pause: vi.fn(),
+    global.Audio = mock(() => ({
+      play: mock(() => Promise.resolve()),
+      pause: mock(),
       src: "",
       onended: null,
     })) as any;
 
-    global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
-    global.URL.revokeObjectURL = vi.fn();
-    global.requestAnimationFrame = vi.fn((cb) => {
+    global.URL.createObjectURL = mock(() => "blob:mock-url");
+    global.URL.revokeObjectURL = mock();
+    global.requestAnimationFrame = mock((cb) => {
       cb(0);
       return 0;
     });
-    global.cancelAnimationFrame = vi.fn();
+    global.cancelAnimationFrame = mock();
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    // Bun doesn't have vi.clearAllMocks(), but mocks are reset between tests
   });
 
   it("should allow creating multiple MediaElementSource from same audio element", () => {

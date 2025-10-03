@@ -12,6 +12,7 @@
     "@mantine/notifications": "^8.3.3",
     "@mantine/nprogress": "^8.3.3",
     "@testing-library/react": "^14.0.0",
+    "@types/bun": "^1.2.23",
     "@types/lodash.debounce": "^4.0.9",
     "@types/lodash.merge": "^4.6.9",
     "@types/node": "^20.8.9",
@@ -20,7 +21,6 @@
     "@types/wicg-file-system-access": "^2023.10.2",
     "@types/yauzl": "^2.10.3",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/ui": "^2.1.8",
     "buffer": "^6.0.3",
     "eslint": "^9.17.0",
     "eslint-config-love": "^113.0.0",
@@ -47,7 +47,6 @@
     "vite": "^6.0.5",
     "vite-plugin-checker": "^0.8.0",
     "vite-plugin-markdown": "^2.2.0",
-    "vitest": "^2.1.8",
     "webworker": "^0.8.4",
     "whatwg-streams": "^0.1.1",
     "yauzl": "^3.2.0"
@@ -61,11 +60,10 @@
     "dev": "vite dev",
     "lint": "prettier src --check && eslint src",
     "lint:fix": "prettier src --write && eslint src --fix",
-    "test": "vitest run",
-    "test:dev": "vitest watch --ui",
+    "pretest": "bun -e 'import(\"./src/util/tttool.ts\").then(m => m.tttool(\"--help\"))'",
+    "test": "bun test",
     "build": "vite build",
-    "preview": "vite preview",
-    "test:debug": "vitest run -t 'gme should produce a valid gme file'"
+    "preview": "vite preview"
   },
   "type": "module"
 }

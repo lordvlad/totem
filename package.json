@@ -60,10 +60,10 @@
     "dev": "vite dev",
     "lint": "prettier src --check && eslint src",
     "lint:fix": "prettier src --write && eslint src --fix",
-    "test": "bun test --timeout 60000",
+    "pretest": "bun -e 'import(\"./src/util/tttool.ts\").then(m => m.tttool(\"--help\"))'",
+    "test": "bun test",
     "build": "vite build",
-    "preview": "vite preview",
-    "test:debug": "bun test --timeout 60000 -t 'gme should produce a valid gme file'"
+    "preview": "vite preview"
   },
   "type": "module"
 }

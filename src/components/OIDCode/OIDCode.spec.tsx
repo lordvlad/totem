@@ -6,13 +6,13 @@ import { range } from "./util";
 describe("range", () => {
   it("should work with end only", () => {
     const r = range(8);
-    expect(Array.isArray(r)).toBe(true);
+    expect(r).toBeArray();
     expect(r).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
   });
 
   it("should work with start and end", () => {
     const r = range(2, 8);
-    expect(Array.isArray(r)).toBe(true);
+    expect(r).toBeArray();
     expect(r).toEqual([2, 3, 4, 5, 6, 7, 8]);
   });
 });

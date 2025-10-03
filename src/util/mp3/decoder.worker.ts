@@ -1,9 +1,16 @@
-import { set } from "idb-keyval";
+import { get, set } from "idb-keyval";
 import { load } from "./id3";
 import type { Mp3WebWorkerRequest, Mp3WebWorkerResponse } from "./decoder";
 
 function loadAll(handles: FileSystemFileHandle[]) {
   (async () => {
+    // Get current project ID from IndexedDB
+    const projectId = await get<string | undefined>("currentProject");
+    if (projectId === undefined) {
+      emit({ event: "error", error: "No current project" });
+      return;
+    }
+
     let n = -1;
     const total = handles.length;
     for (const handle of handles) {
@@ -12,8 +19,12 @@ function loadAll(handles: FileSystemFileHandle[]) {
         const file = await handle.getFile();
         const { data, ...meta } = await load(file.stream());
         const uuid = crypto.randomUUID();
-        await set(`data:${uuid}`, data);
-        await set(`track:${uuid}`, { ...meta, fileName: handle.name, uuid });
+        await set(`${projectId}:data:${uuid}`, data);
+        await set(`${projectId}:track:${uuid}`, {
+          ...meta,
+          fileName: handle.name,
+          uuid,
+        });
         emit({
           event: "loaded",
           meta: { ...meta, fileName: handle.name, uuid },

@@ -10,6 +10,7 @@ import { Track } from "../util/mp3/track";
 import DecoderWorker from "../util/mp3/decoder.worker?worker";
 import { assert, is } from "tsafe";
 import { getAsFileSystemHandle } from "../util/fileSystemFallback";
+import { getCurrentProjectId } from "./useProjects";
 
 const worker = new DecoderWorker();
 
@@ -92,8 +93,12 @@ function reduce(s: typeof state, action: A): S {
       return s;
     case "remove":
       Promise.all([
-        delMany(action.tracks.map((t) => `track:${t.uuid}`)),
-        delMany(action.tracks.map((t) => `data:${t.uuid}`)),
+        delMany(
+          action.tracks.map((t) => `${getCurrentProjectId()}:track:${t.uuid}`),
+        ),
+        delMany(
+          action.tracks.map((t) => `${getCurrentProjectId()}:data:${t.uuid}`),
+        ),
       ])
         .then(() => dispatch({ event: "removed", tracks: action.tracks }))
         .catch((e1: unknown) => console.error(e1));
@@ -108,8 +113,10 @@ function reduce(s: typeof state, action: A): S {
       };
     case "clear":
       Promise.all([
-        delMany(s.tracks.map((t) => `track:${t.uuid}`)),
-        delMany(s.tracks.map((t) => `data:${t.uuid}`)),
+        delMany(
+          s.tracks.map((t) => `${getCurrentProjectId()}:track:${t.uuid}`),
+        ),
+        delMany(s.tracks.map((t) => `${getCurrentProjectId()}:data:${t.uuid}`)),
       ])
         .then(() => dispatch({ event: "cleared" }))
         .catch((e1: unknown) => console.error(e1));
@@ -118,17 +125,20 @@ function reduce(s: typeof state, action: A): S {
       return { ...s, isLoading: false, tracks: [] };
     case "init":
       keys()
-        .then(
-          async (ks) =>
-            await getMany(
-              ks.filter((k) => typeof k === "string" && k.startsWith("track")),
-            ).then((items) =>
-              items.map((i) => {
-                assert(is<Record<string, unknown>>(i));
-                return i;
-              }),
+        .then(async (ks) => {
+          const projectPrefix = `${getCurrentProjectId()}:`;
+          return await getMany(
+            ks.filter(
+              (k) =>
+                typeof k === "string" && k.startsWith(`${projectPrefix}track:`),
             ),
-        )
+          ).then((items) =>
+            items.map((i) => {
+              assert(is<Record<string, unknown>>(i));
+              return i;
+            }),
+          );
+        })
         .then((items) => items.map((item) => hydrate(item, Track)))
         .then((tracks) => dispatch({ event: "initialized", tracks }))
         .catch((e1: unknown) => console.error(e1));
@@ -136,7 +146,12 @@ function reduce(s: typeof state, action: A): S {
     case "initialized":
       return { ...s, isLoading: false, tracks: action.tracks };
     case "update":
-      setMany(action.tracks.map((track) => [`track:${track.uuid}`, track]))
+      setMany(
+        action.tracks.map((track) => [
+          `${getCurrentProjectId()}:track:${track.uuid}`,
+          track,
+        ]),
+      )
         .then(() => dispatch({ event: "updated", tracks: action.tracks }))
         .catch((e1: unknown) => console.error(e1));
       return { ...s, isLoading: true };

@@ -5,7 +5,13 @@ import { isReq, build, type MediaTableItem, type Req } from "./gme";
 import { singleChunkStream } from "../singleChunkStream";
 
 async function fetchMedia({ track }: MediaTableItem) {
-  const data = await get<Uint8Array>(`data:${track.uuid}`);
+  // Get current project ID from IndexedDB
+  const projectId = await get<string | undefined>("currentProject");
+  if (projectId === undefined) {
+    throw new Error("No current project");
+  }
+
+  const data = await get<Uint8Array>(`${projectId}:data:${track.uuid}`);
   if (data == null) throw new Error(`Missing track data for ${track.fileName}`);
   return singleChunkStream(data);
 }

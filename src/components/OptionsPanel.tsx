@@ -1,11 +1,20 @@
-import { Button, Checkbox, Group, NumberInput, TextInput } from "@mantine/core";
+import {
+  Button,
+  Checkbox,
+  Group,
+  Modal,
+  NumberInput,
+  TextInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { clear, get, keys, set } from "idb-keyval";
 import debounce from "lodash.debounce";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FormField } from "../components/FormField";
 import { Download } from "../components/icons/Download";
+import Globe from "../components/icons/Globe";
 import Trash from "../components/icons/Trash";
 import { Upload } from "../components/icons/Upload";
 import { useI18n } from "../hooks/useI18n/useI18n";
@@ -52,6 +61,9 @@ export function OptionsPanel() {
       [],
     ),
   });
+  const [projectUrl, setProjectUrl] = useState("");
+  const [urlModalOpened, { open: openUrlModal, close: closeUrlModal }] =
+    useDisclosure(false);
 
   useEffect(() => {
     form.setValues(options);
@@ -177,6 +189,53 @@ export function OptionsPanel() {
     }
   }, [alert, i18n]);
 
+  const loadProjectFromUrl = useCallback(async () => {
+    if (!projectUrl.trim()) {
+      alert(i18n`Failed to open project: Please enter a valid URL`);
+      return;
+    }
+
+    closeUrlModal();
+
+    try {
+      notifications.show({
+        loading: true,
+        message: i18n`Loading project from URL...`,
+        id: "load-url",
+      });
+
+      const response = await fetch(projectUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const text = await response.text();
+      const lines = text.split("\n");
+
+      for (const line of lines) {
+        if (line.trim()) {
+          const [key, data] = JSON.parse(line, (_k: string, value: unknown) => {
+            if (typeof value === "string") {
+              if (value.startsWith("uint8array:base64:"))
+                return fromBase64(value.substring("uint8array:base64:".length));
+              if (value.startsWith("arraybuffer:base64:"))
+                return fromBase64(value.substring("arraybuffer:base64:".length))
+                  .buffer;
+            }
+            return value;
+          });
+          await set(key, data);
+        }
+      }
+
+      notifications.hide("load-url");
+      window.location.reload();
+    } catch (error) {
+      notifications.hide("load-url");
+      alert(i18n`Failed to open project: ${(error as Error).message}`);
+    }
+  }, [projectUrl, alert, i18n, closeUrlModal]);
+
   const { confirm, element: confirmHandle } = useConfirm();
 
   const deleteProject = () => {
@@ -210,6 +269,9 @@ export function OptionsPanel() {
           <Button leftSection={<Upload {...iconStyle} />} onClick={openProject}>
             {i18n`Open Project`}
           </Button>
+          <Button leftSection={<Globe {...iconStyle} />} onClick={openUrlModal}>
+            {i18n`Load from URL`}
+          </Button>
           <Button
             color="red"
             onClick={deleteProject}
@@ -219,6 +281,42 @@ export function OptionsPanel() {
           </Button>
         </Group>
       </FormField>
+
+      <Modal
+        opened={urlModalOpened}
+        onClose={closeUrlModal}
+        title={i18n`Load from URL`}
+        size="lg"
+      >
+        <FormField
+          label={i18n`Project URL`}
+          tooltip={i18n`Enter a public URL to a .ndjson project file`}
+        >
+          <TextInput
+            placeholder="https://example.com/project.ndjson"
+            value={projectUrl}
+            onChange={(e) => setProjectUrl(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && projectUrl.trim()) {
+                loadProjectFromUrl();
+              }
+            }}
+            data-autofocus
+          />
+        </FormField>
+        <Group mt="md" gap={4} style={{ justifyContent: "flex-end" }}>
+          <Button variant="subtle" onClick={closeUrlModal}>
+            {i18n`Close`}
+          </Button>
+          <Button
+            onClick={loadProjectFromUrl}
+            disabled={!projectUrl.trim()}
+            leftSection={<Globe {...iconStyle} />}
+          >
+            {i18n`Load from URL`}
+          </Button>
+        </Group>
+      </Modal>
 
       <FormField
         label={i18n`Product ID`}

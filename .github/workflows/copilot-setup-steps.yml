@@ -58,26 +58,14 @@ jobs:
           source ~/.bash_profile
           bun run preview &
           sleep 5
-
-  development-workflow:
-    runs-on: ubuntu-latest
-    steps:
-      # Common development tasks
-      - name: Development server
+      
+      # Additional notes for developers
+      - name: Development workflow notes
         run: |
-          # Start development server with hot reload
-          # bun run dev
-          echo "Development server runs on http://localhost:5173"
-
-      - name: Test in watch mode
-        run: |
-          # Run tests with UI in watch mode
-          # bun run test:dev
-          echo "Test UI available for interactive testing"
-
-  important-notes:
-    runs-on: ubuntu-latest
-    steps:
+          echo "=== Development Workflow ==="
+          echo "Development server: bun run dev (runs on http://localhost:5173)"
+          echo "Test UI: bun run test:dev (interactive testing)"
+      
       - name: Project requirements
         run: |
           echo "=== Totem Project Setup Requirements ==="
@@ -120,3 +108,4 @@ jobs:
           echo "  - README.md          : User-facing documentation"
           echo "  - CONTRIBUTING.md    : Development setup and guidelines"
           echo "  - .github/copilot-instructions.md : Detailed developer instructions"
+

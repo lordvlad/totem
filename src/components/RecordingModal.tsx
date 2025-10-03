@@ -190,11 +190,10 @@ export function RecordingModal({
   const playRecording = useCallback(() => {
     if (!audioUrl) return;
 
-    if (!audioElementRef.current) {
-      audioElementRef.current = new Audio();
-    }
-
-    const audio = audioElementRef.current;
+    // Always create a new Audio element for playback to avoid
+    // "InvalidStateError: The HTMLMediaElement has already been connected to a different AudioContext"
+    const audio = new Audio();
+    audioElementRef.current = audio;
     audio.src = audioUrl;
 
     audioContextRef.current = new AudioContext();

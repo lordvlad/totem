@@ -44,4 +44,15 @@ Using modern web technologies, it's possible to satisfy all of the above.
 
 ## How does it work
 
-TODO 
+Totem runs entirely in your browser - there's no backend server, no cloud storage, and no data ever leaves your computer. Here's what happens under the hood:
+
+When you upload audio files, Totem uses Web Workers (background threads) to decode your MP3 files and extract metadata like title, artist, and album art. All of this happens locally in your browser.
+
+When you save the audiobook file, Totem builds a GME (Game Mode Electronics) file - a special binary format that Tiptoi devices understand. This file contains your audio data XOR-encoded with a magic value, along with a script table that tells the Tiptoi pen what to do when you tap different OID codes.
+
+The visual codes you print are OID (Optical Identification) codes - unique dot patterns that the Tiptoi pen can recognize. Each code corresponds to a specific action in the GME file, like playing a particular song or stopping playback.
+
+Totem generates these codes at 1200 DPI as SVG graphics that can be printed. When you tap a code with your Tiptoi pen, it reads the pattern, looks up the corresponding script in the GME file, and plays the audio.
+
+All the heavy computation (decoding MP3s, building GME files, generating OID patterns) happens in Web Workers to keep the interface responsive. The entire application is built with modern web technologies (React, Vite, TypeScript) and compiles to a static site that can run anywhere.
+

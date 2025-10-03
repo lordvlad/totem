@@ -44,4 +44,15 @@ Mit modernen Webtechnologien ist es möglich, all dies zu erfüllen.
 
 ## Wie funktioniert es
 
-TODO
+Totem läuft vollständig in deinem Browser - es gibt keinen Backend-Server, keinen Cloud-Speicher, und keine Daten verlassen jemals deinen Computer. So funktioniert es im Detail:
+
+Wenn du Audiodateien hochlädst, verwendet Totem Web Workers (Hintergrund-Threads), um deine MP3-Dateien zu dekodieren und Metadaten wie Titel, Interpret und Album-Cover zu extrahieren. All dies geschieht lokal in deinem Browser.
+
+Wenn du die Hörbuchdatei speicherst, erstellt Totem eine GME-Datei (Game Mode Electronics) - ein spezielles Binärformat, das Tiptoi-Geräte verstehen. Diese Datei enthält deine Audiodaten, die mit einem magischen Wert XOR-kodiert sind, zusammen mit einer Skript-Tabelle, die dem Tiptoi-Stift sagt, was er tun soll, wenn du verschiedene OID-Codes antippst.
+
+Die visuellen Codes, die du ausdruckst, sind OID-Codes (Optical Identification) - einzigartige Punktmuster, die der Tiptoi-Stift erkennen kann. Jeder Code entspricht einer bestimmten Aktion in der GME-Datei, wie das Abspielen eines bestimmten Liedes oder das Stoppen der Wiedergabe.
+
+Totem erzeugt diese Codes mit 1200 DPI als SVG-Grafiken, die gedruckt werden können. Wenn du einen Code mit deinem Tiptoi-Stift antippst, liest er das Muster, schaut das entsprechende Skript in der GME-Datei nach und spielt die Audiodatei ab.
+
+Die gesamte rechenintensive Arbeit (Dekodierung von MP3s, Erstellung von GME-Dateien, Generierung von OID-Mustern) erfolgt in Web Workers, um die Benutzeroberfläche reaktionsfähig zu halten. Die gesamte Anwendung ist mit modernen Webtechnologien (React, Vite, TypeScript) erstellt und wird zu einer statischen Website kompiliert, die überall ausgeführt werden kann.
+

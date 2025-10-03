@@ -12,6 +12,7 @@ export function useOidCodeBackgroundStyle({ code }: { code: number }) {
       left: 0,
       top: 0,
       backgroundImage: `url(${backgroundImage})`,
+      pointerEvents: "none" as const,
     }),
     [backgroundImage],
   );

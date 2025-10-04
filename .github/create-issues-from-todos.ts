@@ -86,7 +86,7 @@ async function findTodoComments(): Promise<TodoComment[]> {
     }
   
     return comments;
-  }).flat();
+  })).flat();
 }
 
 /**

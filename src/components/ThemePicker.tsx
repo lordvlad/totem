@@ -40,6 +40,7 @@ export function ThemePicker() {
       variant="outline"
       onClick={toggle}
       leftSection={icons[colorScheme]}
+      data-testid="theme-picker-button"
     >
       {labels(colorScheme)}
     </Button>

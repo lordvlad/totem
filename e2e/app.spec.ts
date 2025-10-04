@@ -67,11 +67,8 @@ test.describe("Totem Application", () => {
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    // Get all buttons and find the theme picker by its width attribute
-    const themeButton = page
-      .locator('button[class*="Button"]')
-      .filter({ hasText: /auto|hell|dunkel|clair|sombre|chiaro|scuro/i })
-      .first();
+    // Find the theme picker button by its test ID
+    const themeButton = page.getByTestId("theme-picker-button");
     await expect(themeButton).toBeVisible();
 
     // Verify initial localStorage state (should default to "auto")

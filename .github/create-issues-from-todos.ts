@@ -44,7 +44,7 @@ const [OWNER, REPO] = GITHUB_REPOSITORY.split('/');
  * Scan repository for TODO and FIXME comments
  */
 async function findTodoComments(): Promise<TodoComment[]> {
-  return Promise.all(['src', 'e2e'].map(async (dir) => {
+  return (await Promise.all(['src', 'e2e'].map(async (dir) => {
   
     const comments: TodoComment[] = [];
   
@@ -86,7 +86,7 @@ async function findTodoComments(): Promise<TodoComment[]> {
     }
   
     return comments;
-  })).flat();
+  }))).flat();
 }
 
 /**

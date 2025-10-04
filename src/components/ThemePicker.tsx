@@ -1,5 +1,5 @@
 import { Button, useMantineColorScheme } from "@mantine/core";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import Moon from "../components/icons/Moon";
 import Sun from "../components/icons/Sun";
 import { useI18n } from "../hooks/useI18n/useI18n";
@@ -23,9 +23,7 @@ export function ThemePicker() {
   }, [colorScheme]);
 
   const labels = useMemo(
-    () => {
-      return { light: i18n`light`, dark: i18n`dark`, auto: i18n`auto` } as const;
-    },
+    () => ({ light: i18n`light`, dark: i18n`dark`, auto: i18n`auto` } as const),
     [i18n],
   );
 
@@ -35,6 +33,7 @@ export function ThemePicker() {
       variant="outline"
       onClick={toggle}
       leftSection={icons[colorScheme]}
+      data-testid="theme-picker-button"
     >
       {labels[colorScheme]}
     </Button>

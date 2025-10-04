@@ -9,7 +9,7 @@ import { PrintLayout } from "./components/PrintLayout";
 
 export function Main() {
   return (
-    <MantineProvider>
+    <MantineProvider defaultColorScheme="auto">
       <Notifications position={"top-center"} />
       <App />
       <PrintLayout />

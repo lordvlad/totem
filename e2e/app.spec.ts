@@ -54,7 +54,64 @@ test.describe("Totem Application", () => {
   // - Test switching between supported languages (de_DE, es_ES, fr_FR, it_IT)
   // - Verify UI text updates accordingly
 
-  // TODO: Add test for theme switching
-  // - Test light/dark theme toggle
-  // - Verify theme persistence
+  test("should switch between light, dark, and auto themes", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Wait for app to load
+    await page.waitForLoadState("networkidle");
+
+    // Clear localStorage to start with a clean state
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    // Find the theme picker button by its test ID
+    const themeButton = page.getByTestId("theme-picker-button");
+    await expect(themeButton).toBeVisible();
+
+    // Verify initial localStorage state (should default be `null`)
+    let colorScheme = await page.evaluate(() =>
+      localStorage.getItem("mantine-color-scheme-value"),
+    );
+    expect(colorScheme).toBe(null);
+
+    // Click to switch to "light" theme
+    await themeButton.click();
+
+    // Verify theme changed in localStorage
+    colorScheme = await page.evaluate(() =>
+      localStorage.getItem("mantine-color-scheme-value"),
+    );
+    expect(colorScheme).toBe("light");
+
+    // Click to switch to "dark" theme
+    await themeButton.click();
+
+    // Verify theme changed in localStorage
+    colorScheme = await page.evaluate(() =>
+      localStorage.getItem("mantine-color-scheme-value"),
+    );
+    expect(colorScheme).toBe("dark");
+
+    // Click to switch back to "auto" theme
+    await themeButton.click();
+
+    // Verify theme changed in localStorage
+    colorScheme = await page.evaluate(() =>
+      localStorage.getItem("mantine-color-scheme-value"),
+    );
+    expect(colorScheme).toBe("auto");
+
+    // Reload the page to verify persistence
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    // Verify the theme is still "auto" after reload
+    colorScheme = await page.evaluate(() =>
+      localStorage.getItem("mantine-color-scheme-value"),
+    );
+    expect(colorScheme).toBe("auto");
+  });
 });

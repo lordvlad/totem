@@ -5,7 +5,7 @@ import merge from "lodash.merge";
 import { id } from "tsafe/id";
 import { proxy, subscribe, useSnapshot } from "valtio";
 import { GmeBuildConfig } from "../util/gme/gme";
-import { getProjectKey, getCurrentProjectUuid } from "./useCurrentProject";
+import { getProjectKey } from "./useCurrentProject";
 
 const initialCommonOptions = {
   projectName: "My Tiptoi Book",

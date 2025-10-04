@@ -2,6 +2,7 @@ import { Flex, Space, Tabs } from "@mantine/core";
 import { Download } from "../components/icons/Download";
 import Layout from "../components/icons/Layout";
 import Music2 from "../components/icons/Music2";
+import Folders from "../components/icons/Folders";
 import { iconStyle } from "../util/constants";
 import { useI18n } from "../hooks/useI18n/useI18n";
 import { AudioPanel } from "./AudioPanel";
@@ -10,6 +11,7 @@ import { DownloadPanel } from "./DownloadPanel";
 import { LayoutPanel } from "./LayoutPanel";
 import Settings from "../components/icons/Settings";
 import { OptionsPanel } from "./OptionsPanel";
+import { ProjectsPanel } from "./ProjectsPanel";
 
 export function MainPanel() {
   const i18n = useI18n();
@@ -20,6 +22,10 @@ export function MainPanel() {
           value="audio"
           leftSection={<Music2 {...iconStyle} />}
         >{i18n`Audio`}</Tabs.Tab>
+        <Tabs.Tab
+          value="projects"
+          leftSection={<Folders {...iconStyle} />}
+        >{i18n`Projects`}</Tabs.Tab>
         <Tabs.Tab
           value="options"
           leftSection={<Settings {...iconStyle} />}
@@ -39,6 +45,10 @@ export function MainPanel() {
         <AudioToolbar />
         <Space h="sm" />
         <AudioPanel />
+        <Space h="xl" />
+      </Tabs.Panel>
+      <Tabs.Panel value="projects">
+        <ProjectsPanel />
         <Space h="xl" />
       </Tabs.Panel>
       <Tabs.Panel value="options">

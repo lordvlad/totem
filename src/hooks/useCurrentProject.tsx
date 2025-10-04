@@ -1,6 +1,5 @@
 import { get, set } from "idb-keyval";
 import { proxy, subscribe, useSnapshot } from "valtio";
-import type { ProjectMetadata } from "../types/project";
 
 interface CurrentProjectState {
   currentProjectUuid: string | null;

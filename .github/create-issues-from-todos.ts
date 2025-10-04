@@ -10,7 +10,7 @@
  * - Idempotent: won't create duplicate issues (based on title)
  */
 
-interface TodoComment {
+type TodoComment = {
   file: string;
   line: number;
   type: 'TODO' | 'FIXME';
@@ -18,7 +18,7 @@ interface TodoComment {
   context: string[];
 }
 
-interface GitHubIssue {
+type GitHubIssue = {
   number: number;
   title: string;
   state: string;
@@ -47,7 +47,7 @@ async function findTodoComments(): Promise<TodoComment[]> {
   const comments: TodoComment[] = [];
   
   // Find all source files
-  const findFilesCmd = await Bun.$`find . -type f \\( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.mjs" \\) ! -path "*/node_modules/*" ! -path "*/dist/*" ! -path "*/.git/*"`.text();
+  const findFilesCmd = await Bun.$`find src -type f -name "*.ts" -o -name "*.tsx"`.text();
   
   const files = findFilesCmd.trim().split('\n').filter(Boolean);
   

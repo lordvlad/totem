@@ -2,6 +2,7 @@ import { get } from "idb-keyval";
 import usePlayer from "./usePlayer";
 import { useOptions } from "./useOptions";
 import { useLibrary } from "./useLibrary";
+import { getProjectKey } from "./useCurrentProject";
 
 export function useGmePlayer() {
   const audioPlayer = usePlayer();
@@ -29,7 +30,7 @@ export function useGmePlayer() {
   }
 
   const play = async (uuid: string) => {
-    const data = await get<Uint8Array>(`data:${uuid}`);
+    const data = await get<Uint8Array>(getProjectKey(`data:${uuid}`));
     if (data == null) {
       throw new Error(`No data found for track: ${uuid}`);
     }

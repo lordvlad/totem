@@ -89,6 +89,7 @@ export interface GmeBuildConfig {
 export type Req = {
   event: "build";
   writablePort: MessagePort;
+  projectUuid?: string;
 } & GmeBuildConfig;
 
 interface Buf {

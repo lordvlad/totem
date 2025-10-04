@@ -1,6 +1,7 @@
 import { RemoteReadableStream } from "remote-web-streams";
 import type { GmeBuildConfig, Req } from "./gme";
 import GMEBuilderWorker from "./gme.worker?worker";
+import { getCurrentProjectUuid } from "../../hooks/useCurrentProject";
 
 const worker = new GMEBuilderWorker();
 
@@ -15,7 +16,12 @@ export function useGmeBuilder() {
   return {
     build(cfg: GmeBuildConfig) {
       const { readable, writablePort } = new RemoteReadableStream<Uint8Array>();
-      const req: Req = { event: "build", ...cfg, writablePort };
+      const req: Req = {
+        event: "build",
+        ...cfg,
+        writablePort,
+        projectUuid: getCurrentProjectUuid() ?? undefined,
+      };
       worker.postMessage(req, [writablePort]);
       return readable;
     },

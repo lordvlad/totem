@@ -68,8 +68,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "build": "vite build",
-    "preview": "vite preview",
-    "create-issues": "bun run scripts/create-issues-from-todos.ts"
+    "preview": "vite preview"
   },
   "type": "module"
 }

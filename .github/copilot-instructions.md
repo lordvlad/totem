@@ -266,6 +266,7 @@ To ensure CI passes:
 - LF line endings (enforced by .editorconfig)
 - TypeScript strict mode is enabled
 - No unused locals or parameters (enforced by tsconfig)
+- only add comments where the code is not self-explanatory, prefer using descriptive method and variable names (but don't be too verbose, expect some context awareness from the reader)
 
 ### Icon Components
 

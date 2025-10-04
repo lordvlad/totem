@@ -15,15 +15,23 @@ test.describe("Totem Application", () => {
   test("should display header and footer", async ({ page }) => {
     await page.goto("/");
 
-    // Check for GitHub link in footer
-    const githubLink = page.locator('a[href*="github.com/lordvlad/totem"]');
+    // Check for GitHub repository link in footer
+    const githubLink = page.getByRole("link", {
+      name: /check it out on github/i,
+    });
     await expect(githubLink).toBeVisible();
+    await expect(githubLink).toHaveAttribute(
+      "href",
+      "http://github.com/lordvlad/totem",
+    );
 
     // Check for issue tracker link
-    const issueLink = page.locator(
-      'a[href*="github.com/lordvlad/totem/issues"]',
-    );
+    const issueLink = page.getByRole("link", { name: /file an issue/i });
     await expect(issueLink).toBeVisible();
+    await expect(issueLink).toHaveAttribute(
+      "href",
+      "https://github.com/lordvlad/totem/issues",
+    );
   });
 
   // TODO: Add test for audio file upload functionality

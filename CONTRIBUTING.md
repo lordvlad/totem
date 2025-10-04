@@ -31,8 +31,17 @@ bun run lint
 # Fix linting issues
 bun run lint:fix
 
-# Run tests
+# Run unit tests
 bun run test
+
+# Run E2E tests
+bun run test:e2e
+
+# Run E2E tests in UI mode
+bun run test:e2e:ui
+
+# Run E2E tests in debug mode
+bun run test:e2e:debug
 
 # Build for production
 bun run build
@@ -49,7 +58,7 @@ bun run preview
 - **Framework**: React 19
 - **UI Library**: Mantine 8.x
 - **TypeScript**: 5.7.x
-- **Testing**: Bun's native test runner
+- **Testing**: Bun's native test runner (unit tests) + Playwright (E2E tests)
 - **Linting**: ESLint 9.x + Prettier 3.x
 
 ### Workers
@@ -94,7 +103,11 @@ export default function IconName(props: SVGProps<SVGSVGElement>) {
 
 ## Testing
 
-Tests use Bun's native test runner with jsdom for React component testing. The test suite includes:
+The project uses two types of testing:
+
+### Unit Tests (Bun Test Runner)
+
+Unit tests use Bun's native test runner with jsdom for React component testing:
 
 - Component tests using `@testing-library/react`
 - GME file generation validation using the `tttool` binary
@@ -106,6 +119,45 @@ import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 ```
 
 The jsdom environment is set up globally via `bunfig.toml` and `test-setup.ts` for DOM testing.
+
+Run unit tests with:
+
+```bash
+bun run test
+```
+
+### End-to-End Tests (Playwright)
+
+E2E tests use Playwright to test the application in a real browser environment:
+
+- Full application workflow testing
+- User interaction testing
+- Visual regression testing capabilities
+
+E2E test files are located in the `e2e/` directory and use Playwright's test runner:
+
+```typescript
+import { test, expect } from "@playwright/test";
+```
+
+Run E2E tests with:
+
+```bash
+# Run all E2E tests
+bun run test:e2e
+
+# Run with UI mode for debugging
+bun run test:e2e:ui
+
+# Run in debug mode
+bun run test:e2e:debug
+```
+
+**Note:** Playwright will automatically start the dev server (`bun run dev`) before running tests and shut it down after. On first run, you may need to install Playwright browsers:
+
+```bash
+bunx playwright install chromium
+```
 
 ## Building for Production
 

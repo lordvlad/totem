@@ -1,6 +1,7 @@
 /* eslint-disable complexity -- really not sooo hard */
 import { assert, is } from "tsafe/assert";
 import type { ID3Art, Frame, FrameId, ID3 } from "./id3";
+import { FRAMES } from "./frames";
 
 export class Track implements Pick<ID3, "fileName" | "frames"> {
   readonly uuid = "";
@@ -19,9 +20,14 @@ export class Track implements Pick<ID3, "fileName" | "frames"> {
         f2.data = data;
         return data;
       }
-      // FIXME fix typing
-      /* eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/consistent-type-assertions -- allow this for now, fix later */
-      this.frames[id] = { data, id } as Frame;
+      this.frames[id] = {
+        data,
+        id,
+        size: 0,
+        flags: null,
+        frameDataSize: null,
+        description: FRAMES[id],
+      };
       return data;
     }
     if (f2 == null || typeof f2 === "undefined") return undefined;

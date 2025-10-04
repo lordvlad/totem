@@ -262,6 +262,7 @@ To ensure CI passes:
 
 ### General
 
+- Write composable code, prefer map/reduce over loops, be eager to split methods and functions if body gets larger than 20-40 lines
 - Use 2-space indentation (enforced by Prettier)
 - LF line endings (enforced by .editorconfig)
 - TypeScript strict mode is enabled

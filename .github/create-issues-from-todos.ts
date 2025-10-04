@@ -44,46 +44,49 @@ const [OWNER, REPO] = GITHUB_REPOSITORY.split('/');
  * Scan repository for TODO and FIXME comments
  */
 async function findTodoComments(): Promise<TodoComment[]> {
-  const comments: TodoComment[] = [];
+  return Promise.all(['src', 'e2e'].map(async (dir) => {
   
-  // Find all source files
-  const findFilesCmd = await Bun.$`find src -type f -name "*.ts" -o -name "*.tsx"`.text();
+    const comments: TodoComment[] = [];
   
-  const files = findFilesCmd.trim().split('\n').filter(Boolean);
+    // Find all source files
+    const findFilesCmd = await Bun.$`find ${dir} -type f -name "*.ts" -o -name "*.tsx"`.text();
   
-  for (const file of files) {
-    try {
-      const content = await Bun.file(file).text();
-      const lines = content.split('\n');
+    const files = findFilesCmd.trim().split('\n').filter(Boolean);
+  
+    for (const file of files) {
+      try {
+        const content = await Bun.file(file).text();
+        const lines = content.split('\n');
       
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const todoMatch = line.match(/\/\/\s*(TODO|FIXME)[:\s]+(.+)/);
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const todoMatch = line.match(/\/\/\s*(TODO|FIXME)[:\s]+(.+)/);
         
-        if (todoMatch) {
-          const type = todoMatch[1] as 'TODO' | 'FIXME';
-          const text = todoMatch[2].trim();
+          if (todoMatch) {
+            const type = todoMatch[1] as 'TODO' | 'FIXME';
+            const text = todoMatch[2].trim();
           
-          // Get context: 2 lines before and 2 lines after
-          const contextStart = Math.max(0, i - 2);
-          const contextEnd = Math.min(lines.length, i + 3);
-          const context = lines.slice(contextStart, contextEnd);
+            // Get context: 2 lines before and 2 lines after
+            const contextStart = Math.max(0, i - 2);
+            const contextEnd = Math.min(lines.length, i + 3);
+            const context = lines.slice(contextStart, contextEnd);
           
-          comments.push({
-            file: file.replace(/^\.\//, ''),
-            line: i + 1,
-            type,
-            text,
-            context
-          });
+            comments.push({
+              file: file.replace(/^\.\//, ''),
+              line: i + 1,
+              type,
+              text,
+              context
+            });
+          }
         }
+      } catch (error) {
+        console.error(`Failed to read file ${file}:`, error);
       }
-    } catch (error) {
-      console.error(`Failed to read file ${file}:`, error);
     }
-  }
   
-  return comments;
+    return comments;
+  }).flat();
 }
 
 /**

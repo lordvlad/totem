@@ -71,11 +71,11 @@ test.describe("Totem Application", () => {
     const themeButton = page.getByTestId("theme-picker-button");
     await expect(themeButton).toBeVisible();
 
-    // Verify initial localStorage state (should default to "auto")
+    // Verify initial localStorage state (should default be `null`)
     let colorScheme = await page.evaluate(() =>
       localStorage.getItem("mantine-color-scheme-value"),
     );
-    expect(colorScheme).toBe("auto");
+    expect(colorScheme).toBe(null);
 
     // Click to switch to "light" theme
     await themeButton.click();

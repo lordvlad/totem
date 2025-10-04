@@ -23,7 +23,7 @@ export function ThemePicker() {
   }, [colorScheme]);
 
   const labels = useMemo(
-    () => ({ light: i18n`light`, dark: i18n`dark`, auto: i18n`auto` } as const),
+    () => ({ light: i18n`light`, dark: i18n`dark`, auto: i18n`auto` }) as const,
     [i18n],
   );
 

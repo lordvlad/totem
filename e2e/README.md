@@ -75,10 +75,15 @@ The existing test files contain extensive TODO comments marking opportunities fo
 ## CI Integration
 
 These tests run automatically in GitHub Actions on every push. The workflow:
-1. Installs Playwright browsers
-2. Starts the dev server (`bun run dev`)
-3. Runs all E2E tests
-4. Uploads test reports as artifacts (available for 30 days)
+1. Caches Bun dependencies for faster installation
+2. Builds the production version of the app
+3. Caches Playwright browsers to avoid re-downloading
+4. Installs Playwright browsers (if not cached)
+5. Starts a preview server with the pre-built app
+6. Runs all E2E tests
+7. Uploads test reports as artifacts (available for 30 days)
+
+The CI environment uses a production build (`bun run preview`) instead of the dev server for faster startup times. Local development still uses the dev server (`bun run dev`).
 
 View test reports in GitHub Actions:
 - Go to Actions tab → Select workflow run → Download "playwright-report" artifact

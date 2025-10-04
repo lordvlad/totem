@@ -19,7 +19,11 @@ export function LocalePicker() {
   return (
     <Menu shadow="md" width={100}>
       <Menu.Target>
-        <Button variant="outline" leftSection={<Globe {...iconStyle} />}>
+        <Button
+          variant="outline"
+          leftSection={<Globe {...iconStyle} />}
+          data-testid="locale-picker-button"
+        >
           {" "}
           {locales[locale]}{" "}
         </Button>

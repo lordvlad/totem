@@ -5,6 +5,7 @@ import merge from "lodash.merge";
 import { id } from "tsafe/id";
 import { proxy, subscribe, useSnapshot } from "valtio";
 import { GmeBuildConfig } from "../util/gme/gme";
+import { getProjectKey } from "./useCurrentProject";
 
 const initialCommonOptions = {
   projectName: "My Tiptoi Book",
@@ -64,14 +65,22 @@ export const initialOptions = id<Options>(initialTileOptions);
 
 export const optionsProxy = proxy<Options>(initialOptions);
 
-get("options").then((options) => {
-  if (options) merge(optionsProxy, options);
-});
+// Load options for current project
+function loadOptions() {
+  const key = getProjectKey("options");
+  get(key).then((options) => {
+    if (options) merge(optionsProxy, options);
+  });
+}
+
+// Initial load
+loadOptions();
 
 subscribe(
   optionsProxy,
   debounce(() => {
-    set("options", { ...optionsProxy });
+    const key = getProjectKey("options");
+    set(key, { ...optionsProxy });
   }, 300),
 );
 

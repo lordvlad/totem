@@ -4,13 +4,23 @@ import { get } from "idb-keyval";
 import { isReq, build, type MediaTableItem, type Req } from "./gme";
 import { singleChunkStream } from "../singleChunkStream";
 
+let currentProjectUuid: string | null = null;
+
+function getProjectKey(key: string): string {
+  if (currentProjectUuid == null) {
+    return key; // Backward compatibility
+  }
+  return `project:${currentProjectUuid}:${key}`;
+}
+
 async function fetchMedia({ track }: MediaTableItem) {
-  const data = await get<Uint8Array>(`data:${track.uuid}`);
+  const data = await get<Uint8Array>(getProjectKey(`data:${track.uuid}`));
   if (data == null) throw new Error(`Missing track data for ${track.fileName}`);
   return singleChunkStream(data);
 }
 
-function doBuild({ event: ignored, writablePort, ...cfg }: Req) {
+function doBuild({ event: ignored, writablePort, projectUuid, ...cfg }: Req) {
+  currentProjectUuid = projectUuid ?? null;
   build(cfg, fetchMedia)
     .pipeTo(fromWritablePort<Uint8Array>(writablePort))
     .catch((e: unknown) => postMessage({ event: "error", error: String(e) }));

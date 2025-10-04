@@ -8,6 +8,7 @@ import { AppHeader } from "./AppHeader";
 import { HelpPanel } from "../HelpPanel";
 import { MainPanel } from "../MainPanel";
 import { useOptions } from "../../hooks/useOptions";
+import { useProjectInitialization } from "../../hooks/useProjectInitialization";
 
 export function App(
   props: Omit<
@@ -16,6 +17,7 @@ export function App(
   >,
 ) {
   const { projectName } = useOptions()[0];
+  useProjectInitialization();
 
   useDocumentTitle(`Totem - ${projectName}`);
 

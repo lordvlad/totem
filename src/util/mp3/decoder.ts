@@ -3,6 +3,7 @@ import type { ID3 } from "./id3";
 export interface Mp3WebWorkerRequest {
   event: "load";
   handles: FileSystemFileHandle[];
+  projectUuid?: string;
 }
 
 export type Mp3WebWorkerResponse =

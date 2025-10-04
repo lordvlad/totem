@@ -10,6 +10,7 @@ import { Track } from "../util/mp3/track";
 import DecoderWorker from "../util/mp3/decoder.worker?worker";
 import { assert, is } from "tsafe";
 import { getAsFileSystemHandle } from "../util/fileSystemFallback";
+import { getProjectKey, getCurrentProjectUuid } from "./useCurrentProject";
 
 const worker = new DecoderWorker();
 
@@ -73,7 +74,11 @@ function update(...tracks: Track[]) {
 function reduce(s: typeof state, action: A): S {
   switch (action.event) {
     case "load":
-      worker.postMessage({ event: "load", handles: action.handles });
+      worker.postMessage({
+        event: "load",
+        handles: action.handles,
+        projectUuid: getCurrentProjectUuid() ?? undefined,
+      });
       return { ...s, isLoading: true };
     case "loaded":
       return {
@@ -92,8 +97,8 @@ function reduce(s: typeof state, action: A): S {
       return s;
     case "remove":
       Promise.all([
-        delMany(action.tracks.map((t) => `track:${t.uuid}`)),
-        delMany(action.tracks.map((t) => `data:${t.uuid}`)),
+        delMany(action.tracks.map((t) => getProjectKey(`track:${t.uuid}`))),
+        delMany(action.tracks.map((t) => getProjectKey(`data:${t.uuid}`))),
       ])
         .then(() => dispatch({ event: "removed", tracks: action.tracks }))
         .catch((e1: unknown) => console.error(e1));
@@ -108,8 +113,8 @@ function reduce(s: typeof state, action: A): S {
       };
     case "clear":
       Promise.all([
-        delMany(s.tracks.map((t) => `track:${t.uuid}`)),
-        delMany(s.tracks.map((t) => `data:${t.uuid}`)),
+        delMany(s.tracks.map((t) => getProjectKey(`track:${t.uuid}`))),
+        delMany(s.tracks.map((t) => getProjectKey(`data:${t.uuid}`))),
       ])
         .then(() => dispatch({ event: "cleared" }))
         .catch((e1: unknown) => console.error(e1));
@@ -118,17 +123,21 @@ function reduce(s: typeof state, action: A): S {
       return { ...s, isLoading: false, tracks: [] };
     case "init":
       keys()
-        .then(
-          async (ks) =>
-            await getMany(
-              ks.filter((k) => typeof k === "string" && k.startsWith("track")),
-            ).then((items) =>
-              items.map((i) => {
-                assert(is<Record<string, unknown>>(i));
-                return i;
-              }),
+        .then(async (ks) => {
+          const projectUuid = getCurrentProjectUuid();
+          const trackPrefix =
+            projectUuid != null ? `project:${projectUuid}:track:` : "track:";
+          return await getMany(
+            ks.filter(
+              (k) => typeof k === "string" && k.startsWith(trackPrefix),
             ),
-        )
+          ).then((items) =>
+            items.map((i) => {
+              assert(is<Record<string, unknown>>(i));
+              return i;
+            }),
+          );
+        })
         .then((items) => items.map((item) => hydrate(item, Track)))
         .then((tracks) => dispatch({ event: "initialized", tracks }))
         .catch((e1: unknown) => console.error(e1));
@@ -136,7 +145,12 @@ function reduce(s: typeof state, action: A): S {
     case "initialized":
       return { ...s, isLoading: false, tracks: action.tracks };
     case "update":
-      setMany(action.tracks.map((track) => [`track:${track.uuid}`, track]))
+      setMany(
+        action.tracks.map((track) => [
+          getProjectKey(`track:${track.uuid}`),
+          track,
+        ]),
+      )
         .then(() => dispatch({ event: "updated", tracks: action.tracks }))
         .catch((e1: unknown) => console.error(e1));
       return { ...s, isLoading: true };

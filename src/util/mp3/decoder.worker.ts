@@ -2,6 +2,15 @@ import { set } from "idb-keyval";
 import { load } from "./id3";
 import type { Mp3WebWorkerRequest, Mp3WebWorkerResponse } from "./decoder";
 
+let currentProjectUuid: string | null = null;
+
+function getProjectKey(key: string): string {
+  if (currentProjectUuid == null) {
+    return key; // Backward compatibility
+  }
+  return `project:${currentProjectUuid}:${key}`;
+}
+
 function loadAll(handles: FileSystemFileHandle[]) {
   (async () => {
     let n = -1;
@@ -12,8 +21,12 @@ function loadAll(handles: FileSystemFileHandle[]) {
         const file = await handle.getFile();
         const { data, ...meta } = await load(file.stream());
         const uuid = crypto.randomUUID();
-        await set(`data:${uuid}`, data);
-        await set(`track:${uuid}`, { ...meta, fileName: handle.name, uuid });
+        await set(getProjectKey(`data:${uuid}`), data);
+        await set(getProjectKey(`track:${uuid}`), {
+          ...meta,
+          fileName: handle.name,
+          uuid,
+        });
         emit({
           event: "loaded",
           meta: { ...meta, fileName: handle.name, uuid },
@@ -41,11 +54,13 @@ function isReq(x: unknown): x is Mp3WebWorkerRequest {
   return x != null && typeof x === "object" && "event" in x;
 }
 
-self.addEventListener("message", (event: Event) => {
+// eslint-disable-next-line complexity -- This function handles multiple event types
+function handleMessage(event: Event) {
   if ("data" in event && isReq(event.data)) {
     switch (event.data.event) {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- this is only the first case
       case "load":
+        currentProjectUuid = event.data.projectUuid ?? null;
         loadAll(event.data.handles);
         break;
     }
@@ -55,7 +70,9 @@ self.addEventListener("message", (event: Event) => {
   } else {
     throw new Error(`Unhandled event: ${JSON.stringify(event)}`);
   }
-});
+}
+
+self.addEventListener("message", handleMessage);
 
 self.addEventListener("error", (e) => {
   console.error(e);

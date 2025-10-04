@@ -1,3 +1,20 @@
+// This component is now tested via Playwright E2E tests
+// See: e2e/audio.spec.ts
+//
+// The RecordingModal handles audio recording and playback functionality.
+// E2E tests verify the full audio workflow in a real browser environment.
+//
+// Original unit tests demonstrated:
+// - The bug: calling createMediaElementSource twice on the same audio element fails
+// - The fix: create a new Audio element for each playback session
+//
+// Future E2E test opportunities:
+// - Audio recording via microphone (with permission handling)
+// - Audio playback controls (play, pause, stop)
+// - Multiple audio track management
+// - Preventing InvalidStateError when replaying audio
+// - Audio visualization/waveform display
+
 import { describe, expect, it, mock, beforeEach, afterEach } from "bun:test";
 
 describe("RecordingModal playback behavior", () => {

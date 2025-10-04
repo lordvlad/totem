@@ -1,3 +1,19 @@
+// This component is now tested via Playwright E2E tests
+// See: e2e/oid-codes.spec.ts
+//
+// The OIDCode component generates SVG patterns for Tiptoi optical identification codes.
+// E2E tests verify the full rendering pipeline in a real browser environment.
+//
+// Original unit tests verified:
+// - SVG pattern generation with correct IDs
+// - Path elements within patterns
+// - Proper structure of OID code SVG output
+//
+// Future E2E test opportunities:
+// - Print layout with multiple OID codes
+// - OID code generation at 1200 DPI
+// - Pattern variations for different code values
+
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "bun:test";
 import { OIDCodePattern } from "./OIDCodePattern";

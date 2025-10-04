@@ -21,5 +21,16 @@ jobs:
         run: bun install
       - name: Lint project
         run: bun lint:fix && git diff
-      - name: Test project
+      - name: Test project (unit tests)
         run: bun run test
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+      - name: Test project (E2E tests)
+        run: bun run test:e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

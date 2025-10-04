@@ -10,6 +10,13 @@ The script has catalogued **25 TODO and FIXME items** across the codebase:
 - **3 Component TODOs** - Incomplete UI components
 - **6 Code TODOs/FIXMEs** - Code improvements, refactoring, and bug fixes
 
+## Key Features
+
+- **Idempotent**: Only creates issues for new TODO/FIXME items, skips duplicates
+- **GitHub Actions**: Can be triggered manually from the Actions tab
+- **Automatic labeling**: Applies appropriate labels for categorization
+- **Dry-run mode**: Preview changes before creating issues
+
 ## Prerequisites
 
 1. **GitHub CLI (gh)** must be installed:
@@ -34,7 +41,24 @@ The script has catalogued **25 TODO and FIXME items** across the codebase:
 
 ## Usage
 
-### Dry Run (Preview Mode)
+### Option 1: GitHub Actions (Recommended)
+
+The easiest way to create issues is using the GitHub Actions workflow:
+
+1. Go to the **Actions** tab in the GitHub repository
+2. Select **"Create Issues from TODOs"** workflow
+3. Click **"Run workflow"**
+4. Click the green **"Run workflow"** button
+
+The workflow will:
+- Check out the repository
+- Install dependencies
+- Run the script to create issues
+- Skip any issues that already exist (idempotent)
+
+### Option 2: Manual Execution
+
+#### Dry Run (Preview Mode)
 
 Preview what issues would be created without actually creating them:
 
@@ -48,7 +72,7 @@ This will display:
 - The labels that would be applied
 - The full issue body
 
-### Create Issues
+#### Create Issues
 
 Create all issues in GitHub:
 
@@ -64,8 +88,34 @@ bun run create-issues
 
 The script will:
 1. Check if GitHub CLI is authenticated
-2. Create each issue with appropriate title, body, and labels
-3. Display a summary of created issues
+2. Fetch existing open issues to check for duplicates
+3. Create each new issue with appropriate title, body, and labels
+4. Skip issues that already exist (same title)
+5. Display a summary of created/skipped issues
+
+**Note**: The script is **idempotent** - running it multiple times will not create duplicate issues. It checks for existing open issues with the same title and skips them.
+
+## GitHub Actions Configuration
+
+The repository includes a GitHub Actions workflow (`.github/workflows/create-issues-from-todos.yml`) that can be triggered manually to create issues.
+
+### Required Permissions
+
+The workflow requires the following permissions (already configured):
+- `contents: read` - To check out the repository
+- `issues: write` - To create GitHub issues
+
+These permissions are granted automatically when using `github.token` in the workflow.
+
+### Running the Workflow
+
+1. Navigate to the **Actions** tab in the GitHub repository
+2. Select **"Create Issues from TODOs"** from the workflow list
+3. Click **"Run workflow"** button
+4. Select the branch (usually `main`)
+5. Click the green **"Run workflow"** button
+
+The workflow will execute the script and create issues automatically. No additional configuration is needed.
 
 ## Issue Categories
 
@@ -136,10 +186,13 @@ To add or modify TODO items:
 
 ## Notes
 
-- The script will fail if GitHub CLI is not authenticated
-- Labels must exist in the repository or be created first
+- The script will fail if GitHub CLI is not authenticated (for manual execution)
+- The script is **idempotent** - it checks for existing issues and skips duplicates
+- Only open issues are checked for duplicates; closed issues are ignored
+- Labels must exist in the repository (they will be created automatically by GitHub if needed)
 - Issues are created in the current repository (lordvlad/totem)
 - Use `--dry-run` to preview changes before creating issues
+- When run via GitHub Actions, the workflow uses the built-in `GITHUB_TOKEN` which has permissions to create issues
 
 ## Labels Used
 

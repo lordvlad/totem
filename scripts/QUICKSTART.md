@@ -4,6 +4,20 @@
 
 This script found **25 TODO and FIXME comments** throughout the Totem codebase and creates a GitHub issue for each one, with proper categorization, labels, and context.
 
+**The script is idempotent** - it will only create issues for new TODO/FIXME items and skip any that already exist.
+
+## Two Ways to Create Issues
+
+### Option 1: GitHub Actions (Easiest)
+
+1. Go to the **Actions** tab in the GitHub repository
+2. Select **"Create Issues from TODOs"** workflow
+3. Click **"Run workflow"** → **"Run workflow"**
+
+That's it! The workflow will automatically create all missing issues.
+
+### Option 2: Manual Execution
+
 ## Prerequisites
 
 1. Install GitHub CLI: `brew install gh` (macOS) or visit https://cli.github.com/
@@ -36,9 +50,13 @@ bun run create-issues
 
 This will:
 1. Verify GitHub CLI authentication
-2. Create 25 issues in the lordvlad/totem repository
-3. Show progress and URLs for each created issue
-4. Display a summary of successes/failures
+2. Fetch existing open issues to check for duplicates
+3. Create 25 issues in the lordvlad/totem repository (or fewer if some already exist)
+4. Show progress and URLs for each created issue
+5. Skip issues that already exist
+6. Display a summary of successes/failures
+
+**Important**: The script is idempotent - running it multiple times will not create duplicate issues.
 
 ## What Gets Created
 

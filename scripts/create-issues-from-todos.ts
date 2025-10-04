@@ -26,6 +26,12 @@ interface TodoItem {
   labels: string[];
 }
 
+interface ExistingIssue {
+  number: number;
+  title: string;
+  state: string;
+}
+
 const TODO_ITEMS: TodoItem[] = [
   // E2E Test TODOs - e2e/app.spec.ts
   {
@@ -542,7 +548,29 @@ There's a typing issue that requires disabling TypeScript safety checks. This sh
   },
 ];
 
-function createIssue(item: TodoItem, dryRun: boolean = false): void {
+function getExistingIssues(): ExistingIssue[] {
+  try {
+    // Get all open issues from the repository
+    const result = execSync(
+      'gh issue list --limit 1000 --state open --json number,title,state',
+      {
+        encoding: "utf-8",
+        cwd: process.cwd(),
+      }
+    );
+    return JSON.parse(result) as ExistingIssue[];
+  } catch (error) {
+    console.error(`⚠️  Warning: Could not fetch existing issues: ${error}`);
+    return [];
+  }
+}
+
+function issueExists(item: TodoItem, existingIssues: ExistingIssue[]): boolean {
+  // Check if an issue with the same title already exists (open state)
+  return existingIssues.some(issue => issue.title === item.title && issue.state === 'OPEN');
+}
+
+function createIssue(item: TodoItem, dryRun: boolean = false, existingIssues: ExistingIssue[] = []): { created: boolean, skipped: boolean } {
   const { title, body, labels, file, line, type } = item;
 
   console.log(`\n${"=".repeat(80)}`);
@@ -551,10 +579,16 @@ function createIssue(item: TodoItem, dryRun: boolean = false): void {
   console.log(`Labels: ${labels.join(", ")}`);
   console.log(`${"=".repeat(80)}`);
 
+  // Check if issue already exists
+  if (issueExists(item, existingIssues)) {
+    console.log(`⊙ Issue already exists, skipping`);
+    return { created: false, skipped: true };
+  }
+
   if (dryRun) {
     console.log("\n[DRY RUN] Would create issue with body:");
     console.log(body);
-    return;
+    return { created: false, skipped: false };
   }
 
   try {
@@ -577,6 +611,7 @@ function createIssue(item: TodoItem, dryRun: boolean = false): void {
     });
 
     console.log(`✓ Created issue: ${result.trim()}`);
+    return { created: true, skipped: false };
   } catch (error) {
     console.error(`✗ Failed to create issue: ${error}`);
     throw error;
@@ -591,6 +626,8 @@ function main() {
   console.log(`Mode: ${dryRun ? "DRY RUN" : "LIVE"}`);
   console.log(`Total items: ${TODO_ITEMS.length}`);
 
+  let existingIssues: ExistingIssue[] = [];
+
   if (!dryRun) {
     // Check if gh is authenticated
     try {
@@ -600,15 +637,28 @@ function main() {
       console.error("Please run: gh auth login");
       process.exit(1);
     }
+
+    // Fetch existing issues to check for duplicates
+    console.log("\nFetching existing issues to check for duplicates...");
+    existingIssues = getExistingIssues();
+    console.log(`Found ${existingIssues.length} existing open issues`);
   }
 
   let created = 0;
+  let skipped = 0;
   let failed = 0;
 
   for (const item of TODO_ITEMS) {
     try {
-      createIssue(item, dryRun);
-      created++;
+      const result = createIssue(item, dryRun, existingIssues);
+      if (result.created) {
+        created++;
+      } else if (result.skipped) {
+        skipped++;
+      } else if (dryRun) {
+        // In dry-run mode, count items that would be created
+        created++;
+      }
     } catch (error) {
       failed++;
     }
@@ -618,9 +668,10 @@ function main() {
   console.log("Summary:");
   console.log(`  Total: ${TODO_ITEMS.length}`);
   if (dryRun) {
-    console.log(`  Would create: ${created}`);
+    console.log(`  Would create: ${created + skipped}`);
   } else {
     console.log(`  Created: ${created}`);
+    console.log(`  Skipped (already exist): ${skipped}`);
     console.log(`  Failed: ${failed}`);
   }
   console.log(`${"=".repeat(80)}\n`);

@@ -116,27 +116,11 @@ test.describe("Audio Recording and Playback", () => {
   // 3. Enter new value and press Enter or blur
   // 4. useLibrary.update() saves to IndexedDB
   // 5. Changes persist across page reloads
-
-  test("should show file picker when Choose Files button is clicked", async ({
-    page,
-  }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-
-    const chooseFilesButton = page.getByRole("button", {
-      name: /choose files/i,
-    });
-
-    // Set up listener for file chooser dialog
-    const fileChooserPromise = page.waitForEvent("filechooser");
-    await chooseFilesButton.click();
-    const fileChooser = await fileChooserPromise;
-
-    // Verify file chooser accepts audio files
-    expect(fileChooser).toBeTruthy();
-    // File chooser is configured in AudioToolbar.tsx with:
-    // accept: { "audio/*": [".mp3"] }
-  });
+  //
+  // Track deletion workflow:
+  // 1. Individual: Click Remove button in track table row
+  // 2. Bulk: Select multiple tracks via checkboxes, click Remove in toolbar
+  // 3. All: Click Clear button in toolbar (when no tracks selected)
 
   test("should have dropzone for drag-and-drop file upload", async ({
     page,

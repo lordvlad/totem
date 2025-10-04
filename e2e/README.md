@@ -8,6 +8,8 @@ This directory contains Playwright-based end-to-end tests for the Totem applicat
   - Application loading and initialization
   - Header and footer rendering
   - Basic navigation
+  - Theme switching (light/dark/auto mode)
+  - Theme persistence across page reloads
 
 - **oid-codes.spec.ts** - OID code generation tests
   - SVG pattern generation

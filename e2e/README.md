@@ -5,11 +5,13 @@ This directory contains Playwright-based end-to-end tests for the Totem applicat
 ## Test Structure
 
 - **app.spec.ts** - Basic application tests
+
   - Application loading and initialization
   - Header and footer rendering
   - Basic navigation
 
 - **oid-codes.spec.ts** - OID code generation tests
+
   - SVG pattern generation
   - Print layout functionality
   - OID code rendering at 1200 DPI
@@ -62,6 +64,7 @@ bunx playwright test --headed
 ## Future Test Opportunities
 
 The existing test files contain extensive TODO comments marking opportunities for:
+
 - File upload workflows
 - Audio recording and playback
 - GME file generation and download
@@ -73,10 +76,12 @@ The existing test files contain extensive TODO comments marking opportunities fo
 ## CI Integration
 
 These tests run automatically in GitHub Actions on every push. The workflow:
+
 1. Installs Playwright browsers
 2. Starts the dev server (`bun run dev`)
 3. Runs all E2E tests
 4. Uploads test reports as artifacts (available for 30 days)
 
 View test reports in GitHub Actions:
+
 - Go to Actions tab → Select workflow run → Download "playwright-report" artifact

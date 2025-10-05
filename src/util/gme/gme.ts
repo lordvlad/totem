@@ -97,6 +97,7 @@ interface Buf {
   readonly view: DataView;
   readonly uint8: Uint8Array;
 }
+
 export type MediaItemFetcher = (
   item: MediaTableItem,
 ) => Promise<ReadableStream<Uint8Array>>;
@@ -627,9 +628,9 @@ function createPoweronSoundPlaylistList({
 }
 
 export function createLayout({ tracks, ...cfg }: GmeBuildConfig) {
-  const header = createHeader(cfg);
-
   const { replayOid = 12159, stopOid = 12158 } = cfg;
+
+  const header = createHeader(cfg);
 
   let offset = (header.items.scriptTableOffset.val = 0x0200);
 
@@ -664,7 +665,11 @@ export function createLayout({ tracks, ...cfg }: GmeBuildConfig) {
   const gameTable = createGameTable({ offset });
 
   offset = header.items.specialCodesOffset.val = offset + gameTable.size;
-  const specialCodes = createSpecialCodesTable({ offset, replayOid, stopOid });
+  const specialCodes = createSpecialCodesTable({
+    offset,
+    replayOid,
+    stopOid,
+  });
 
   offset = header.items.mediaTableOffset.val = offset + specialCodes.size;
   const mediaTable = createMediaTable({ tracks, offset });

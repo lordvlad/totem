@@ -537,7 +537,7 @@ function writeScriptTable(
   // Write scripts, recording offsets
   const offsets: number[] = [];
   for (const oid of seq) {
-    if (oid in scripts && scripts[oid] != null && scripts[oid].length > 0) {
+    if (oid in scripts && scripts[oid].length > 0) {
       offsets.push(w.getWriteIndex());
       writeScript(w, scripts[oid]);
     } else {
@@ -558,6 +558,179 @@ function writeScriptTable(
 
   // Restore offset to end of scripts
   w.setWriteIndex(endOfScripts);
+}
+
+function writeInitialRegisterValues(
+  w: BufWriter,
+  initialRegisterValues: number[],
+): void {
+  // Write count
+  w.setUint16(initialRegisterValues.length);
+  // Write register values
+  for (const value of initialRegisterValues) {
+    w.setUint16(value);
+  }
+}
+
+function writePoweronSoundPlaylistList(
+  w: BufWriter,
+  trackIndices: number[],
+): void {
+  if (trackIndices.length === 0) {
+    w.setUint16(0);
+    return;
+  }
+
+  const startOffset = w.getWriteIndex();
+
+  // Number of playlists
+  w.setUint16(1);
+  // Offset to first playlist (6 bytes from start = 2 bytes count + 4 bytes offset)
+  w.setUint32(startOffset + 6);
+  // Number of tracks in playlist
+  w.setUint16(trackIndices.length);
+  // Track indices
+  for (const index of trackIndices) {
+    w.setUint16(index);
+  }
+}
+
+function writeSpecialCodesTable(
+  w: BufWriter,
+  replayOid: number,
+  stopOid: number,
+): void {
+  const example = `
+          #             68 18 00 00 67 18 64 18 65 18 00 00
+                        aa aa bb bb cc cc dd dd ee ee pp pp
+          # 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+            pp pp pp pp pp pp pp pp pp pp pp pp pp pp pp pp
+          # 00 00 00 00 00 00 00 00 01 00 66 18
+            pp pp pp pp pp pp pp pp ff ff gg gg 
+  `;
+  const data = example
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s.length !== 0 && !s.startsWith("#"))
+    .join("\n")
+    .replace("aa aa", toHex(replayOid))
+    .replace("bb bb", toHex(stopOid))
+    .replace("cc cc", "00 00")
+    .replace("dd dd", "00 00")
+    .replace("ee ee", "00 00")
+    .replace("ff ff", "00 00")
+    .replace("gg gg", "00 00")
+    .replaceAll("pp", "00")
+    .split(/\s+/)
+    .filter((s) => s.length)
+    .map((s) => parseInt(s, 16));
+
+  for (const byte of data) {
+    w.setUint8(byte);
+  }
+}
+
+function writeGameTable(w: BufWriter): void {
+  const data = `
+            0c 00 00 00 71 70 01 00  35 7a 01 00 91 7f 01 00
+            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+            cd 82 01 00 59 8a 01 00  e7 8e 01 00 4f 97 01 00 
+            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+            0f 9f 01 00 c7 9f 01 00  69 a1 01 00 69 ad 01 00 
+            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+            fb b2 01 00 
+            00 00 00 00
+            `
+    .split(/\s+/)
+    .filter((s) => s.length)
+    .map((s) => parseInt(s, 16));
+
+  for (const byte of data) {
+    w.setUint8(byte);
+  }
+}
+
+function writeMediaTable(w: BufWriter, tracks: Track[]): void {
+  const startOffset = w.getWriteIndex();
+  const tableSize = 8 * tracks.length;
+
+  let mediaOffset = startOffset + tableSize;
+
+  for (const track of tracks) {
+    w.setUint32(mediaOffset);
+    w.setUint32(track.size);
+    mediaOffset += track.size;
+  }
+}
+
+function writeHeader(
+  w: BufWriter,
+  config: {
+    productId: number;
+    comment?: string;
+    language: string;
+    scriptTableOffset: number;
+    mediaTableOffset: number;
+    additionalScriptTableOffset: number;
+    gameTableOffset: number;
+    initialRegisterValuesOffset: number;
+    powerOnSoundOffset: number;
+    specialCodesOffset: number;
+  },
+): void {
+  const comment =
+    config.comment ?? "CHOMPTECH DATA FORMAT CopyRight 2009 Ver2.1.2222";
+  const d = new Date();
+  const date = `${d.getFullYear()}${String(d.getMonth()).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+
+  if (comment.length > 48) {
+    throw new Error(
+      `Comment must not be longer than 48 chars: ${comment}(${comment.length} chars)`,
+    );
+  }
+  if (date.length !== 8) {
+    throw new Error(
+      `Date must have an length of _exactly_ 8 characters: ${date}`,
+    );
+  }
+
+  // Set write index to start of header
+  w.setWriteIndex(0x0000);
+
+  // 32bit offset to the play script table
+  w.setUint32(config.scriptTableOffset);
+  // 32bit offset to the *media file table*
+  w.setUint32(config.mediaTableOffset);
+  // 32bit magic number
+  w.setUint32(0x0000238b);
+  // 32bit offset to an *additional script table*
+  w.setUint32(config.additionalScriptTableOffset);
+  // 32bit offset to the *game table*
+  w.setUint32(config.gameTableOffset);
+  // 32bit product id code
+  w.setUint32(config.productId);
+  // 32bit pointer to register init values
+  w.setUint32(config.initialRegisterValuesOffset);
+  // 8bit raw XOR value
+  w.setUint8(0x39);
+
+  // Set write index to copyright string position
+  w.setWriteIndex(0x0020);
+  w.writeString(comment, { lengthPrefix: true });
+  w.writeString(date);
+  w.writeString(config.language.substring(0, 6), { nullTerminated: true });
+
+  // Set write index to additional media offset position
+  w.setWriteIndex(0x0060);
+  w.setUint32(0xffff_ffff);
+
+  // Set write index to power on sound offset position
+  w.setWriteIndex(0x0071);
+  w.setUint32(config.powerOnSoundOffset);
+
+  // Set write index to special codes offset position
+  w.setWriteIndex(0x0094);
+  w.setUint32(config.specialCodesOffset);
 }
 
 function createAlbumControls(tracks?: Track[]): Record<number, ScriptLine[]> {

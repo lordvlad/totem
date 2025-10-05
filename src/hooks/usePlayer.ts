@@ -9,17 +9,6 @@ const usePlayer = () => {
     if (audioElement == null) {
       audioElement = document.createElement("audio");
       document.body.appendChild(audioElement);
-
-      // Expose audio element for Playwright tests
-      // This is safe because it's only exposing a read-only reference for verification
-      if (typeof window !== "undefined") {
-        interface WindowWithAudio {
-          __TOTEM_AUDIO_ELEMENT__: HTMLAudioElement;
-        }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Required for exposing audio element to Playwright tests
-        (window as unknown as WindowWithAudio).__TOTEM_AUDIO_ELEMENT__ =
-          audioElement;
-      }
     }
     audioRef.current = audioElement;
   }, []);

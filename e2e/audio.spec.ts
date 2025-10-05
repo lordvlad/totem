@@ -228,11 +228,11 @@ test.describe("Audio Recording and Playback", () => {
     await layoutTab.click();
     await page.waitForTimeout(500);
 
-    // Get reference to the exposed audio element for verification
-    // Wait for audio element to be created (it's created when usePlayer mounts)
+    // Get reference to the audio element for verification
+    // There is only one audio element in the DOM, so we can query for it directly
     const getAudioState = () =>
       page.evaluate(() => {
-        const audio = (window as any).__TOTEM_AUDIO_ELEMENT__;
+        const audio = document.querySelector("audio");
         if (!audio) return null;
         return {
           paused: audio.paused,
@@ -244,10 +244,9 @@ test.describe("Audio Recording and Playback", () => {
 
     // Wait for the audio element to be created
     // The audio element is created when the Layout tab with OID codes is rendered
-    await page.waitForFunction(
-      () => (window as any).__TOTEM_AUDIO_ELEMENT__ != null,
-      { timeout: 5000 },
-    );
+    await page.waitForFunction(() => document.querySelector("audio") != null, {
+      timeout: 5000,
+    });
 
     // Check initial state - audio should be paused
     let audioState = await getAudioState();
@@ -315,7 +314,7 @@ test.describe("Audio Recording and Playback", () => {
 
     // Note: This test validates the audio playback control flow:
     // - Track data can be injected and loaded from IndexedDB
-    // - Audio element is properly exposed for testing
+    // - Audio element can be queried directly from the DOM (only one exists)
     // - Play/stop/replay controls interact with the audio element
     // - The usePlayer hook manages audio playback state correctly
   });

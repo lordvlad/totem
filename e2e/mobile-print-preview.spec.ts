@@ -48,12 +48,9 @@ test.describe("Mobile Print Preview", () => {
     const fab = page.getByRole("button", { name: /toggle print preview/i });
     await expect(fab).toBeVisible();
 
-    // Print preview should not be visible initially
-    const overlay = page.locator('div[style*="position: fixed"]').filter({
-      hasText: /.*/,
-    });
-    const overlayCount = await overlay.count();
-    expect(overlayCount).toBe(0);
+    // Drawer should not be visible initially
+    const drawer = page.locator('[role="dialog"]');
+    await expect(drawer).not.toBeVisible();
   });
 
   test("should toggle print preview when FAB is clicked on mobile", async ({
@@ -76,16 +73,17 @@ test.describe("Mobile Print Preview", () => {
     await fab.click();
     await page.waitForTimeout(300);
 
-    // Print preview overlay should now be visible
-    const overlay = page.locator('div[style*="position: fixed"]').first();
-    await expect(overlay).toBeVisible();
+    // Drawer should now be visible
+    const drawer = page.locator('[role="dialog"]');
+    await expect(drawer).toBeVisible();
 
-    // Click overlay to close it
-    await overlay.click({ position: { x: 10, y: 10 } });
+    // Click close button to close drawer
+    const closeButton = page.getByRole("button", { name: /close/i }).first();
+    await closeButton.click();
     await page.waitForTimeout(300);
 
-    // Overlay should be hidden again
-    await expect(overlay).not.toBeVisible();
+    // Drawer should be hidden again
+    await expect(drawer).not.toBeVisible();
   });
 
   test("should maintain preview visibility when switching between tabs on mobile", async ({

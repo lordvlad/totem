@@ -98,6 +98,100 @@ interface Buf {
   readonly uint8: Uint8Array;
 }
 
+class BufWriter {
+  readonly buf: ArrayBuffer;
+  readonly view: DataView;
+  readonly uint8: Uint8Array;
+  private writeIndex: number;
+  private readonly littleEndian: boolean;
+
+  constructor(size: number, littleEndian = true) {
+    this.buf = new ArrayBuffer(size);
+    this.view = new DataView(this.buf);
+    this.uint8 = new Uint8Array(this.buf);
+    this.writeIndex = 0;
+    this.littleEndian = littleEndian;
+  }
+
+  getWriteIndex(): number {
+    return this.writeIndex;
+  }
+
+  setWriteIndex(index: number): void {
+    this.writeIndex = index;
+  }
+
+  setInt8(value: number): void {
+    this.view.setInt8(this.writeIndex, value);
+    this.writeIndex += 1;
+  }
+
+  setUint8(value: number): void {
+    this.view.setUint8(this.writeIndex, value);
+    this.writeIndex += 1;
+  }
+
+  setInt16(value: number): void {
+    this.view.setInt16(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 2;
+  }
+
+  setUint16(value: number): void {
+    this.view.setUint16(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 2;
+  }
+
+  setInt32(value: number): void {
+    this.view.setInt32(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 4;
+  }
+
+  setUint32(value: number): void {
+    this.view.setUint32(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 4;
+  }
+
+  setFloat32(value: number): void {
+    this.view.setFloat32(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 4;
+  }
+
+  setFloat64(value: number): void {
+    this.view.setFloat64(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 8;
+  }
+
+  setBigInt64(value: bigint): void {
+    this.view.setBigInt64(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 8;
+  }
+
+  setBigUint64(value: bigint): void {
+    this.view.setBigUint64(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 8;
+  }
+
+  writeString(
+    val: string,
+    opt: { lengthPrefix?: boolean; nullTerminated?: boolean } = {},
+  ): void {
+    const nullTerminated = opt.nullTerminated ?? false;
+    const lengthPrefix = opt.lengthPrefix ?? false;
+    if (nullTerminated && lengthPrefix) {
+      throw new Error("lengthPrefix and nullTerminated cannot both be true");
+    }
+    const enc = utf8enc.encode(val);
+    if (lengthPrefix) {
+      this.setUint8(enc.byteLength);
+    }
+    this.uint8.set(enc, this.writeIndex);
+    this.writeIndex += enc.length;
+    if (nullTerminated) {
+      this.setUint8(0x0);
+    }
+  }
+}
+
 export type MediaItemFetcher = (
   item: MediaTableItem,
 ) => Promise<ReadableStream<Uint8Array>>;
@@ -346,6 +440,78 @@ function encodeScript(
   }
 
   return concatBuffers(...[new Uint8Array(b), ...encodedLines]);
+}
+
+function writeScript(w: BufWriter, lines: ScriptLine[]): void {
+  // Write offset table bytesize (number of lines)
+  w.setUint16(lines.length);
+
+  // Mark BufWriter offset (start of offset table)
+  const offsetTableStart = w.getWriteIndex();
+
+  // Skip offset table (4 bytes per line for offsets)
+  w.setWriteIndex(offsetTableStart + 4 * lines.length);
+
+  // Write encoded lines, recording every offset
+  const offsets: number[] = [];
+  for (const line of lines) {
+    offsets.push(w.getWriteIndex());
+
+    // Write conditions count
+    w.setUint16(line.conditions.length);
+
+    // Write conditions
+    for (const condition of line.conditions) {
+      w.setUint8(isRegister(condition.lhs) ? 0x00 : 0x01);
+      w.setUint16(
+        isRegister(condition.lhs)
+          ? condition.lhs.register
+          : condition.lhs.value,
+      );
+      w.setUint16(scriptConditionOps[condition.op]);
+      w.setUint8(isRegister(condition.rhs) ? 0x00 : 0x01);
+      w.setUint16(
+        isRegister(condition.rhs)
+          ? condition.rhs.register
+          : condition.rhs.value,
+      );
+    }
+
+    // Write actions count
+    w.setUint16(line.actions.length);
+
+    // Write actions
+    for (const action of line.actions) {
+      w.setUint16(action.register ?? 0);
+      w.setUint16(commands[action.cmd]);
+      w.setUint8(isRegister(action.param) ? 0x00 : 0x01);
+      w.setUint16(
+        isRegister(action.param) ? action.param.register : action.param.value,
+      );
+    }
+
+    // Write playlist count
+    w.setUint16(line.playlist.length);
+
+    // Write playlist items
+    for (const item of line.playlist) {
+      w.setUint16(item);
+    }
+  }
+
+  // Remember current position (end of script lines)
+  const endOfScriptLines = w.getWriteIndex();
+
+  // Jump back to write offset table
+  w.setWriteIndex(offsetTableStart);
+
+  // Write offsets
+  for (const offset of offsets) {
+    w.setUint32(offset);
+  }
+
+  // Restore offset to end of script lines
+  w.setWriteIndex(endOfScriptLines);
 }
 
 function createAlbumControls(tracks?: Track[]): Record<number, ScriptLine[]> {
@@ -628,12 +794,10 @@ function createPoweronSoundPlaylistList({
 }
 
 export function createLayout({ tracks, ...cfg }: GmeBuildConfig) {
-  const { replayOid = 12159, stopOid = 12158 } = cfg;
-
   const header = createHeader(cfg);
 
-  // Layout sections are created with offsets to support internal calculations.
-  // Offsets are calculated sequentially and stored in the header for later use.
+  const { replayOid = 12159, stopOid = 12158 } = cfg;
+
   let offset = (header.items.scriptTableOffset.val = 0x0200);
 
   const scriptTable = createScriptTable({
@@ -667,11 +831,7 @@ export function createLayout({ tracks, ...cfg }: GmeBuildConfig) {
   const gameTable = createGameTable({ offset });
 
   offset = header.items.specialCodesOffset.val = offset + gameTable.size;
-  const specialCodes = createSpecialCodesTable({
-    offset,
-    replayOid,
-    stopOid,
-  });
+  const specialCodes = createSpecialCodesTable({ offset, replayOid, stopOid });
 
   offset = header.items.mediaTableOffset.val = offset + specialCodes.size;
   const mediaTable = createMediaTable({ tracks, offset });

@@ -185,7 +185,7 @@ class BufWriter {
       this.setUint8(enc.byteLength);
     }
     this.uint8.set(enc, this.writeIndex);
-    this.writeIndex += enc.length;
+    this.writeIndex += enc.byteLength;
     if (nullTerminated) {
       this.setUint8(0x0);
     }
@@ -512,6 +512,52 @@ function writeScript(w: BufWriter, lines: ScriptLine[]): void {
 
   // Restore offset to end of script lines
   w.setWriteIndex(endOfScriptLines);
+}
+
+function writeScriptTable(
+  w: BufWriter,
+  scripts: Record<number, ScriptLine[]>,
+): void {
+  const firstOid = Math.min(...Object.keys(scripts).map(Number));
+  const lastOid = Math.max(...Object.keys(scripts).map(Number));
+  const seq = new Array(lastOid - firstOid + 1)
+    .fill(0)
+    .map((_, i) => i + firstOid);
+
+  // Write lastOid and firstOid
+  w.setUint16(lastOid);
+  w.setUint16(firstOid);
+
+  // Mark offset table start
+  const offsetTableStart = w.getWriteIndex();
+
+  // Skip offset table (4 bytes per OID in sequence)
+  w.setWriteIndex(offsetTableStart + 4 * seq.length);
+
+  // Write scripts, recording offsets
+  const offsets: number[] = [];
+  for (const oid of seq) {
+    if (oid in scripts && scripts[oid] != null && scripts[oid].length > 0) {
+      offsets.push(w.getWriteIndex());
+      writeScript(w, scripts[oid]);
+    } else {
+      offsets.push(0xffff_ffff);
+    }
+  }
+
+  // Remember current position (end of all scripts)
+  const endOfScripts = w.getWriteIndex();
+
+  // Jump back to write offset table
+  w.setWriteIndex(offsetTableStart);
+
+  // Write offsets
+  for (const offset of offsets) {
+    w.setUint32(offset);
+  }
+
+  // Restore offset to end of scripts
+  w.setWriteIndex(endOfScripts);
 }
 
 function createAlbumControls(tracks?: Track[]): Record<number, ScriptLine[]> {

@@ -632,6 +632,8 @@ export function createLayout({ tracks, ...cfg }: GmeBuildConfig) {
 
   const header = createHeader(cfg);
 
+  // Layout sections are created with offsets to support internal calculations.
+  // Offsets are calculated sequentially and stored in the header for later use.
   let offset = (header.items.scriptTableOffset.val = 0x0200);
 
   const scriptTable = createScriptTable({

@@ -24,6 +24,18 @@ Infine, salva il file audiolibro direttamente sul tuo tiptoi (di solito, la penn
 
 Configura un layout di stampa. Al momento puoi scegliere tra tre layout con alcune opzioni di personalizzazione. (Maggiore personalizzazione in arrivo). Quindi, premi il pulsante di stampa e assicurati che le opzioni di stampa non ridimensionino o distorcano l'immagine in alcun modo. Usa una stampante che gestisce 1200 dpi (una stampante molto buona da 600 dpi potrebbe funzionare anche).
 
+### Trovare la dimensione dei pixel OID ottimale
+
+Diverse stampanti hanno diverse capacità di riprodurre i codici OID con precisione. Per aiutarti a trovare la dimensione dei pixel ottimale per la tua stampante:
+
+1. Usa il pulsante **"Stampa pagina di test"** nella sezione Download per stampare una pagina di test con codici OID a diverse dimensioni di pixel (3-12 pixel)
+2. Usa il pulsante **"Scarica GME di test"** per scaricare un file GME di test (ID prodotto 950) e copialo sulla tua penna tiptoi
+3. Stampa la pagina di test al 100% di scala (nessuna scala o adattamento alla pagina)
+4. Tocca ogni codice con la tua penna tiptoi per vedere quali dimensioni di pixel funzionano
+5. Aggiorna l'impostazione **"Dimensione pixel OID"** nel pannello Opzioni al valore che funziona meglio per la tua stampante
+
+Il file GME di test riprodurrà un semplice suono di test quando tocchi uno qualsiasi dei codici sulla pagina di test. Se la tua penna non riconosce un codice, prova un'altra dimensione di pixel.
+
 ## Lavori precedenti
 
 Tutto il merito per il lavoro pesante va a [tttool](https://github.com/entropia/tip-toi-reveng). Sto davvero solo traducendo tutte le cose di basso livello e aggiungendo qualche abbellimento in più.

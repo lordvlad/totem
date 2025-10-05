@@ -24,6 +24,18 @@ Finalmente, guarda el archivo de audiolibro directamente en tu tiptoi (generalme
 
 Configura un diseño de impresión. Ahora mismo puedes elegir entre tres diseños con algunas opciones de personalización. (Más personalización próximamente). Luego, presiona el botón de imprimir y asegúrate de que las opciones de impresión no escalen o distorsionen la imagen de ninguna manera. Usa una impresora que maneje 1200 dpi (una impresora muy buena de 600 dpi también podría funcionar).
 
+### Encontrar el tamaño de píxel OID óptimo
+
+Diferentes impresoras tienen diferentes capacidades para reproducir los códigos OID con precisión. Para ayudarte a encontrar el tamaño de píxel óptimo para tu impresora:
+
+1. Usa el botón **"Imprimir página de prueba"** en la sección de Descargas para imprimir una página de prueba con códigos OID en diferentes tamaños de píxel (3-12 píxeles)
+2. Usa el botón **"Descargar GME de prueba"** para descargar un archivo GME de prueba (ID de producto 950) y cópialo a tu lápiz tiptoi
+3. Imprime la página de prueba al 100% de escala (sin escala o ajuste a la página)
+4. Toca cada código con tu lápiz tiptoi para ver qué tamaños de píxel funcionan
+5. Actualiza la configuración **"Tamaño de píxel OID"** en el panel de Opciones al valor que funcione mejor para tu impresora
+
+El archivo GME de prueba reproducirá un sonido de prueba simple cuando toques cualquiera de los códigos en la página de prueba. Si tu lápiz no reconoce un código, prueba con otro tamaño de píxel.
+
 ## Trabajo previo
 
 Todo el crédito por el trabajo pesado va a [tttool](https://github.com/entropia/tip-toi-reveng). Realmente solo estoy traduciendo todas las cosas de bajo nivel y agregando algunos toques adicionales.

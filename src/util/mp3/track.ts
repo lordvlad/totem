@@ -37,7 +37,19 @@ export class Track implements Pick<ID3, "fileName" | "frames"> {
   }
 
   get title() {
-    return this.frame<string>("TIT2");
+    const titleFromMetadata = this.frame<string>("TIT2");
+    if (titleFromMetadata !== undefined && titleFromMetadata !== "") {
+      return titleFromMetadata;
+    }
+    // Fallback to filename without extension
+    if (typeof this.fileName === "string" && this.fileName.length > 0) {
+      const lastDotIndex = this.fileName.lastIndexOf(".");
+      if (lastDotIndex > 0) {
+        return this.fileName.substring(0, lastDotIndex);
+      }
+      return this.fileName;
+    }
+    return undefined;
   }
   set title(data: string | undefined) {
     this.frame("TIT2", data);

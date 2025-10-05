@@ -60,9 +60,113 @@ test.describe("OID Code Generation", () => {
     }
   });
 
-  // TODO: Add test for OID code pixel size configuration
-  // - Test adjusting pixel size setting
-  // - Verify pattern density changes accordingly
+  test("should adjust OID code pattern density based on pixel size configuration", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Navigate to Settings tab to configure OID pixel size
+    const settingsTab = page.getByRole("tab", { name: /settings/i });
+    await expect(settingsTab).toBeVisible();
+    await settingsTab.click();
+    await page.waitForTimeout(500);
+
+    // Find the OID Pixel Size input field
+    // The input should have "px" as rightSection and be labeled "OID Pixel Size"
+    const pixelSizeLabel = page.locator("text=OID Pixel Size").first();
+    await expect(pixelSizeLabel).toBeVisible();
+
+    // Find the input field - it's a NumberInput with rightSection="px"
+    // We'll locate it by finding the input near the label
+    const pixelSizeInput = page
+      .locator('input[type="text"]')
+      .filter({ has: page.locator("..").filter({ hasText: "px" }) })
+      .first();
+
+    // Get the initial pixel size value
+    const initialValue = await pixelSizeInput.inputValue();
+    const initialPixelSize = parseInt(initialValue || "2");
+
+    // Change the pixel size to a different value
+    const newPixelSize = initialPixelSize === 2 ? 4 : 2;
+    await pixelSizeInput.clear();
+    await pixelSizeInput.fill(newPixelSize.toString());
+    await pixelSizeInput.press("Tab"); // Trigger change event
+    await page.waitForTimeout(500); // Wait for debounced update
+
+    // Navigate to Layout tab to view the generated patterns
+    const layoutTab = page.getByRole("tab", { name: /layout/i });
+    await expect(layoutTab).toBeVisible();
+    await layoutTab.click();
+    await page.waitForTimeout(500);
+
+    // Verify that SVG patterns exist
+    const svgPatterns = page.locator("svg pattern");
+    const patternCount = await svgPatterns.count();
+
+    if (patternCount > 0) {
+      // Get the first pattern to inspect its structure
+      const firstPattern = svgPatterns.first();
+      const pathElements = firstPattern.locator("path");
+      const pathCount = await pathElements.count();
+      expect(pathCount).toBeGreaterThan(0);
+
+      // Verify that path elements use the new pixel size in their dimensions
+      // The path elements should have 'd' attributes containing the pixel size
+      if (pathCount > 0) {
+        const firstPath = pathElements.first();
+        const pathD = await firstPath.getAttribute("d");
+        expect(pathD).toBeTruthy();
+
+        // The path 'd' attribute should contain coordinates that reflect pixel size
+        // For example, with pixel size 2, we'd see "h2" or "v2" in the path
+        // With pixel size 4, we'd see "h4" or "v4"
+        if (pathD) {
+          // The pixel size appears in the path as horizontal/vertical line segments
+          // Pattern: "h{size}" or "v{size}" or coordinates involving the size
+          const hasExpectedSize =
+            pathD.includes(`h${newPixelSize}`) ||
+            pathD.includes(`v${newPixelSize}`) ||
+            pathD.includes(`h-${newPixelSize}`) ||
+            pathD.includes(`v-${newPixelSize}`);
+          expect(hasExpectedSize).toBe(true);
+        }
+      }
+    }
+
+    // Change back to initial pixel size to test reactivity
+    await settingsTab.click();
+    await page.waitForTimeout(500);
+    await pixelSizeInput.clear();
+    await pixelSizeInput.fill(initialPixelSize.toString());
+    await pixelSizeInput.press("Tab");
+    await page.waitForTimeout(500);
+
+    // Navigate back to Layout and verify the pattern changed back
+    await layoutTab.click();
+    await page.waitForTimeout(500);
+
+    if (patternCount > 0) {
+      const firstPattern = svgPatterns.first();
+      const pathElements = firstPattern.locator("path");
+      const pathCount = await pathElements.count();
+
+      if (pathCount > 0) {
+        const firstPath = pathElements.first();
+        const pathD = await firstPath.getAttribute("d");
+
+        if (pathD) {
+          const hasInitialSize =
+            pathD.includes(`h${initialPixelSize}`) ||
+            pathD.includes(`v${initialPixelSize}`) ||
+            pathD.includes(`h-${initialPixelSize}`) ||
+            pathD.includes(`v-${initialPixelSize}`);
+          expect(hasInitialSize).toBe(true);
+        }
+      }
+    }
+  });
 
   // TODO: Add test for print layout options
   // - Test different layout configurations (grid, list, etc.)

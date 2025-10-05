@@ -1,15 +1,95 @@
 #!/usr/bin/env bun
 
 /**
- * Script to automatically create GitHub issues from TODO and FIXME comments.
+ * Automated TODO/FIXME Issue Creation
  * 
- * Features:
- * - Scans repository for TODO/FIXME comments
- * - Creates GitHub issues with context (2 lines before and after)
- * - Includes first commit hash where the comment was detected
- * - Idempotent: won't create duplicate issues (based on title)
+ * Automatically scans the repository for TODO and FIXME comments and creates GitHub issues from them.
+ * 
+ * ## Features
+ * 
+ * - **Comprehensive Scanning**: Searches all TypeScript, JavaScript, and related files
+ * - **Context Preservation**: Includes 2 lines before and after each comment
+ * - **Commit Tracking**: Records the commit hash where the comment was detected
+ * - **Idempotent**: Won't create duplicate issues (checks existing issues by title)
+ * - **Formatted Output**: Creates well-formatted GitHub issues with code context
+ * 
+ * ## Usage
+ * 
+ * The script is automatically run by the GitHub Actions workflow `.github/workflows/create-issues-from-todos.yml`
+ * on every push to the main/master branch.
+ * 
+ * ### Manual Execution
+ * 
+ * To run manually:
+ * 
+ * ```bash
+ * export GITHUB_TOKEN="your-token-here"
+ * export GITHUB_REPOSITORY="owner/repo"
+ * export GITHUB_SHA="commit-hash"
+ * bun run .github/create-issues-from-todos.ts
+ * ```
+ * 
+ * ## Issue Format
+ * 
+ * Each created issue will have:
+ * 
+ * - **Title**: `[TODO|FIXME] <comment text>`
+ * - **Labels**: `todo` or `fixme`
+ * - **Body**: 
+ *   - File path and line number
+ *   - Commit hash (first 7 characters)
+ *   - Code context (2 lines before and after)
+ *   - Timestamp
+ * 
+ * ### Example
+ * 
+ * For a comment like:
+ * 
+ * ```typescript
+ * // TODO: Add test for audio file upload
+ * ```
+ * 
+ * An issue will be created with:
+ * 
+ * ```
+ * Title: [TODO] Add test for audio file upload
+ * Label: todo
+ * 
+ * Body:
+ * **File**: `e2e/audio.spec.ts`
+ * **Line**: 14
+ * **Commit**: abc1234
+ * 
+ * ### Context
+ * 
+ * ```
+ *   12:   });
+ *   13: 
+ * → 14:   // TODO: Add test for audio file upload
+ *   15:   // - Test file upload functionality
+ *   16:   // - Verify files are processed
+ * ```
+ * 
+ * ### Details
+ * 
+ * This issue was automatically created from a TODO comment found in the codebase.
+ * 
+ * ---
+ * *Created by automated TODO/FIXME scanner on 2025-10-04T20:00:00.000Z*
+ * ```
+ * 
+ * ## Configuration
+ * 
+ * The workflow is configured in `.github/workflows/create-issues-from-todos.yml`:
+ * 
+ * - Triggers on push to main/master branches
+ * - Has `issues: write` permission
+ * - Uses Bun as the TypeScript runtime
  */
 
+/**
+ * Represents a TODO or FIXME comment found in the codebase
+ */
 type TodoComment = {
   file: string;
   line: number;
@@ -18,12 +98,18 @@ type TodoComment = {
   context: string[];
 }
 
+/**
+ * Represents a GitHub issue from the API
+ */
 type GitHubIssue = {
   number: number;
   title: string;
   state: string;
 }
 
+/**
+ * Environment variables required for script execution
+ */
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
 const GITHUB_SHA = process.env.GITHUB_SHA || 'unknown';
@@ -42,6 +128,17 @@ const [OWNER, REPO] = GITHUB_REPOSITORY.split('/');
 
 /**
  * Scan repository for TODO and FIXME comments
+ * 
+ * Searches through TypeScript and TSX files in the src/ and e2e/ directories
+ * for comments matching the pattern: // TODO: or // FIXME:
+ * 
+ * For each comment found, captures:
+ * - File path and line number
+ * - Comment type (TODO or FIXME)
+ * - Comment text
+ * - Context: 2 lines before and 2 lines after the comment
+ * 
+ * @returns Array of TodoComment objects representing all found comments
  */
 async function findTodoComments(): Promise<TodoComment[]> {
   return (await Promise.all(['src', 'e2e'].map(async (dir) => {
@@ -91,6 +188,11 @@ async function findTodoComments(): Promise<TodoComment[]> {
 
 /**
  * Get existing GitHub issues
+ * 
+ * Fetches all issues (open and closed) from the GitHub repository to prevent
+ * creating duplicate issues. Uses GitHub's REST API v3.
+ * 
+ * @returns Array of existing GitHub issues, or empty array on error
  */
 async function getExistingIssues(): Promise<GitHubIssue[]> {
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/issues?state=all&per_page=100`;
@@ -117,6 +219,16 @@ async function getExistingIssues(): Promise<GitHubIssue[]> {
 
 /**
  * Create a GitHub issue
+ * 
+ * Creates a formatted GitHub issue from a TODO/FIXME comment with:
+ * - Title: [TODO|FIXME] followed by the comment text
+ * - Label: 'todo' or 'fixme' (lowercase)
+ * - Body: Contains file path, line number, commit hash, code context, and timestamp
+ * 
+ * The code context shows 2 lines before and after the comment, with an arrow (→)
+ * marking the line containing the TODO/FIXME comment.
+ * 
+ * @param comment - The TodoComment object to create an issue from
  */
 async function createGitHubIssue(comment: TodoComment): Promise<void> {
   const title = `[${comment.type}] ${comment.text}`;
@@ -177,6 +289,13 @@ This issue was automatically created from a ${comment.type} comment found in the
 
 /**
  * Main execution
+ * 
+ * Orchestrates the TODO/FIXME issue creation process:
+ * 1. Scans repository for TODO/FIXME comments
+ * 2. Fetches existing GitHub issues
+ * 3. Filters out comments that already have corresponding issues
+ * 4. Creates new issues for remaining comments
+ * 5. Adds a 1-second delay between issue creations to avoid rate limiting
  */
 async function main() {
   console.log('🔍 Scanning repository for TODO and FIXME comments...');

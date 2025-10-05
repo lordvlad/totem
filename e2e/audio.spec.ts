@@ -319,11 +319,213 @@ test.describe("Audio Recording and Playback", () => {
     // - The usePlayer hook manages audio playback state correctly
   });
 
-  // TODO: Add test for preventing multiple MediaElementSource issue
-  // - Play an audio track
-  // - Stop and replay the same track
-  // - Verify no "InvalidStateError" occurs
-  // - Ensure new Audio element is created for each playback
+  test("should prevent multiple MediaElementSource issue when replaying tracks", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Clear any existing data
+    await page.evaluate(() => localStorage.clear());
+    await page.evaluate(() => indexedDB.deleteDatabase("keyval-store"));
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    // Read the test audio file and inject it directly into IndexedDB
+    const fs = await import("fs");
+    const path = await import("path");
+    const audioFilePath = path.join(
+      process.cwd(),
+      "e2e/fixtures/hello.mp3",
+    );
+    const audioBuffer = fs.readFileSync(audioFilePath);
+    const audioBase64 = audioBuffer.toString("base64");
+
+    // Inject a test track with audio data into IndexedDB
+    await page.evaluate(
+      async ({ audioBase64 }) => {
+        const idbSet = (key: string, value: any): Promise<void> => {
+          return new Promise((resolve, reject) => {
+            const dbName = "keyval-store";
+            const storeName = "keyval";
+            const request = indexedDB.open(dbName);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+              const db = request.result;
+              const transaction = db.transaction(storeName, "readwrite");
+              const store = transaction.objectStore(storeName);
+              const putRequest = store.put(value, key);
+
+              putRequest.onerror = () => reject(putRequest.error);
+              putRequest.onsuccess = () => resolve();
+            };
+            request.onupgradeneeded = () => {
+              const db = request.result;
+              if (!db.objectStoreNames.contains(storeName)) {
+                db.createObjectStore(storeName);
+              }
+            };
+          });
+        };
+
+        const trackUuid = "test-track-replay-12345";
+        const track = {
+          uuid: trackUuid,
+          fileName: "hello.mp3",
+          frames: {
+            TIT2: {
+              id: "TIT2",
+              data: "Replay Test Track",
+              size: 0,
+              flags: null,
+              frameDataSize: null,
+              description: "Title",
+            },
+            TOA: {
+              id: "TOA",
+              data: "Test Artist",
+              size: 0,
+              flags: null,
+              frameDataSize: null,
+              description: "Artist",
+            },
+            TALB: {
+              id: "TALB",
+              data: "Test Album",
+              size: 0,
+              flags: null,
+              frameDataSize: null,
+              description: "Album",
+            },
+          },
+          size: audioBase64.length,
+          data: null,
+        };
+
+        const binaryString = atob(audioBase64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        await idbSet(`track:${trackUuid}`, track);
+        await idbSet(`data:${trackUuid}`, bytes);
+      },
+      { audioBase64 },
+    );
+
+    // Setup console error listener to catch InvalidStateError
+    const consoleErrors: string[] = [];
+    page.on("pageerror", (error) => {
+      consoleErrors.push(error.message);
+    });
+
+    // Reload to pick up the injected track
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+
+    // Navigate to Layout tab
+    const layoutTab = page.getByRole("tab", { name: /layout/i });
+    await expect(layoutTab).toBeVisible();
+    await layoutTab.click();
+    await page.waitForTimeout(500);
+
+    // Wait for audio element to be created
+    await page.waitForFunction(() => document.querySelector("audio") != null, {
+      timeout: 5000,
+    });
+
+    const getAudioState = () =>
+      page.evaluate(() => {
+        const audio = document.querySelector("audio");
+        if (!audio) return null;
+        return {
+          paused: audio.paused,
+          currentTime: audio.currentTime,
+          src: audio.src,
+        };
+      });
+
+    // Test scenario: Play -> Stop -> Replay multiple times
+    // This verifies that audio elements are properly managed and no InvalidStateError occurs
+    const trackOidCode = page.locator('rect[fill*="pattern.1401"]').first();
+
+    if ((await trackOidCode.count()) > 0) {
+      // First play cycle
+      await trackOidCode.click();
+      await page.waitForTimeout(500);
+
+      let audioState = await getAudioState();
+      expect(audioState?.paused).toBe(false);
+      expect(audioState?.src).toContain("data:audio/mpeg");
+
+      // Stop playback
+      const stopButton = page.locator('rect[fill*="pattern.15001"]').first();
+      if ((await stopButton.count()) > 0) {
+        await stopButton.click();
+        await page.waitForTimeout(200);
+
+        audioState = await getAudioState();
+        expect(audioState?.paused).toBe(true);
+        expect(audioState?.currentTime).toBe(0);
+      }
+
+      // Second play cycle - replay the same track
+      await trackOidCode.click();
+      await page.waitForTimeout(500);
+
+      audioState = await getAudioState();
+      expect(audioState?.paused).toBe(false);
+
+      // Stop again
+      if ((await stopButton.count()) > 0) {
+        await stopButton.click();
+        await page.waitForTimeout(200);
+      }
+
+      // Third play cycle - test replay button
+      await trackOidCode.click();
+      await page.waitForTimeout(500);
+
+      const replayButton = page
+        .locator('rect[fill*="pattern.15002"]')
+        .first();
+      if ((await replayButton.count()) > 0) {
+        await page.waitForTimeout(300);
+        await replayButton.click();
+        await page.waitForTimeout(200);
+
+        audioState = await getAudioState();
+        expect(audioState?.paused).toBe(false);
+        expect(audioState?.currentTime).toBeLessThan(0.5);
+      }
+
+      // Fourth play cycle - one more time to ensure stability
+      if ((await stopButton.count()) > 0) {
+        await stopButton.click();
+        await page.waitForTimeout(200);
+      }
+
+      await trackOidCode.click();
+      await page.waitForTimeout(500);
+
+      audioState = await getAudioState();
+      expect(audioState?.paused).toBe(false);
+    }
+
+    // Verify no InvalidStateError or other errors occurred
+    // This is the key assertion for the MediaElementSource issue
+    expect(consoleErrors).toHaveLength(0);
+
+    // Note: This test validates that:
+    // - Audio can be played, stopped, and replayed multiple times without errors
+    // - No InvalidStateError occurs (which would happen if trying to call
+    //   createMediaElementSource twice on the same audio element)
+    // - The usePlayer hook properly manages audio element state
+    // - Multiple play/stop/replay cycles work correctly
+  });
 
   // Track Management Tests
   // The following tests document and verify the UI structure for track management

@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call -- expect is typed as error in bun:test */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access -- expect is typed as error in bun:test */
 
-import { mkdtemp, rm, stat } from "fs/promises";
+import { mkdtemp, readdir, readFile, rm, stat } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -147,7 +147,42 @@ Script for OID 1406:
       expect(stderr).toBeFalsy();
       expect(stdout).toContain("Audio Table entries: 6");
 
-      // TODO compare audio files byte-by-byte
+      // Compare extracted audio files byte-by-byte with originals
+      const mediaDir = join(tmpDir, "media");
+      const extractedFiles = await readdir(mediaDir);
+
+      // Verify we have the expected number of files
+      expect(extractedFiles.length).toBe(6);
+
+      // Sort files to ensure consistent comparison order
+      extractedFiles.sort();
+
+      const originalFiles = [
+        "back.ogg",
+        "bing.ogg",
+        "hello.ogg",
+        "one.ogg",
+        "three.ogg",
+        "two.ogg",
+      ].sort();
+
+      // Compare each extracted file with its original
+      for (let i = 0; i < extractedFiles.length; i++) {
+        const extractedPath = join(mediaDir, extractedFiles[i]);
+        const originalPath = join(__dirname, originalFiles[i]);
+
+        const extractedBuffer = await readFile(extractedPath);
+        const originalBuffer = await readFile(originalPath);
+
+        // Compare byte-by-byte
+        expect(extractedBuffer.length).toBe(originalBuffer.length);
+        expect(
+          Buffer.compare(
+            extractedBuffer as unknown as Uint8Array,
+            originalBuffer as unknown as Uint8Array,
+          ),
+        ).toBe(0);
+      }
     }
 
     {

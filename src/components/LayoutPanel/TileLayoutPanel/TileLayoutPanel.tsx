@@ -4,7 +4,7 @@ import type {
   CommonOptions,
   TileOptions,
 } from "../../../hooks/useOptions";
-import { PrintPreview } from "../../PrintLayout";
+import { PrintPreviewWrapper } from "../../PrintLayout";
 import { AutoOptionsPanel } from "../AutoOptionsPanel";
 import { CommonOptionsPanel } from "../CommonOptionsPanel";
 import { TileOptionsPanel } from "./TileOptionsPanel";
@@ -19,7 +19,7 @@ export function TileLayoutPanel({ form }: TileLayoutPanelProps) {
       <CommonOptionsPanel form={form as UseFormReturnType<CommonOptions>} />
       <AutoOptionsPanel form={form as UseFormReturnType<AutoOptions>} />
       <TileOptionsPanel form={form as UseFormReturnType<TileOptions>} />
-      <PrintPreview />
+      <PrintPreviewWrapper />
     </>
   );
 }

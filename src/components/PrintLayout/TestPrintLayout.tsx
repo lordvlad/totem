@@ -2,9 +2,10 @@ import { Box, Text, Stack, SimpleGrid } from "@mantine/core";
 import { OIDCode } from "../OIDCode/OIDCode";
 import { useOptions } from "../../hooks/useOptions";
 import { useI18n } from "../../hooks/useI18n";
+import { range } from "../OIDCode/util";
 
 const TEST_PRODUCT_ID = 950;
-const PIXEL_SIZES = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const PIXEL_SIZES = range(3, 12);
 
 function TestOidCode({ pixelSize }: { pixelSize: number }) {
   const { oidCodeResolution } = useOptions()[0];

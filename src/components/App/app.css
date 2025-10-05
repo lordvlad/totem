@@ -9,6 +9,10 @@ body {
   display: none !important;
 }
 
+.test-print-only {
+  display: none !important;
+}
+
 @media print {
   .no-print,
   #geist-ui-drawer,
@@ -23,6 +27,24 @@ body {
 
   body {
     background-color: white !important;
+  }
+}
+
+body.test-print-mode .print-only {
+  display: none !important;
+}
+
+body.test-print-mode .test-print-only {
+  display: block !important;
+}
+
+@media print {
+  body.test-print-mode .print-only {
+    display: none !important;
+  }
+
+  body.test-print-mode .test-print-only {
+    display: block !important;
   }
 }
 

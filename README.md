@@ -24,6 +24,18 @@ Finally, save the audio book file directly to your tiptoi (usually, the pen is r
 
 Configure a print layout. Right now you can choose from three layouts with a few customization options. (More customization soon). Then, hit the print button and make sure that the print options do not scale or skew the image in any way. Use a printer that manages 1200dpi (a very good 600dpi printer might also work).
 
+### Finding the optimal OID pixel size
+
+Different printers have different capabilities for reproducing the OID codes accurately. To help you find the optimal pixel size setting for your printer:
+
+1. Use the **"Print Test Page"** button in the Downloads section to print a test page with OID codes at different pixel sizes (3-12 pixels)
+2. Use the **"Download Test GME"** button to download a test GME file (Product ID 950) and copy it to your tiptoi pen
+3. Print the test page at 100% scale (no scaling or fitting to page)
+4. Touch each code with your tiptoi pen to see which pixel sizes work
+5. Update the **"OID Pixel Size"** setting in the Options panel to the value that works best for your printer
+
+The test GME file will play a simple test sound when you touch any of the codes on the test page. If your pen doesn't recognize a code, try another pixel size.
+
 ## Prior art
 
 All credit for the heavy lifting goes to [tttool](https://github.com/entropia/tip-toi-reveng). I'm really only translating all the low-level stuff and adding a few sprinkles on top.

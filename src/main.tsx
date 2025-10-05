@@ -6,6 +6,7 @@ import { Notifications } from "@mantine/notifications";
 import { createRoot } from "react-dom/client";
 import { App } from "./components/App";
 import { PrintLayout } from "./components/PrintLayout";
+import { TestPrintLayoutWrapper } from "./components/PrintLayout/TestPrintLayoutWrapper";
 
 export function Main() {
   return (
@@ -13,6 +14,7 @@ export function Main() {
       <Notifications position={"top-center"} />
       <App />
       <PrintLayout />
+      <TestPrintLayoutWrapper />
     </MantineProvider>
   );
 }

@@ -24,6 +24,18 @@ Enfin, enregistrez le fichier de livre audio directement sur votre tiptoi (gén�
 
 Configurez une mise en page d'impression. Pour le moment, vous pouvez choisir parmi trois mises en page avec quelques options de personnalisation. (Plus de personnalisation à venir prochainement). Ensuite, appuyez sur le bouton d'impression et assurez-vous que les options d'impression ne mettent pas à l'échelle ou ne déforment pas l'image de quelque manière que ce soit. Utilisez une imprimante qui gère 1200 dpi (une très bonne imprimante 600 dpi pourrait également fonctionner).
 
+### Trouver la taille de pixel OID optimale
+
+Différentes imprimantes ont différentes capacités pour reproduire les codes OID avec précision. Pour vous aider à trouver la taille de pixel optimale pour votre imprimante :
+
+1. Utilisez le bouton **"Imprimer la page de test"** dans la section Téléchargements pour imprimer une page de test avec des codes OID à différentes tailles de pixels (3-12 pixels)
+2. Utilisez le bouton **"Télécharger le GME de test"** pour télécharger un fichier GME de test (ID produit 950) et copiez-le sur votre stylo tiptoi
+3. Imprimez la page de test à 100% d'échelle (sans mise à l'échelle ni ajustement à la page)
+4. Touchez chaque code avec votre stylo tiptoi pour voir quelles tailles de pixels fonctionnent
+5. Mettez à jour le paramètre **"Taille de pixel OID"** dans le panneau Options avec la valeur qui fonctionne le mieux pour votre imprimante
+
+Le fichier GME de test jouera un son de test simple lorsque vous toucherez l'un des codes sur la page de test. Si votre stylo ne reconnaît pas un code, essayez une autre taille de pixel.
+
 ## Travaux antérieurs
 
 Tout le crédit pour le gros du travail revient à [tttool](https://github.com/entropia/tip-toi-reveng). Je ne fais vraiment que traduire toutes les choses de bas niveau et ajouter quelques améliorations supplémentaires.

@@ -52,7 +52,14 @@ export function OptionsPanel() {
 
       <FormField
         label={i18n`OID Pixel Size`}
-        tooltip={i18n`Number of pixels (squared) for each dot in the OID code.`}
+        tooltip={
+          <>
+            {i18n`Number of pixels (squared) for each dot in the OID code.`}
+            <br />
+            <br />
+            {i18n`Use the test page to find the optimal value for your printer.`}
+          </>
+        }
       >
         <NumberInput
           mt={0.75}

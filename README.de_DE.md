@@ -24,6 +24,18 @@ Speichere schließlich die Hörbuchdatei direkt auf deinem tiptoi (normalerweise
 
 Konfiguriere ein Drucklayout. Derzeit kannst du aus drei Layouts mit einigen Anpassungsoptionen wählen. (Mehr Anpassungsmöglichkeiten folgen in Kürze). Klicke dann auf die Druck-Schaltfläche und stelle sicher, dass die Druckoptionen das Bild nicht skaliert oder verzerrt. Verwende einen Drucker, der 1200 dpi unterstützt (ein sehr guter 600-dpi-Drucker funktioniert möglicherweise auch).
 
+### Die optimale OID-Pixelgröße finden
+
+Verschiedene Drucker haben unterschiedliche Fähigkeiten, die OID-Codes genau zu reproduzieren. Um die optimale Pixelgröße für deinen Drucker zu finden:
+
+1. Verwende die Schaltfläche **"Testseite drucken"** im Downloads-Bereich, um eine Testseite mit OID-Codes in verschiedenen Pixelgrößen (3-12 Pixel) zu drucken
+2. Verwende die Schaltfläche **"Test-GME herunterladen"**, um eine Test-GME-Datei (Produkt-ID 950) herunterzuladen und kopiere sie auf deinen Tiptoi-Stift
+3. Drucke die Testseite mit 100 % Skalierung (keine Skalierung oder Anpassung an die Seite)
+4. Berühre jeden Code mit deinem Tiptoi-Stift, um zu sehen, welche Pixelgrößen funktionieren
+5. Aktualisiere die Einstellung **"OID-Pixelgröße"** im Optionen-Bereich auf den Wert, der für deinen Drucker am besten funktioniert
+
+Die Test-GME-Datei spielt einen einfachen Testton ab, wenn du einen der Codes auf der Testseite berührst. Wenn dein Stift einen Code nicht erkennt, versuche eine andere Pixelgröße.
+
 ## Andere Arbeiten
 
 Der gesamte Dank für die harte Arbeit gebührt [tttool](https://github.com/entropia/tip-toi-reveng). Ich übersetze im Grunde nur alle Low-Level Dinge und füge ein paar zusätzliche Verbesserungen hinzu.

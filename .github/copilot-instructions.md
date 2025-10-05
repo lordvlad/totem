@@ -303,7 +303,6 @@ import { markdown as content } from './README.md'
 ### Known TODO/FIXME Items
 
 Found in codebase (do not fix unless related to your task):
-- `src/util/gme/gme.ts`: "FIXME allow multiple playlists"
 - `src/util/gme/gme.ts`: "TODO refactor into more chunks" (max-lines eslint disabled)
 - Test file: "TODO compare audio files byte-by-byte"
 

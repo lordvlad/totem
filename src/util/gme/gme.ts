@@ -583,7 +583,6 @@ function createHeader({
   };
 }
 
-// FIXME allow multiple playlists
 function createPoweronSoundPlaylistList({
   offset,
   trackIndices = [],

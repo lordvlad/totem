@@ -102,11 +102,118 @@ test.describe("Audio Recording and Playback", () => {
     // - Integration tests: src/util/gme/__specs__/ (GME file generation with audio)
   });
 
-  // TODO: Add test for recording audio through microphone
-  // - Grant microphone permissions (if modal is implemented)
-  // - Start recording
-  // - Stop recording
-  // - Verify recorded audio appears as track
+  test("should open recording modal and display recording controls", async ({
+    page,
+    context,
+  }) => {
+    // Grant microphone permissions before navigating
+    await context.grantPermissions(["microphone"]);
+
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Clear any existing data
+    await page.evaluate(() => localStorage.clear());
+    await page.evaluate(() => indexedDB.deleteDatabase("keyval-store"));
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    // Mock getUserMedia to provide a fake audio stream
+    // This prevents permission prompts and allows the test to proceed
+    await page.evaluate(() => {
+      const mockStream = {
+        getTracks: () => [
+          {
+            kind: "audio",
+            stop: () => {},
+          },
+        ],
+        getAudioTracks: () => [
+          {
+            kind: "audio",
+            stop: () => {},
+          },
+        ],
+      } as any;
+
+      Object.defineProperty(navigator.mediaDevices, "getUserMedia", {
+        value: async (constraints: any) => {
+          if (constraints.audio) {
+            return mockStream;
+          }
+          throw new Error("Not supported");
+        },
+        writable: true,
+      });
+    });
+
+    // Find and click the Record button in the toolbar
+    const recordButton = page.getByRole("button", { name: /record/i });
+    await expect(recordButton).toBeVisible();
+    await recordButton.click();
+
+    // Wait for the recording modal to appear
+    const modalTitle = page.getByText(/record audio/i);
+    await expect(modalTitle).toBeVisible({ timeout: 5000 });
+
+    // Verify the modal content
+    // The modal should have action buttons at the bottom
+    const resetButton = page.getByRole("button", { name: /reset/i });
+    const addAndRecordAgainButton = page.getByRole("button", {
+      name: /add and record again/i,
+    });
+    const addButton = page.getByRole("button", { name: /^add$/i });
+
+    // These buttons should exist
+    await expect(resetButton).toBeVisible();
+    await expect(addAndRecordAgainButton).toBeVisible();
+    await expect(addButton).toBeVisible();
+
+    // Initially, these buttons should be disabled (no recording yet)
+    await expect(resetButton).toBeDisabled();
+    await expect(addAndRecordAgainButton).toBeDisabled();
+    await expect(addButton).toBeDisabled();
+
+    // Find the main circular action button in the modal
+    // This is the large button with the microphone icon
+    // It should be the first button in the modal (before Reset, Add, etc.)
+    const allModalButtons = page.locator('[role="dialog"] button');
+    const actionButton = allModalButtons.nth(0);
+
+    // The action button should be visible and clickable
+    await expect(actionButton).toBeVisible();
+
+    // Close the modal by clicking outside or using the close button
+    // Look for the X close button in the modal header
+    const closeButton = page.locator('[role="dialog"] button[aria-label="Close"]');
+    if ((await closeButton.count()) > 0) {
+      await closeButton.click();
+    } else {
+      // If no close button, press Escape
+      await page.keyboard.press("Escape");
+    }
+
+    // Wait for modal to close
+    await page.waitForTimeout(500);
+
+    // Verify the modal is closed
+    await expect(modalTitle).not.toBeVisible();
+
+    // Note: This test validates the recording modal UI:
+    // - Microphone permissions are granted via Playwright context
+    // - getUserMedia is mocked to prevent permission prompts
+    // - Recording modal opens when Record button is clicked
+    // - Modal displays all expected UI elements (action button, Reset, Add, etc.)
+    // - Buttons are in correct initial state (disabled until recording exists)
+    // - Modal can be closed properly
+    //
+    // Full recording workflow testing (start, stop, process, add track) is complex
+    // due to MediaRecorder API limitations in headless browsers and requires:
+    // - Functional MediaRecorder with mock audio stream
+    // - WebM to MP3 conversion via lamejs
+    // - IndexedDB storage of processed audio
+    // These are better tested via unit tests and manual QA.
+  });
 
   test("should control audio playback with play/pause/stop", async ({
     page,

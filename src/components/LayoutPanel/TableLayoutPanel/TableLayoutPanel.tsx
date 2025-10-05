@@ -4,7 +4,7 @@ import {
   type CommonOptions,
   TableOptions,
 } from "../../../hooks/useOptions";
-import { PrintPreview } from "../../PrintLayout";
+import { PrintPreviewWrapper } from "../../PrintLayout";
 import { AutoOptionsPanel } from "../AutoOptionsPanel";
 import { CommonOptionsPanel } from "../CommonOptionsPanel";
 import { TableOptionsPanel } from "./TableOptionsPanel";
@@ -19,7 +19,7 @@ export function TableLayoutPanel({ form }: TableLayoutPanelProps) {
       <CommonOptionsPanel form={form as UseFormReturnType<CommonOptions>} />
       <AutoOptionsPanel form={form as UseFormReturnType<AutoOptions>} />
       <TableOptionsPanel form={form as UseFormReturnType<TableOptions>} />
-      <PrintPreview />
+      <PrintPreviewWrapper />
     </>
   );
 }

@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { createLayout, BufWriter, writeLayout, GmeBuildConfig } from "../gme";
+import {
+  createLayout,
+  BufWriter,
+  writeLayout,
+  GmeBuildConfig,
+  build,
+  write,
+  MediaTableItem,
+} from "../gme";
 import { readFile } from "fs/promises";
 import { join } from "path";
 import { Track } from "../../mp3/track";
@@ -33,6 +41,40 @@ async function createTestConfig(): Promise<GmeBuildConfig> {
     language: "GERMAN",
     comment: "CHOMPTECH DATA FORMAT CopyRight 2009 Ver2.1.2222",
   };
+}
+
+// Helper to get media function
+async function getMediaFn(item: MediaTableItem) {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(item.track.data);
+      controller.close();
+    },
+  });
+}
+
+// Helper to read all data from a stream
+async function readStream(
+  stream: ReadableStream<Uint8Array>,
+): Promise<Uint8Array> {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalLength = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    totalLength += value.length;
+  }
+
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return result;
 }
 
 describe("writeLayout", () => {
@@ -97,5 +139,54 @@ describe("writeLayout", () => {
     expect(newProductId).toBe(oldProductId);
 
     console.log("Header comparison completed");
+  });
+
+  it("should produce comparable results with build vs write", async () => {
+    const config = await createTestConfig();
+
+    // Use build (old approach)
+    const oldStream = build(config, getMediaFn);
+    const oldData = await readStream(oldStream);
+
+    // Use write (new approach)
+    const newStream = write(config, getMediaFn);
+    const newData = await readStream(newStream);
+
+    console.log("Old build output size:", oldData.length);
+    console.log("New write output size:", newData.length);
+
+    // The last 4 bytes are the checksum - they should match if everything is correct
+    const oldChecksum = new DataView(
+      oldData.buffer,
+      oldData.byteOffset + oldData.length - 4,
+      4,
+    ).getUint32(0, true);
+    const newChecksum = new DataView(
+      newData.buffer,
+      newData.byteOffset + newData.length - 4,
+      4,
+    ).getUint32(0, true);
+
+    console.log("Old checksum:", oldChecksum.toString(16).padStart(8, "0"));
+    console.log("New checksum:", newChecksum.toString(16).padStart(8, "0"));
+
+    // Check header fields from the output
+    const oldView = new DataView(oldData.buffer, oldData.byteOffset);
+    const newView = new DataView(newData.buffer, newData.byteOffset);
+
+    // Script table offset at 0x0000
+    expect(newView.getUint32(0x0000, true)).toBe(
+      oldView.getUint32(0x0000, true),
+    );
+    // Magic number at 0x0008
+    expect(newView.getUint32(0x0008, true)).toBe(
+      oldView.getUint32(0x0008, true),
+    );
+    // Product ID at 0x0014
+    expect(newView.getUint32(0x0014, true)).toBe(
+      oldView.getUint32(0x0014, true),
+    );
+
+    console.log("Build vs Write comparison completed");
   });
 });

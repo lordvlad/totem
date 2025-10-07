@@ -1212,3 +1212,31 @@ export function build(
 
   return concatStreams(streams()).pipeThrough(checksum());
 }
+
+export function write(
+  config: Parameters<typeof writeLayout>[1],
+  getMediaFn: MediaItemFetcher,
+) {
+  async function* streams(): AsyncGenerator<ReadableStream<Uint8Array>> {
+    // First pass: determine buffer size by creating layout with old method
+    // This is needed because we need to know the total size upfront
+    const tempLayout = createLayout(config);
+    const bufferSize = tempLayout.size;
+
+    // Create buffer and write using new method
+    const writer = new BufWriter(bufferSize);
+    const result = writeLayout(writer, config);
+
+    // Yield the layout data
+    const layoutSize = writer.getWriteIndex();
+    yield singleChunkStream(new Uint8Array(writer.buf, 0, layoutSize));
+
+    // Yield media files with cipher
+    for (const media of result.mediaTable) {
+      const data = await getMediaFn(media);
+      yield data.pipeThrough(mediaFileCypher(magicXorValue));
+    }
+  }
+
+  return concatStreams(streams()).pipeThrough(checksum());
+}

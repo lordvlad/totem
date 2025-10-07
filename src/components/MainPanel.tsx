@@ -16,7 +16,7 @@ import { ProjectsPanel } from "./ProjectsPanel";
 export function MainPanel() {
   const i18n = useI18n();
   return (
-    <Tabs defaultValue="audio">
+    <Tabs defaultValue="audio" keepMounted={false}>
       <Tabs.List>
         <Tabs.Tab
           value="audio"

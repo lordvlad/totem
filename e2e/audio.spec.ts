@@ -842,5 +842,188 @@ test.describe("Audio Recording and Playback", () => {
       page.getByText(/drag-and-drop/i),
     ).toBeVisible();
   });
+
+  test("should complete recording workflow and check for console errors", async ({
+    page,
+    context,
+  }) => {
+    // Set up console error monitoring to catch MPEGMode errors
+    const consoleErrors: string[] = [];
+    const consoleWarnings: string[] = [];
+    
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      } else if (msg.type() === "warning") {
+        consoleWarnings.push(msg.text());
+      }
+    });
+
+    // Set up page error monitoring for uncaught exceptions
+    const pageErrors: Error[] = [];
+    page.on("pageerror", (error) => {
+      pageErrors.push(error);
+    });
+
+    // Grant microphone permissions
+    await context.grantPermissions(["microphone"]);
+
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Clear any existing data
+    await page.evaluate(() => localStorage.clear());
+    await page.evaluate(() => indexedDB.deleteDatabase("keyval-store"));
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    // Mock getUserMedia and critical browser APIs for recording
+    await page.evaluate(() => {
+      // Mock AudioContext with proper analyser support
+      const mockAnalyser = {
+        fftSize: 256,
+        frequencyBinCount: 128,
+        connect: () => {},
+        getByteFrequencyData: (array: Uint8Array) => {
+          // Simulate audio data
+          for (let i = 0; i < array.length; i++) {
+            array[i] = Math.floor(Math.random() * 128);
+          }
+        },
+      };
+
+      const mockAudioContext = {
+        createMediaStreamSource: () => ({
+          connect: () => {},
+        }),
+        createAnalyser: () => mockAnalyser,
+        createMediaElementSource: () => ({
+          connect: () => {},
+        }),
+        close: async () => {},
+        state: "running",
+        destination: {},
+      };
+
+      (window as any).AudioContext = function () {
+        return mockAudioContext;
+      };
+
+      // Mock MediaRecorder to simulate recording
+      class MockMediaRecorder {
+        state = "inactive";
+        ondataavailable: ((event: any) => void) | null = null;
+        onstop: (() => void) | null = null;
+
+        start() {
+          this.state = "recording";
+          // Simulate recording data
+          setTimeout(() => {
+            if (this.ondataavailable) {
+              const audioData = new Uint8Array(8192); // Larger buffer for realistic test
+              for (let i = 0; i < audioData.length; i++) {
+                audioData[i] = Math.floor(Math.random() * 255);
+              }
+              const blob = new Blob([audioData], { type: "audio/webm" });
+              this.ondataavailable({ data: blob });
+            }
+          }, 100);
+        }
+
+        stop() {
+          this.state = "inactive";
+          setTimeout(() => {
+            if (this.onstop) {
+              this.onstop();
+            }
+          }, 100);
+        }
+      }
+
+      (window as any).MediaRecorder = MockMediaRecorder;
+
+      // Mock getUserMedia
+      const mockStream = {
+        getTracks: () => [
+          {
+            kind: "audio",
+            stop: () => {},
+          },
+        ],
+        getAudioTracks: () => [
+          {
+            kind: "audio",
+            stop: () => {},
+          },
+        ],
+      } as any;
+
+      Object.defineProperty(navigator.mediaDevices, "getUserMedia", {
+        value: async (constraints: any) => {
+          if (constraints.audio) {
+            return mockStream;
+          }
+          throw new Error("Not supported");
+        },
+        writable: true,
+      });
+    });
+
+    // Verify no errors before starting test
+    expect(consoleErrors.filter(e => !e.includes("404") && !e.includes("favicon"))).toEqual([]);
+    expect(pageErrors).toEqual([]);
+
+    // Find and click the Record button
+    const recordButton = page.getByRole("button", { name: /record/i });
+    await expect(recordButton).toBeVisible();
+    await recordButton.click();
+
+    // Wait for modal
+    const modalTitle = page.getByText(/record audio/i);
+    await expect(modalTitle).toBeVisible({ timeout: 5000 });
+
+    // Find the action button (large circular button with mic icon)
+    const allModalButtons = page.locator('[role="dialog"] button');
+    const actionButton = allModalButtons.nth(0);
+    await expect(actionButton).toBeVisible();
+
+    // Start recording
+    await actionButton.click();
+    await page.waitForTimeout(500);
+
+    // Stop recording
+    await actionButton.click();
+
+    // Wait for processing (MP3 conversion)
+    await page.waitForTimeout(2000);
+
+    // Check for MPEGMode or other critical errors
+    const criticalErrors = consoleErrors.filter(
+      (e) => 
+        e.includes("MPEGMode") || 
+        e.includes("ReferenceError") ||
+        e.includes("lamejs") ||
+        (e.includes("Error") && !e.includes("404") && !e.includes("favicon"))
+    );
+
+    // This is the critical test: no MPEGMode errors should occur
+    expect(criticalErrors).toEqual([]);
+    expect(pageErrors).toEqual([]);
+
+    // Verify recording was successful by checking if audio controls appear
+    // (this happens only after successful MP3 conversion)
+    const audioControls = page.locator('[role="dialog"] audio[controls]');
+    await expect(audioControls).toBeVisible({ timeout: 3000 });
+
+    // Verify Add button is enabled (only happens after successful recording)
+    const addButton = page.getByRole("button", { name: /^add$/i });
+    await expect(addButton).not.toBeDisabled();
+
+    // Close modal
+    await page.keyboard.press("Escape");
+
+    // Final verification
+    expect(criticalErrors).toEqual([]);
+  });
 });
 

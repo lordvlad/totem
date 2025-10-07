@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from "bun:test";
 import {
   createLayout,
   BufWriter,
@@ -137,6 +137,43 @@ describe("writeLayout", () => {
     const newProductId = newView.getUint32(0x0014, true);
     console.log("Product ID - old:", oldProductId, "new:", newProductId);
     expect(newProductId).toBe(oldProductId);
+
+    // Special codes table offset at 0x0094
+    const oldSpecialCodesOffset = oldView.getUint32(0x0094, true);
+    const newSpecialCodesOffset = newView.getUint32(0x0094, true);
+    console.log(
+      "Special codes offset - old:",
+      oldSpecialCodesOffset,
+      "new:",
+      newSpecialCodesOffset,
+    );
+
+    // Byte-by-byte comparison of special codes table (40 bytes)
+    const specialCodesSize = 40;
+    let specialCodesMatch = true;
+    const specialCodesDiffs: string[] = [];
+
+    for (let i = 0; i < specialCodesSize; i++) {
+      const oldByte = oldUint8[oldSpecialCodesOffset + i];
+      const newByte = newUint8[newSpecialCodesOffset + i];
+      if (oldByte !== newByte) {
+        specialCodesMatch = false;
+        specialCodesDiffs.push(
+          `Byte ${i}: old=0x${oldByte?.toString(16).padStart(2, "0") ?? "??"}, new=0x${newByte?.toString(16).padStart(2, "0") ?? "??"}`,
+        );
+      }
+    }
+
+    console.log("Special codes table match:", specialCodesMatch ? "YES" : "NO");
+    if (!specialCodesMatch) {
+      console.log("Special codes table differences:");
+      for (const diff of specialCodesDiffs) {
+        console.log("  " + diff);
+      }
+    }
+
+    // Verify special codes table matches byte-by-byte
+    expect(specialCodesMatch).toBe(true);
 
     console.log("Header comparison completed");
   });

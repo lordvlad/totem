@@ -5,7 +5,7 @@ import Mic from "./icons/Mic";
 import { CircleStop } from "./icons/CircleStop";
 import { CirclePlay } from "./icons/CirclePlay";
 import Pause from "./icons/Pause";
-import lamejs from "lamejs";
+import lamejs from "@breezystack/lamejs";
 
 type RecordingState = "idle" | "recording" | "recorded";
 type PlaybackState = "idle" | "playing" | "paused";
@@ -151,7 +151,7 @@ export function RecordingModal({
     const samples = audioBuffer.getChannelData(0);
 
     const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128);
-    const mp3Data: Int8Array[] = [];
+    const mp3Data: Uint8Array[] = [];
 
     const sampleBlockSize = 1152;
     const int16Samples = new Int16Array(samples.length);
@@ -180,7 +180,7 @@ export function RecordingModal({
     const concatenated = new Uint8Array(totalLength);
     let offset = 0;
     for (const arr of mp3Data) {
-      concatenated.set(new Uint8Array(arr.buffer), offset);
+      concatenated.set(arr, offset);
       offset += arr.length;
     }
 

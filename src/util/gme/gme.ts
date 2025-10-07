@@ -7,6 +7,7 @@ import { id } from "tsafe";
 import { concatStreams } from "../concatStreams";
 import { singleChunkStream } from "../singleChunkStream";
 import { concatBuffers } from "../concatBuffers";
+import { range } from "../../components/OIDCode/util";
 
 interface ScriptValue {
   value: number;
@@ -98,7 +99,7 @@ interface Buf {
   readonly uint8: Uint8Array;
 }
 
-class BufWriter {
+export class BufWriter {
   readonly buf: ArrayBuffer;
   readonly view: DataView;
   readonly uint8: Uint8Array;
@@ -188,6 +189,16 @@ class BufWriter {
     this.writeIndex += enc.byteLength;
     if (nullTerminated) {
       this.setUint8(0x0);
+    }
+  }
+
+  writeBytes(data: Uint8Array | number[]): void {
+    if (Array.isArray(data)) {
+      this.uint8.set(data, this.writeIndex);
+      this.writeIndex += data.length;
+    } else {
+      this.uint8.set(data, this.writeIndex);
+      this.writeIndex += data.length;
     }
   }
 }
@@ -520,9 +531,7 @@ function writeScriptTable(
 ): void {
   const firstOid = Math.min(...Object.keys(scripts).map(Number));
   const lastOid = Math.max(...Object.keys(scripts).map(Number));
-  const seq = new Array(lastOid - firstOid + 1)
-    .fill(0)
-    .map((_, i) => i + firstOid);
+  const seq = range(firstOid, lastOid);
 
   // Write lastOid and firstOid
   w.setUint16(lastOid);
@@ -537,9 +546,10 @@ function writeScriptTable(
   // Write scripts, recording offsets
   const offsets: number[] = [];
   for (const oid of seq) {
-    if (oid in scripts && scripts[oid].length > 0) {
+    const script = scripts[oid];
+    if (script !== undefined) {
       offsets.push(w.getWriteIndex());
-      writeScript(w, scripts[oid]);
+      writeScript(w, script);
     } else {
       offsets.push(0xffff_ffff);
     }
@@ -625,9 +635,7 @@ function writeSpecialCodesTable(
     .filter((s) => s.length)
     .map((s) => parseInt(s, 16));
 
-  for (const byte of data) {
-    w.setUint8(byte);
-  }
+  w.writeBytes(data);
 }
 
 function writeGameTable(w: BufWriter): void {
@@ -645,9 +653,7 @@ function writeGameTable(w: BufWriter): void {
     .filter((s) => s.length)
     .map((s) => parseInt(s, 16));
 
-  for (const byte of data) {
-    w.setUint8(byte);
-  }
+  w.writeBytes(data);
 }
 
 function writeMediaTable(w: BufWriter, tracks: Track[]): void {
@@ -731,6 +737,77 @@ function writeHeader(
   // Set write index to special codes offset position
   w.setWriteIndex(0x0094);
   w.setUint32(config.specialCodesOffset);
+}
+
+export function writeLayout(
+  w: BufWriter,
+  config: GmeBuildConfig,
+): { mediaTable: MediaTableItem[] } {
+  const { replayOid = 12159, stopOid = 12158 } = config;
+
+  // Prepare scripts - merge config scripts with album controls
+  const albumControls = createAlbumControls(config.tracks);
+  const scripts = config.scripts ?? albumControls;
+
+  // Track offsets as we write
+  const scriptTableOffset = 0x0200;
+  w.setWriteIndex(scriptTableOffset);
+  writeScriptTable(w, scripts);
+
+  const initialRegisterValuesOffset = w.getWriteIndex();
+  writeInitialRegisterValues(w, config.initialRegisterValues ?? []);
+
+  const powerOnSoundOffset = w.getWriteIndex();
+  writePoweronSoundPlaylistList(w, config.powerOnSounds ?? []);
+
+  const additionalScriptTableOffset = w.getWriteIndex();
+  writeScriptTable(w, { 0x3000: [] });
+
+  const gameTableOffset = w.getWriteIndex();
+  writeGameTable(w);
+
+  const specialCodesOffset = w.getWriteIndex();
+  writeSpecialCodesTable(w, replayOid, stopOid);
+
+  const mediaTableOffset = w.getWriteIndex();
+  writeMediaTable(w, config.tracks);
+
+  // Build media table items for return value
+  const mediaTableStart = mediaTableOffset;
+  const tableSize = 8 * config.tracks.length;
+  let mediaOffset = mediaTableStart + tableSize;
+  const mediaTableItems = config.tracks.map((track, index) => {
+    const itemOffset = mediaTableStart + index * 8;
+    const currentMediaOffset = mediaOffset;
+    mediaOffset += track.size;
+    return id<MediaTableItem>({
+      offset: itemOffset,
+      mediaOffset: currentMediaOffset,
+      write({ view }) {
+        view.setUint32(this.offset, this.mediaOffset, true);
+        view.setUint32(this.offset + 4, this.track.size, true);
+      },
+      track,
+    });
+  });
+
+  // Now write the header with all the offsets
+  writeHeader(w, {
+    productId: config.productId,
+    comment: config.comment,
+    language: config.language,
+    scriptTableOffset,
+    mediaTableOffset,
+    additionalScriptTableOffset,
+    gameTableOffset,
+    initialRegisterValuesOffset,
+    powerOnSoundOffset,
+    specialCodesOffset,
+  });
+
+  return {
+    mediaTable: mediaTableItems,
+  };
 }
 
 function createAlbumControls(tracks?: Track[]): Record<number, ScriptLine[]> {

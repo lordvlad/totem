@@ -145,4 +145,50 @@ test.describe("Mobile Print Preview", () => {
     // FAB should be hidden again
     await expect(fab).not.toBeVisible();
   });
+
+  test("should only show FAB on Layout tab, not other tabs", async ({
+    page,
+  }) => {
+    // Set viewport to mobile size
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    const fab = page.getByRole("button", { name: /toggle print preview/i });
+
+    // Check FAB is not visible on Audio tab
+    const audioTab = page.getByRole("tab", { name: /^audio$/i });
+    await expect(audioTab).toBeVisible();
+    await audioTab.click();
+    await page.waitForTimeout(500);
+    await expect(fab).not.toBeVisible();
+
+    // Check FAB is not visible on Projects tab
+    const projectsTab = page.getByRole("tab", { name: /projects/i });
+    await expect(projectsTab).toBeVisible();
+    await projectsTab.click();
+    await page.waitForTimeout(500);
+    await expect(fab).not.toBeVisible();
+
+    // Check FAB is not visible on Settings tab
+    const settingsTab = page.getByRole("tab", { name: /settings/i });
+    await expect(settingsTab).toBeVisible();
+    await settingsTab.click();
+    await page.waitForTimeout(500);
+    await expect(fab).not.toBeVisible();
+
+    // Check FAB IS visible on Layout tab
+    const layoutTab = page.getByRole("tab", { name: /layout/i });
+    await expect(layoutTab).toBeVisible();
+    await layoutTab.click();
+    await page.waitForTimeout(500);
+    await expect(fab).toBeVisible();
+
+    // Check FAB is not visible on Downloads tab
+    const downloadsTab = page.getByRole("tab", { name: /downloads/i });
+    await expect(downloadsTab).toBeVisible();
+    await downloadsTab.click();
+    await page.waitForTimeout(500);
+    await expect(fab).not.toBeVisible();
+  });
 });

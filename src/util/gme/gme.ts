@@ -7,6 +7,7 @@ import { id } from "tsafe";
 import { concatStreams } from "../concatStreams";
 import { singleChunkStream } from "../singleChunkStream";
 import { concatBuffers } from "../concatBuffers";
+import { range } from "../../components/OIDCode/util";
 
 interface ScriptValue {
   value: number;
@@ -97,6 +98,111 @@ interface Buf {
   readonly view: DataView;
   readonly uint8: Uint8Array;
 }
+
+export class BufWriter {
+  readonly buf: ArrayBuffer;
+  readonly view: DataView;
+  readonly uint8: Uint8Array;
+  private writeIndex: number;
+  private readonly littleEndian: boolean;
+
+  constructor(size: number, littleEndian = true) {
+    this.buf = new ArrayBuffer(size);
+    this.view = new DataView(this.buf);
+    this.uint8 = new Uint8Array(this.buf);
+    this.writeIndex = 0;
+    this.littleEndian = littleEndian;
+  }
+
+  getWriteIndex(): number {
+    return this.writeIndex;
+  }
+
+  setWriteIndex(index: number): void {
+    this.writeIndex = index;
+  }
+
+  setInt8(value: number): void {
+    this.view.setInt8(this.writeIndex, value);
+    this.writeIndex += 1;
+  }
+
+  setUint8(value: number): void {
+    this.view.setUint8(this.writeIndex, value);
+    this.writeIndex += 1;
+  }
+
+  setInt16(value: number): void {
+    this.view.setInt16(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 2;
+  }
+
+  setUint16(value: number): void {
+    this.view.setUint16(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 2;
+  }
+
+  setInt32(value: number): void {
+    this.view.setInt32(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 4;
+  }
+
+  setUint32(value: number): void {
+    this.view.setUint32(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 4;
+  }
+
+  setFloat32(value: number): void {
+    this.view.setFloat32(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 4;
+  }
+
+  setFloat64(value: number): void {
+    this.view.setFloat64(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 8;
+  }
+
+  setBigInt64(value: bigint): void {
+    this.view.setBigInt64(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 8;
+  }
+
+  setBigUint64(value: bigint): void {
+    this.view.setBigUint64(this.writeIndex, value, this.littleEndian);
+    this.writeIndex += 8;
+  }
+
+  writeString(
+    val: string,
+    opt: { lengthPrefix?: boolean; nullTerminated?: boolean } = {},
+  ): void {
+    const nullTerminated = opt.nullTerminated ?? false;
+    const lengthPrefix = opt.lengthPrefix ?? false;
+    if (nullTerminated && lengthPrefix) {
+      throw new Error("lengthPrefix and nullTerminated cannot both be true");
+    }
+    const enc = utf8enc.encode(val);
+    if (lengthPrefix) {
+      this.setUint8(enc.byteLength);
+    }
+    this.uint8.set(enc, this.writeIndex);
+    this.writeIndex += enc.byteLength;
+    if (nullTerminated) {
+      this.setUint8(0x0);
+    }
+  }
+
+  writeBytes(data: Uint8Array | number[]): void {
+    if (Array.isArray(data)) {
+      this.uint8.set(data, this.writeIndex);
+      this.writeIndex += data.length;
+    } else {
+      this.uint8.set(data, this.writeIndex);
+      this.writeIndex += data.length;
+    }
+  }
+}
+
 export type MediaItemFetcher = (
   item: MediaTableItem,
 ) => Promise<ReadableStream<Uint8Array>>;
@@ -347,6 +453,369 @@ function encodeScript(
   return concatBuffers(...[new Uint8Array(b), ...encodedLines]);
 }
 
+function writeScript(w: BufWriter, lines: ScriptLine[]): void {
+  // Don't write anything for empty scripts (matches encodeScript behavior)
+  if (lines.length === 0) return;
+
+  // Write offset table bytesize (number of lines)
+  w.setUint16(lines.length);
+
+  // Mark BufWriter offset (start of offset table)
+  const offsetTableStart = w.getWriteIndex();
+
+  // Skip offset table (4 bytes per line for offsets)
+  w.setWriteIndex(offsetTableStart + 4 * lines.length);
+
+  // Write encoded lines, recording every offset
+  const offsets: number[] = [];
+  for (const line of lines) {
+    offsets.push(w.getWriteIndex());
+
+    // Write conditions count
+    w.setUint16(line.conditions.length);
+
+    // Write conditions
+    for (const condition of line.conditions) {
+      w.setUint8(isRegister(condition.lhs) ? 0x00 : 0x01);
+      w.setUint16(
+        isRegister(condition.lhs)
+          ? condition.lhs.register
+          : condition.lhs.value,
+      );
+      w.setUint16(scriptConditionOps[condition.op]);
+      w.setUint8(isRegister(condition.rhs) ? 0x00 : 0x01);
+      w.setUint16(
+        isRegister(condition.rhs)
+          ? condition.rhs.register
+          : condition.rhs.value,
+      );
+    }
+
+    // Write actions count
+    w.setUint16(line.actions.length);
+
+    // Write actions
+    for (const action of line.actions) {
+      w.setUint16(action.register ?? 0);
+      w.setUint16(commands[action.cmd]);
+      w.setUint8(isRegister(action.param) ? 0x00 : 0x01);
+      w.setUint16(
+        isRegister(action.param) ? action.param.register : action.param.value,
+      );
+    }
+
+    // Write playlist count
+    w.setUint16(line.playlist.length);
+
+    // Write playlist items
+    for (const item of line.playlist) {
+      w.setUint16(item);
+    }
+  }
+
+  // Remember current position (end of script lines)
+  const endOfScriptLines = w.getWriteIndex();
+
+  // Jump back to write offset table
+  w.setWriteIndex(offsetTableStart);
+
+  // Write offsets
+  for (const offset of offsets) {
+    w.setUint32(offset);
+  }
+
+  // Restore offset to end of script lines
+  w.setWriteIndex(endOfScriptLines);
+}
+
+function writeScriptTable(
+  w: BufWriter,
+  scripts: Record<number, ScriptLine[]>,
+): void {
+  const firstOid = Math.min(...Object.keys(scripts).map(Number));
+  const lastOid = Math.max(...Object.keys(scripts).map(Number));
+  const seq = range(firstOid, lastOid);
+
+  // Write lastOid and firstOid (both 32-bit per GME spec)
+  w.setUint32(lastOid);
+  w.setUint32(firstOid);
+
+  // Mark offset table start
+  const offsetTableStart = w.getWriteIndex();
+
+  // Skip offset table (4 bytes per OID in sequence)
+  w.setWriteIndex(offsetTableStart + 4 * seq.length);
+
+  // Write scripts, recording offsets
+  const offsets: number[] = [];
+  for (const oid of seq) {
+    const script = scripts[oid];
+    if (script.length > 0) {
+      offsets.push(w.getWriteIndex());
+      writeScript(w, script);
+    } else {
+      offsets.push(0xffff_ffff);
+    }
+  }
+
+  // Remember current position (end of all scripts)
+  const endOfScripts = w.getWriteIndex();
+
+  // Jump back to write offset table
+  w.setWriteIndex(offsetTableStart);
+
+  // Write offsets
+  for (const offset of offsets) {
+    w.setUint32(offset);
+  }
+
+  // Restore offset to end of scripts
+  w.setWriteIndex(endOfScripts);
+}
+
+function writeInitialRegisterValues(
+  w: BufWriter,
+  initialRegisterValues: number[],
+): void {
+  // Write count
+  w.setUint16(initialRegisterValues.length);
+  // Write register values
+  for (const value of initialRegisterValues) {
+    w.setUint16(value);
+  }
+}
+
+function writePoweronSoundPlaylistList(
+  w: BufWriter,
+  trackIndices: number[],
+): void {
+  if (trackIndices.length === 0) {
+    w.setUint16(0);
+    return;
+  }
+
+  const startOffset = w.getWriteIndex();
+
+  // Number of playlists
+  w.setUint16(1);
+  // Offset to first playlist (6 bytes from start = 2 bytes count + 4 bytes offset)
+  w.setUint32(startOffset + 6);
+  // Number of tracks in playlist
+  w.setUint16(trackIndices.length);
+  // Track indices
+  for (const index of trackIndices) {
+    w.setUint16(index);
+  }
+}
+
+function writeSpecialCodesTable(
+  w: BufWriter,
+  replayOid: number,
+  stopOid: number,
+): void {
+  const example = `
+          #             68 18 00 00 67 18 64 18 65 18 00 00
+                        aa aa bb bb cc cc dd dd ee ee pp pp
+          # 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+            pp pp pp pp pp pp pp pp pp pp pp pp pp pp pp pp
+          # 00 00 00 00 00 00 00 00 01 00 66 18
+            pp pp pp pp pp pp pp pp ff ff gg gg 
+  `;
+  const data = example
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s.length !== 0 && !s.startsWith("#"))
+    .join("\n")
+    .replace("aa aa", toHex(replayOid))
+    .replace("bb bb", toHex(stopOid))
+    .replace("cc cc", "00 00")
+    .replace("dd dd", "00 00")
+    .replace("ee ee", "00 00")
+    .replace("ff ff", "00 00")
+    .replace("gg gg", "00 00")
+    .replaceAll("pp", "00")
+    .split(/\s+/)
+    .filter((s) => s.length)
+    .map((s) => parseInt(s, 16));
+
+  w.writeBytes(data);
+}
+
+function writeGameTable(w: BufWriter): void {
+  const data = `
+            0c 00 00 00 71 70 01 00  35 7a 01 00 91 7f 01 00
+            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+            cd 82 01 00 59 8a 01 00  e7 8e 01 00 4f 97 01 00 
+            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+            0f 9f 01 00 c7 9f 01 00  69 a1 01 00 69 ad 01 00 
+            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+            fb b2 01 00 
+            00 00 00 00
+            `
+    .split(/\s+/)
+    .filter((s) => s.length)
+    .map((s) => parseInt(s, 16));
+
+  w.writeBytes(data);
+}
+
+function writeMediaTable(w: BufWriter, tracks: Track[]): void {
+  const startOffset = w.getWriteIndex();
+  const tableSize = 8 * tracks.length;
+
+  let mediaOffset = startOffset + tableSize;
+
+  for (const track of tracks) {
+    w.setUint32(mediaOffset);
+    w.setUint32(track.size);
+    mediaOffset += track.size;
+  }
+}
+
+function writeHeader(
+  w: BufWriter,
+  config: {
+    productId: number;
+    comment?: string;
+    language: string;
+    scriptTableOffset: number;
+    mediaTableOffset: number;
+    additionalScriptTableOffset: number;
+    gameTableOffset: number;
+    initialRegisterValuesOffset: number;
+    powerOnSoundOffset: number;
+    specialCodesOffset: number;
+  },
+): void {
+  const comment =
+    config.comment ?? "CHOMPTECH DATA FORMAT CopyRight 2009 Ver2.1.2222";
+  const d = new Date();
+  const date = `${d.getFullYear()}${String(d.getMonth()).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+
+  if (comment.length > 48) {
+    throw new Error(
+      `Comment must not be longer than 48 chars: ${comment}(${comment.length} chars)`,
+    );
+  }
+  if (date.length !== 8) {
+    throw new Error(
+      `Date must have an length of _exactly_ 8 characters: ${date}`,
+    );
+  }
+
+  // Set write index to start of header
+  w.setWriteIndex(0x0000);
+
+  // 32bit offset to the play script table
+  w.setUint32(config.scriptTableOffset);
+  // 32bit offset to the *media file table*
+  w.setUint32(config.mediaTableOffset);
+  // 32bit magic number
+  w.setUint32(0x0000238b);
+  // 32bit offset to an *additional script table*
+  w.setUint32(config.additionalScriptTableOffset);
+  // 32bit offset to the *game table*
+  w.setUint32(config.gameTableOffset);
+  // 32bit product id code
+  w.setUint32(config.productId);
+  // 32bit pointer to register init values
+  w.setUint32(config.initialRegisterValuesOffset);
+  // 8bit raw XOR value
+  w.setUint8(0x39);
+
+  // Set write index to copyright string position
+  w.setWriteIndex(0x0020);
+  w.writeString(comment, { lengthPrefix: true });
+  w.writeString(date);
+  w.writeString(config.language.substring(0, 6), { nullTerminated: true });
+
+  // Set write index to additional media offset position
+  w.setWriteIndex(0x0060);
+  w.setUint32(0xffff_ffff);
+
+  // Set write index to power on sound offset position
+  w.setWriteIndex(0x0071);
+  w.setUint32(config.powerOnSoundOffset);
+
+  // Set write index to special codes offset position
+  w.setWriteIndex(0x0094);
+  w.setUint32(config.specialCodesOffset);
+}
+
+export function writeLayout(
+  w: BufWriter,
+  config: GmeBuildConfig,
+): { mediaTable: MediaTableItem[] } {
+  const { replayOid = 12159, stopOid = 12158 } = config;
+
+  // Prepare scripts - merge config scripts with album controls
+  const albumControls = createAlbumControls(config.tracks);
+  const scripts = config.scripts ?? albumControls;
+
+  // Track offsets as we write
+  const scriptTableOffset = 0x0200;
+  w.setWriteIndex(scriptTableOffset);
+  writeScriptTable(w, scripts);
+
+  const initialRegisterValuesOffset = w.getWriteIndex();
+  writeInitialRegisterValues(w, config.initialRegisterValues ?? []);
+
+  const powerOnSoundOffset = w.getWriteIndex();
+  writePoweronSoundPlaylistList(w, config.powerOnSounds ?? []);
+
+  const additionalScriptTableOffset = w.getWriteIndex();
+  writeScriptTable(w, { 0x3000: [] });
+
+  const gameTableOffset = w.getWriteIndex();
+  writeGameTable(w);
+
+  const specialCodesOffset = w.getWriteIndex();
+  writeSpecialCodesTable(w, replayOid, stopOid);
+
+  const mediaTableOffset = w.getWriteIndex();
+  writeMediaTable(w, config.tracks);
+
+  // Build media table items for return value
+  const mediaTableStart = mediaTableOffset;
+  const tableSize = 8 * config.tracks.length;
+  let mediaOffset = mediaTableStart + tableSize;
+  const mediaTableItems = config.tracks.map((track, index) => {
+    const itemOffset = mediaTableStart + index * 8;
+    const currentMediaOffset = mediaOffset;
+    mediaOffset += track.size;
+    return id<MediaTableItem>({
+      offset: itemOffset,
+      mediaOffset: currentMediaOffset,
+      write({ view }) {
+        view.setUint32(this.offset, this.mediaOffset, true);
+        view.setUint32(this.offset + 4, this.track.size, true);
+      },
+      track,
+    });
+  });
+
+  // Now write the header with all the offsets
+  writeHeader(w, {
+    productId: config.productId,
+    comment: config.comment,
+    language: config.language,
+    scriptTableOffset,
+    mediaTableOffset,
+    additionalScriptTableOffset,
+    gameTableOffset,
+    initialRegisterValuesOffset,
+    powerOnSoundOffset,
+    specialCodesOffset,
+  });
+
+  // Restore write index to the end of all written data
+  w.setWriteIndex(mediaTableOffset + 8 * config.tracks.length);
+
+  return {
+    mediaTable: mediaTableItems,
+  };
+}
+
 function createAlbumControls(tracks?: Track[]): Record<number, ScriptLine[]> {
   if (typeof tracks === "undefined" || tracks.length === 0) return { 1401: [] };
 
@@ -412,8 +881,9 @@ function createScriptTable({
   return {
     size,
     write({ uint8, view }: Buf) {
-      view.setUint16(offset, lastOid, true);
-      view.setUint16(offset + 4, firstOid, true);
+      // Both lastOid and firstOid should be 32-bit per GME spec
+      view.setUint32(offset, lastOid, true);
+      view.setUint32(offset + 4, firstOid, true);
       for (const item of items) {
         view.setUint32(item.offset, item.scriptOffset, true);
       }
@@ -741,6 +1211,31 @@ export function build(
     yield singleChunkStream(buf.uint8);
 
     for (const media of layout.mediaTable.items) {
+      const data = await getMediaFn(media);
+      yield data.pipeThrough(mediaFileCypher(magicXorValue));
+    }
+  }
+
+  return concatStreams(streams()).pipeThrough(checksum());
+}
+
+export function write(
+  config: Parameters<typeof writeLayout>[1],
+  getMediaFn: MediaItemFetcher,
+) {
+  async function* streams(): AsyncGenerator<ReadableStream<Uint8Array>> {
+    // Allocate buffer for layout (layouts are typically under 2KB)
+    // We'll only use what we actually write
+    const bufferSize = 65536; // 64KB should be more than enough for any layout
+    const writer = new BufWriter(bufferSize, true); // explicitly set little-endian
+    const result = writeLayout(writer, config);
+
+    // Yield only the written portion of the layout data
+    const layoutSize = writer.getWriteIndex();
+    yield singleChunkStream(new Uint8Array(writer.buf, 0, layoutSize));
+
+    // Yield media files with cipher
+    for (const media of result.mediaTable) {
       const data = await getMediaFn(media);
       yield data.pipeThrough(mediaFileCypher(magicXorValue));
     }

@@ -110,6 +110,30 @@ Test audio files (.ogg) are located in `src/util/gme/__specs__/` directory along
 bun run test:debug
 ```
 
+### E2E Testing Guidelines
+
+**CRITICAL: NO MOCKING IN E2E TESTS**
+
+E2E tests must test the application as a real user would experience it:
+
+- ❌ **NEVER mock** browser APIs (`getUserMedia`, `fetch`, `localStorage`, `AudioContext`, etc.)
+- ❌ **NEVER mock** application functions or modules
+- ❌ **NEVER override** global objects or prototype methods
+- ✅ **DO use** fixture data files (e.g., test audio files in `e2e/fixtures/`)
+- ✅ **DO pre-populate** test databases with real data via `page.evaluate()`
+- ✅ **DO grant** browser permissions via Playwright's `context.grantPermissions()`
+
+**Why no mocking?**
+- E2E tests validate the entire stack works together in a real browser
+- Mocking defeats the purpose and should be in unit tests instead
+- Real browser behavior catches integration bugs that mocks hide
+
+**Limitations:**
+Some features (like microphone recording) cannot be fully tested in headless CI environments because they require real system hardware. These should be documented with comments explaining why, and tested through:
+- Manual QA with real hardware
+- Unit tests for the underlying logic
+- E2E tests for UI interactions only (not the hardware-dependent parts)
+
 ## Project Structure
 
 ### Root Directory

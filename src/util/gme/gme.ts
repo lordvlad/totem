@@ -536,9 +536,9 @@ function writeScriptTable(
   const lastOid = Math.max(...Object.keys(scripts).map(Number));
   const seq = range(firstOid, lastOid);
 
-  // Write lastOid and firstOid
-  w.setUint16(lastOid);
-  w.setUint16(firstOid);
+  // Write lastOid and firstOid (both 32-bit per GME spec)
+  w.setUint32(lastOid);
+  w.setUint32(firstOid);
 
   // Mark offset table start
   const offsetTableStart = w.getWriteIndex();
@@ -550,7 +550,7 @@ function writeScriptTable(
   const offsets: number[] = [];
   for (const oid of seq) {
     const script = scripts[oid];
-    if (script !== undefined && script.length > 0) {
+    if (script.length > 0) {
       offsets.push(w.getWriteIndex());
       writeScript(w, script);
     } else {
@@ -881,8 +881,9 @@ function createScriptTable({
   return {
     size,
     write({ uint8, view }: Buf) {
-      view.setUint16(offset, lastOid, true);
-      view.setUint16(offset + 4, firstOid, true);
+      // Both lastOid and firstOid should be 32-bit per GME spec
+      view.setUint32(offset, lastOid, true);
+      view.setUint32(offset + 4, firstOid, true);
       for (const item of items) {
         view.setUint32(item.offset, item.scriptOffset, true);
       }

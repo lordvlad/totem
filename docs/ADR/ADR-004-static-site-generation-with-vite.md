@@ -1,4 +1,4 @@
-# ADR-003: Static Site Generation with Vite
+# ADR-004: Static Site Generation with Vite
 
 ## Status
 

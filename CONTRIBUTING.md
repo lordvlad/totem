@@ -8,8 +8,7 @@ Before contributing, please review our [Architecture Decision Records (ADRs)](..
 - [ADR-001: Client-Side Only Architecture](../docs/ADR/ADR-001-client-side-only-architecture.md) - No backend, everything runs in browser
 - [ADR-002: Web Workers](../docs/ADR/ADR-002-web-workers-for-compute-intensive-tasks.md) - Use workers for heavy computation
 - [ADR-006: No Mocking in E2E Tests](../docs/ADR/ADR-006-no-mocking-in-e2e-tests.md) - E2E tests must use real APIs
-- [ADR-007: Bun as Package Manager](../docs/ADR/ADR-007-bun-as-package-manager-and-runtime.md) - Use Bun, not npm/yarn
-- [ADR-009: Vite Worker Import Pattern](../docs/ADR/ADR-009-vite-worker-import-pattern.md) - Workers must use `?worker` suffix
+- [ADR-003: Bun as Package Manager](../docs/ADR/ADR-003-bun-as-package-manager-and-runtime.md) - Use Bun, not npm/yarn
 
 **When contributing:**
 - Ensure your changes adhere to existing ADRs

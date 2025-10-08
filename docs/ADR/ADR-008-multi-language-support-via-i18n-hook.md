@@ -1,4 +1,4 @@
-# ADR-010: Multi-Language Support via i18n Hook
+# ADR-008: Multi-Language Support via i18n Hook
 
 ## Status
 

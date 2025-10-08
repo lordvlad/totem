@@ -10,14 +10,12 @@ Architecture Decision Records document important architectural decisions along w
 
 - [ADR-001: Client-Side Only Architecture (No Backend)](./ADR-001-client-side-only-architecture.md)
 - [ADR-002: Web Workers for Compute-Intensive Tasks](./ADR-002-web-workers-for-compute-intensive-tasks.md)
-- [ADR-003: Static Site Generation with Vite](./ADR-003-static-site-generation-with-vite.md)
-- [ADR-004: IndexedDB for Client-Side Storage](./ADR-004-indexeddb-for-client-side-storage.md)
-- [ADR-005: GME File Format Implementation](./ADR-005-gme-file-format-implementation.md)
+- [ADR-003: Bun as Package Manager and Runtime](./ADR-003-bun-as-package-manager-and-runtime.md)
+- [ADR-004: Static Site Generation with Vite](./ADR-004-static-site-generation-with-vite.md)
+- [ADR-005: IndexedDB for Client-Side Storage](./ADR-005-indexeddb-for-client-side-storage.md)
 - [ADR-006: No Mocking in E2E Tests](./ADR-006-no-mocking-in-e2e-tests.md)
-- [ADR-007: Bun as Package Manager and Runtime](./ADR-007-bun-as-package-manager-and-runtime.md)
-- [ADR-008: TypeScript Strict Mode](./ADR-008-typescript-strict-mode.md)
-- [ADR-009: Vite Worker Import Pattern](./ADR-009-vite-worker-import-pattern.md)
-- [ADR-010: Multi-Language Support via i18n Hook](./ADR-010-multi-language-support-via-i18n-hook.md)
+- [ADR-007: TypeScript Strict Mode](./ADR-007-typescript-strict-mode.md)
+- [ADR-008: Multi-Language Support via i18n Hook](./ADR-008-multi-language-support-via-i18n-hook.md)
 
 ## ADR Format
 

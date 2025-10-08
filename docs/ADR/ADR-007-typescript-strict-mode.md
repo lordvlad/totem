@@ -1,4 +1,4 @@
-# ADR-008: TypeScript Strict Mode
+# ADR-007: TypeScript Strict Mode
 
 ## Status
 

@@ -11,8 +11,7 @@ This project uses Architecture Decision Records (ADRs) to document important arc
 - [ADR-001: Client-Side Only Architecture](../docs/ADR/ADR-001-client-side-only-architecture.md)
 - [ADR-002: Web Workers](../docs/ADR/ADR-002-web-workers-for-compute-intensive-tasks.md)
 - [ADR-006: No Mocking in E2E Tests](../docs/ADR/ADR-006-no-mocking-in-e2e-tests.md)
-- [ADR-007: Bun as Package Manager](../docs/ADR/ADR-007-bun-as-package-manager-and-runtime.md)
-- [ADR-009: Vite Worker Import Pattern](../docs/ADR/ADR-009-vite-worker-import-pattern.md)
+- [ADR-003: Bun as Package Manager](../docs/ADR/ADR-003-bun-as-package-manager-and-runtime.md)
 
 **When working on an issue or feature:**
 1. Check if existing ADRs apply to your changes

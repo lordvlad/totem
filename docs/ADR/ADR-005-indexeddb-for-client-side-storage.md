@@ -1,4 +1,4 @@
-# ADR-004: IndexedDB for Client-Side Storage
+# ADR-005: IndexedDB for Client-Side Storage
 
 ## Status
 

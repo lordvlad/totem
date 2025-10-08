@@ -1,4 +1,4 @@
-# ADR-007: Bun as Package Manager and Runtime
+# ADR-003: Bun as Package Manager and Runtime
 
 ## Status
 

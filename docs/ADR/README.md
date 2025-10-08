@@ -16,6 +16,7 @@ Architecture Decision Records document important architectural decisions along w
 - [ADR-006: No Mocking in E2E Tests](./ADR-006-no-mocking-in-e2e-tests.md)
 - [ADR-007: TypeScript Strict Mode](./ADR-007-typescript-strict-mode.md)
 - [ADR-008: Multi-Language Support via i18n Hook](./ADR-008-multi-language-support-via-i18n-hook.md)
+- [ADR-009: Valtio for State Management](./ADR-009-valtio-for-state-management.md)
 
 ## ADR Format
 

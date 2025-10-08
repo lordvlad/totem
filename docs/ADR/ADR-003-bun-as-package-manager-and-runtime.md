@@ -56,7 +56,6 @@ bun test            # Not npm test
 
 ### Negative
 - Contributors must install Bun (additional setup step)
-- Bun-specific lockfile format (`bun.lockb` is binary)
 - Potential compatibility issues with some npm packages
 - Less mature ecosystem compared to npm/yarn
 - CI/CD must include Bun installation step
@@ -78,9 +77,6 @@ bun --version  # Should show 1.2+
 **package.json:**
 ```json
 {
-  "engines": {
-    "node": ">=22.0.0"
-  },
   "type": "module"
 }
 ```

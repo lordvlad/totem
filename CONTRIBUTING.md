@@ -1,5 +1,22 @@
 # Contributing to Totem
 
+## Architecture Decision Records (ADRs)
+
+Before contributing, please review our [Architecture Decision Records (ADRs)](../docs/ADR/README.md). These document key architectural decisions and patterns you must follow.
+
+**Important ADRs for contributors:**
+- [ADR-001: Client-Side Only Architecture](../docs/ADR/ADR-001-client-side-only-architecture.md) - No backend, everything runs in browser
+- [ADR-002: Web Workers](../docs/ADR/ADR-002-web-workers-for-compute-intensive-tasks.md) - Use workers for heavy computation
+- [ADR-006: No Mocking in E2E Tests](../docs/ADR/ADR-006-no-mocking-in-e2e-tests.md) - E2E tests must use real APIs
+- [ADR-007: Bun as Package Manager](../docs/ADR/ADR-007-bun-as-package-manager-and-runtime.md) - Use Bun, not npm/yarn
+- [ADR-009: Vite Worker Import Pattern](../docs/ADR/ADR-009-vite-worker-import-pattern.md) - Workers must use `?worker` suffix
+
+**When contributing:**
+- Ensure your changes adhere to existing ADRs
+- If your feature requires new architectural decisions, create a new ADR
+- Include the ADR in your PR and wait for confirmation before implementing
+- Do not violate established ADRs without discussion and approval
+
 ## Development Setup
 
 This project uses [Bun](https://bun.sh) as its package manager and runtime for optimal performance.

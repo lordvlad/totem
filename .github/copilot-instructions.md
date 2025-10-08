@@ -1,5 +1,28 @@
 # Totem - Copilot Developer Instructions
 
+## Architecture Decision Records (ADRs)
+
+**CRITICAL: Read the ADRs before making any changes.**
+
+This project uses Architecture Decision Records (ADRs) to document important architectural decisions. All contributions MUST adhere to these decisions.
+
+**Required Reading:**
+- [ADR Index](../docs/ADR/README.md) - Full list of ADRs
+- [ADR-001: Client-Side Only Architecture](../docs/ADR/ADR-001-client-side-only-architecture.md)
+- [ADR-002: Web Workers](../docs/ADR/ADR-002-web-workers-for-compute-intensive-tasks.md)
+- [ADR-006: No Mocking in E2E Tests](../docs/ADR/ADR-006-no-mocking-in-e2e-tests.md)
+- [ADR-007: Bun as Package Manager](../docs/ADR/ADR-007-bun-as-package-manager-and-runtime.md)
+- [ADR-009: Vite Worker Import Pattern](../docs/ADR/ADR-009-vite-worker-import-pattern.md)
+
+**When working on an issue or feature:**
+1. Check if existing ADRs apply to your changes
+2. Ensure your implementation follows all relevant ADRs
+3. If your feature requires new architectural decisions:
+   - Create a new ADR following the format in existing ADRs
+   - Include it in your PR
+   - Wait for confirmation before implementing
+4. Never violate an ADR without explicit discussion and approval
+
 ## Project Overview
 
 Totem is a web-based application that allows users to create custom audio books for the Tiptoi electronic pen system. It runs entirely in the browser with no backend, using Web Workers for compute-intensive tasks. Users can upload audio files and generate GME (Game Mode Electronics) files that work with Tiptoi devices, along with printable visual codes.

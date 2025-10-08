@@ -47,7 +47,9 @@ async function createTestConfig(): Promise<GmeBuildConfig> {
 async function getMediaFn(item: MediaTableItem) {
   return new ReadableStream<Uint8Array>({
     start(controller) {
-      controller.enqueue(item.track.data);
+      if (item.track.data) {
+        controller.enqueue(item.track.data);
+      }
       controller.close();
     },
   });

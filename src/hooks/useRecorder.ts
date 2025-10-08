@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { notifications } from "@mantine/notifications";
 import lamejs from "@breezystack/lamejs";
 
-type RecordingState = "idle" | "recording" | "recorded";
-type PlaybackState = "idle" | "playing" | "paused";
+type RecordingState = "idle" | "recording" | "recorded" | "error";
+type PlaybackState = "idle" | "playing" | "paused" | "error";
+
+export interface RecorderError {
+  type: "recording" | "playback" | "conversion" | "permission";
+  message: string;
+}
 
 interface UseRecorderReturn {
   recordingState: RecordingState;
@@ -11,25 +15,23 @@ interface UseRecorderReturn {
   audioBlob: Blob | null;
   audioUrl: string | null;
   volumeLevel: number;
+  error: RecorderError | null;
   startRecording: () => Promise<void>;
   stopRecording: () => void;
   playRecording: () => void;
   pausePlayback: () => void;
   resumePlayback: () => void;
   reset: () => void;
+  clearError: () => void;
 }
 
-export function useRecorder(
-  i18nRecordingError: string,
-  i18nPermissionDenied: string,
-  i18nCheckMicrophone: string,
-  i18nConversionError: string,
-): UseRecorderReturn {
+export function useRecorder(): UseRecorderReturn {
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [playbackState, setPlaybackState] = useState<PlaybackState>("idle");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [volumeLevel, setVolumeLevel] = useState(0);
+  const [error, setError] = useState<RecorderError | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -173,12 +175,14 @@ export function useRecorder(
           analyserRef.current = null;
         } catch (error) {
           console.error("Error converting recording to MP3:", error);
-          notifications.show({
-            title: i18nRecordingError,
-            message: i18nConversionError,
-            color: "red",
+          setRecordingState("error");
+          setError({
+            type: "conversion",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Failed to convert audio to MP3",
           });
-          setRecordingState("idle");
           setVolumeLevel(0);
         }
       };
@@ -190,24 +194,16 @@ export function useRecorder(
       console.error("Error starting recording:", error);
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      const message =
+      const isPermissionError =
         errorMessage.includes("Permission denied") ||
-        errorMessage.includes("NotAllowedError")
-          ? i18nPermissionDenied
-          : i18nCheckMicrophone;
-      notifications.show({
-        title: i18nRecordingError,
-        message,
-        color: "red",
+        errorMessage.includes("NotAllowedError");
+      setRecordingState("error");
+      setError({
+        type: isPermissionError ? "permission" : "recording",
+        message: errorMessage,
       });
     }
-  }, [
-    analyzeAudio,
-    i18nRecordingError,
-    i18nPermissionDenied,
-    i18nCheckMicrophone,
-    i18nConversionError,
-  ]);
+  }, [analyzeAudio]);
 
   const stopRecording = useCallback(() => {
     if (
@@ -300,11 +296,22 @@ export function useRecorder(
     setRecordingState("idle");
     setPlaybackState("idle");
     setVolumeLevel(0);
+    setError(null);
     if (animationFrameRef.current != null && animationFrameRef.current !== 0) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
   }, [audioUrl]);
+
+  const clearError = useCallback(() => {
+    setError(null);
+    if (recordingState === "error") {
+      setRecordingState("idle");
+    }
+    if (playbackState === "error") {
+      setPlaybackState("idle");
+    }
+  }, [recordingState, playbackState]);
 
   return {
     recordingState,
@@ -312,11 +319,13 @@ export function useRecorder(
     audioBlob,
     audioUrl,
     volumeLevel,
+    error,
     startRecording,
     stopRecording,
     playRecording,
     pausePlayback,
     resumePlayback,
     reset,
+    clearError,
   };
 }

@@ -1,7 +1,8 @@
 import { ActionIcon, Box, Button, Group, Modal, Tooltip } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useCallback, useEffect, useRef } from "react";
 import { useI18n } from "../hooks/useI18n";
-import { useRecorder } from "../hooks/useRecorder";
+import { useRecorder, type RecorderError } from "../hooks/useRecorder";
 import Mic from "./icons/Mic";
 import { CircleStop } from "./icons/CircleStop";
 import { CirclePlay } from "./icons/CirclePlay";
@@ -21,12 +22,7 @@ export function RecordingModal({
   const i18n = useI18n();
   const actionButtonRef = useRef<HTMLButtonElement>(null);
 
-  const recorder = useRecorder(
-    i18n`Recording Error`,
-    i18n`Microphone access denied. Please allow microphone permissions and try again.`,
-    i18n`Failed to start recording. Please check your microphone and try again.`,
-    i18n`Failed to convert recording to MP3. Please try again.`,
-  );
+  const recorder = useRecorder();
 
   const {
     recordingState,
@@ -34,13 +30,43 @@ export function RecordingModal({
     audioBlob,
     audioUrl,
     volumeLevel,
+    error,
     startRecording,
     stopRecording,
     playRecording,
     pausePlayback,
     resumePlayback,
     reset,
+    clearError,
   } = recorder;
+
+  // Handle errors by showing notifications
+  useEffect(() => {
+    if (error != null) {
+      const getErrorMessage = (err: RecorderError): string => {
+        switch (err.type) {
+          case "permission":
+            return i18n`Microphone access denied. Please allow microphone permissions and try again.`;
+          case "conversion":
+            return i18n`Failed to convert recording to MP3. Please try again.`;
+          case "recording":
+            return i18n`Failed to start recording. Please check your microphone and try again.`;
+          case "playback":
+            return i18n`Failed to play recording. Please try again.`;
+          default:
+            return err.message;
+        }
+      };
+
+      notifications.show({
+        title: i18n`Recording Error`,
+        message: getErrorMessage(error),
+        color: "red",
+      });
+
+      clearError();
+    }
+  }, [error, clearError, i18n]);
 
   useEffect(() => {
     if (opened) {
@@ -65,6 +91,9 @@ export function RecordingModal({
       } else if (playbackState === "playing") {
         pausePlayback();
       }
+    } else if (recordingState === "error") {
+      // Allow retry after error
+      reset();
     }
   }, [
     recordingState,
@@ -74,6 +103,7 @@ export function RecordingModal({
     playRecording,
     pausePlayback,
     resumePlayback,
+    reset,
   ]);
 
   const handleReset = useCallback(() => {
@@ -109,7 +139,8 @@ export function RecordingModal({
 
   const getActionIcon = () => {
     const iconSize = { width: 64, height: 64 };
-    if (recordingState === "idle") return <Mic {...iconSize} />;
+    if (recordingState === "idle" || recordingState === "error")
+      return <Mic {...iconSize} />;
     if (recordingState === "recording") return <CircleStop {...iconSize} />;
     if (playbackState === "playing") return <Pause {...iconSize} />;
     return <CirclePlay {...iconSize} />;
@@ -117,6 +148,7 @@ export function RecordingModal({
 
   const getTooltip = () => {
     if (recordingState === "idle") return i18n`Start recording`;
+    if (recordingState === "error") return i18n`Try again`;
     if (recordingState === "recording") return i18n`Stop recording`;
     if (playbackState === "playing") return i18n`Pause playback`;
     return i18n`Play recording`;

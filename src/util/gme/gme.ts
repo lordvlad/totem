@@ -454,6 +454,9 @@ function encodeScript(
 }
 
 function writeScript(w: BufWriter, lines: ScriptLine[]): void {
+  // Don't write anything for empty scripts (matches encodeScript behavior)
+  if (lines.length === 0) return;
+
   // Write offset table bytesize (number of lines)
   w.setUint16(lines.length);
 
@@ -547,7 +550,7 @@ function writeScriptTable(
   const offsets: number[] = [];
   for (const oid of seq) {
     const script = scripts[oid];
-    if (script !== undefined) {
+    if (script !== undefined && script.length > 0) {
       offsets.push(w.getWriteIndex());
       writeScript(w, script);
     } else {
@@ -804,6 +807,9 @@ export function writeLayout(
     powerOnSoundOffset,
     specialCodesOffset,
   });
+
+  // Restore write index to the end of all written data
+  w.setWriteIndex(mediaTableOffset + 8 * config.tracks.length);
 
   return {
     mediaTable: mediaTableItems,

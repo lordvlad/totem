@@ -40,7 +40,20 @@ export function AudioToolbar() {
     const opts = {
       multiple: true,
       types: [
-        { description: i18n`Audio`, accept: { "audio/*": [".mp3" as const] } },
+        {
+          description: i18n`Audio`,
+          accept: {
+            "audio/*": [
+              ".mp3" as const,
+              ".ogg" as const,
+              ".oga" as const,
+              ".m4a" as const,
+              ".aac" as const,
+              ".flac" as const,
+              ".wav" as const,
+            ],
+          },
+        },
       ],
     };
     const handles: FileSystemFileHandle[] = await showOpenFilePicker(opts);

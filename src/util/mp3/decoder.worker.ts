@@ -1,5 +1,5 @@
 import { set } from "idb-keyval";
-import { load } from "./id3";
+import { loadAudioMetadata } from "./audioMetadata";
 import type { Mp3WebWorkerRequest, Mp3WebWorkerResponse } from "./decoder";
 
 let currentProjectUuid: string | null = null;
@@ -19,7 +19,10 @@ function loadAll(handles: FileSystemFileHandle[]) {
       try {
         n++;
         const file = await handle.getFile();
-        const { data, ...meta } = await load(file.stream());
+        const { data, ...meta } = await loadAudioMetadata(
+          file.stream(),
+          handle.name,
+        );
         const uuid = crypto.randomUUID();
         await set(getProjectKey(`data:${uuid}`), data);
         await set(getProjectKey(`track:${uuid}`), {

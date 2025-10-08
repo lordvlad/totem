@@ -842,5 +842,14 @@ test.describe("Audio Recording and Playback", () => {
       page.getByText(/drag-and-drop/i),
     ).toBeVisible();
   });
+
+  // Note: Recording functionality cannot be fully tested in E2E tests because:
+  // - Real microphone access is not available in headless CI environments
+  // - Mocking getUserMedia/MediaRecorder defeats the purpose of E2E testing
+  // - Audio recording requires system-level permissions not available in automated tests
+  // Recording is tested through:
+  // - Manual QA with real microphone input
+  // - Unit tests for the MP3 conversion logic
+  // - The existing "should open recording modal and display recording controls" test above
 });
 

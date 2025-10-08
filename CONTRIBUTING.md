@@ -204,6 +204,11 @@ bunx playwright install chromium
 - **Wait for actions**: Use Playwright's auto-waiting features
 - **Keep tests independent**: Each test should be able to run in isolation
 - **Add TODO comments**: Document future test opportunities as inline comments
+- **NO MOCKING**: E2E tests should never mock browser APIs, functions, or modules. This defeats the purpose of end-to-end testing.
+  - ❌ Don't mock: `getUserMedia`, `fetch`, `localStorage`, `AudioContext`, etc.
+  - ✅ Do use: Real browser APIs, fixture data, pre-populated test databases
+  - If functionality requires mocking to test, it belongs in unit tests, not E2E tests
+  - E2E tests validate the entire stack working together in a real browser environment
 
 #### Future Test Opportunities
 

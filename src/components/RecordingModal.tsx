@@ -1,11 +1,12 @@
 import { ActionIcon, Box, Button, Group, Modal, Tooltip } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "../hooks/useI18n";
 import Mic from "./icons/Mic";
 import { CircleStop } from "./icons/CircleStop";
 import { CirclePlay } from "./icons/CirclePlay";
 import Pause from "./icons/Pause";
-import lamejs from "lamejs";
+import lamejs from "@breezystack/lamejs";
 
 type RecordingState = "idle" | "recording" | "recorded";
 type PlaybackState = "idle" | "playing" | "paused";
@@ -105,22 +106,33 @@ export function RecordingModal({
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach((track) => track.stop());
 
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/webm",
-        });
-        const mp3Blob = await convertToMp3(audioBlob);
+        try {
+          const audioBlob = new Blob(audioChunksRef.current, {
+            type: "audio/webm",
+          });
+          const mp3Blob = await convertToMp3(audioBlob);
 
-        setAudioBlob(mp3Blob);
-        const url = URL.createObjectURL(mp3Blob);
-        setAudioUrl(url);
-        setRecordingState("recorded");
-        setVolumeLevel(0);
+          setAudioBlob(mp3Blob);
+          const url = URL.createObjectURL(mp3Blob);
+          setAudioUrl(url);
+          setRecordingState("recorded");
+          setVolumeLevel(0);
 
-        if (audioContextRef.current?.state !== "closed") {
-          await audioContextRef.current?.close();
+          if (audioContextRef.current?.state !== "closed") {
+            await audioContextRef.current?.close();
+          }
+          audioContextRef.current = null;
+          analyserRef.current = null;
+        } catch (error) {
+          console.error("Error converting recording to MP3:", error);
+          notifications.show({
+            title: i18n`Recording Error`,
+            message: i18n`Failed to convert recording to MP3. Please try again.`,
+            color: "red",
+          });
+          setRecordingState("idle");
+          setVolumeLevel(0);
         }
-        audioContextRef.current = null;
-        analyserRef.current = null;
       };
 
       mediaRecorder.start();
@@ -128,8 +140,19 @@ export function RecordingModal({
       analyzeAudio();
     } catch (error) {
       console.error("Error starting recording:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      notifications.show({
+        title: i18n`Recording Error`,
+        message:
+          errorMessage.includes("Permission denied") ||
+          errorMessage.includes("NotAllowedError")
+            ? i18n`Microphone access denied. Please allow microphone permissions and try again.`
+            : i18n`Failed to start recording. Please check your microphone and try again.`,
+        color: "red",
+      });
     }
-  }, [analyzeAudio]);
+  }, [analyzeAudio, i18n]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current?.state === "recording") {
@@ -151,7 +174,7 @@ export function RecordingModal({
     const samples = audioBuffer.getChannelData(0);
 
     const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128);
-    const mp3Data: Int8Array[] = [];
+    const mp3Data: Uint8Array[] = [];
 
     const sampleBlockSize = 1152;
     const int16Samples = new Int16Array(samples.length);
@@ -180,7 +203,7 @@ export function RecordingModal({
     const concatenated = new Uint8Array(totalLength);
     let offset = 0;
     for (const arr of mp3Data) {
-      concatenated.set(new Uint8Array(arr.buffer), offset);
+      concatenated.set(arr, offset);
       offset += arr.length;
     }
 

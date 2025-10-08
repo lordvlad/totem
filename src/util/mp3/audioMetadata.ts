@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- musicmetadata types are incomplete */
+ 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access -- musicmetadata types are incomplete */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment -- musicmetadata types are incomplete */
 /* eslint-disable @typescript-eslint/no-unsafe-call -- musicmetadata types are incomplete */
 /* eslint-disable @typescript-eslint/no-unsafe-return -- musicmetadata types are incomplete */
 /* eslint-disable @typescript-eslint/no-explicit-any -- musicmetadata uses any types */
-/* eslint-disable @typescript-eslint/strict-boolean-expressions -- need to handle musicmetadata's optional fields */
+ 
 /* eslint-disable complexity -- metadata conversion requires checking multiple fields */
 // @ts-expect-error -- musicmetadata does not have type definitions
 import musicmetadata from "musicmetadata";
@@ -108,15 +108,17 @@ function createNodeReadableStream(data: Uint8Array): any {
     readable: true,
     on(event: string, handler: (...args: unknown[]) => void) {
       if (event === "data") {
-        // Emit data in chunks
-        while (offset < data.length) {
-          const chunk = data.slice(
-            offset,
-            Math.min(offset + chunkSize, data.length),
-          );
-          offset += chunk.length;
-          handler(Buffer.from(chunk));
-        }
+        // Emit data in chunks asynchronously
+        setImmediate(() => {
+          while (offset < data.length) {
+            const chunk = data.slice(
+              offset,
+              Math.min(offset + chunkSize, data.length),
+            );
+            offset += chunk.length;
+            handler(Buffer.from(chunk));
+          }
+        });
       }
       if (event === "end") {
         setImmediate(() => {
@@ -135,10 +137,17 @@ function createNodeReadableStream(data: Uint8Array): any {
       return stream;
     },
     pipe(dest: any) {
-      stream.on("data", (...args: unknown[]) => {
-        dest.write(args[0]);
-      });
-      stream.on("end", () => {
+      // Emit data asynchronously to match Node stream behavior
+      setImmediate(() => {
+        offset = 0; // Reset offset for pipe
+        while (offset < data.length) {
+          const chunk = data.slice(
+            offset,
+            Math.min(offset + chunkSize, data.length),
+          );
+          offset += chunk.length;
+          dest.write(Buffer.from(chunk));
+        }
         dest.end();
       });
       return dest;

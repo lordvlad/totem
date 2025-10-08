@@ -4,9 +4,21 @@ import lamejs from "@breezystack/lamejs";
 type RecordingState = "idle" | "recording" | "recorded" | "error";
 type PlaybackState = "idle" | "playing" | "paused" | "error";
 
-export interface RecorderError {
+export class RecorderError extends Error {
   type: "recording" | "playback" | "conversion" | "permission";
-  message: string;
+
+  constructor(
+    type: "recording" | "playback" | "conversion" | "permission",
+    message: string,
+  ) {
+    super(message);
+    this.name = "RecorderError";
+    this.type = type;
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, RecorderError);
+    }
+  }
 }
 
 interface UseRecorderReturn {
@@ -176,13 +188,14 @@ export function useRecorder(): UseRecorderReturn {
         } catch (error) {
           console.error("Error converting recording to MP3:", error);
           setRecordingState("error");
-          setError({
-            type: "conversion",
-            message:
+          setError(
+            new RecorderError(
+              "conversion",
               error instanceof Error
                 ? error.message
                 : "Failed to convert audio to MP3",
-          });
+            ),
+          );
           setVolumeLevel(0);
         }
       };
@@ -198,10 +211,12 @@ export function useRecorder(): UseRecorderReturn {
         errorMessage.includes("Permission denied") ||
         errorMessage.includes("NotAllowedError");
       setRecordingState("error");
-      setError({
-        type: isPermissionError ? "permission" : "recording",
-        message: errorMessage,
-      });
+      setError(
+        new RecorderError(
+          isPermissionError ? "permission" : "recording",
+          errorMessage,
+        ),
+      );
     }
   }, [analyzeAudio]);
 

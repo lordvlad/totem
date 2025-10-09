@@ -6,7 +6,7 @@ import { join } from "path";
 import { loadAudioMetadata } from "./audioMetadata";
 
 describe("audioMetadata", () => {
-  it("should load metadata from OGG file", async () => {
+  it("should load raw data from OGG file without metadata", async () => {
     // Read an existing OGG test file
     const filePath = join(__dirname, "../gme/__specs__/hello.ogg");
     const buffer = await readFile(filePath);
@@ -20,7 +20,7 @@ describe("audioMetadata", () => {
       },
     });
 
-    // Load metadata
+    // Load metadata (should return empty metadata for OGG)
     const metadata = await loadAudioMetadata(stream, "hello.ogg");
 
     // Verify metadata structure
@@ -28,6 +28,7 @@ describe("audioMetadata", () => {
     expect(metadata.data).toBeInstanceOf(Uint8Array);
     expect(metadata.size).toBeGreaterThan(0);
     expect(metadata.frames).toBeDefined();
+    expect(Object.keys(metadata.frames).length).toBe(0); // No metadata for non-MP3
   });
 
   it("should use ID3 parser for MP3 files", async () => {

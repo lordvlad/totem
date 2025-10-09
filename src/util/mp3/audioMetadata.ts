@@ -1,12 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access -- musicmetadata types are incomplete */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment -- musicmetadata types are incomplete */
-/* eslint-disable @typescript-eslint/no-unsafe-call -- musicmetadata types are incomplete */
-/* eslint-disable @typescript-eslint/no-unsafe-return -- musicmetadata types are incomplete */
-/* eslint-disable @typescript-eslint/no-explicit-any -- musicmetadata uses any types */
-
-/* eslint-disable complexity -- metadata conversion requires checking multiple fields */
-// @ts-expect-error -- musicmetadata does not have type definitions
-import musicmetadata from "musicmetadata";
 import { load as loadId3 } from "./id3";
 import type { ID3 } from "./id3";
 
@@ -15,22 +6,12 @@ export type AudioMetadata = Omit<ID3, "fileName"> & {
   size: number;
 };
 
-interface MusicMetadata {
-  title?: string;
-  artist?: string[];
-  album?: string;
-  year?: string | number;
-  genre?: string[];
-  picture?: Array<{
-    format: string;
-    data: Buffer;
-  }>;
-  duration?: number;
-}
-
 /**
  * Extract metadata from an audio file stream.
  * Supports MP3 (ID3), OGG (Vorbis), M4A/AAC, FLAC, and WAV formats.
+ *
+ * Note: For non-MP3 formats, metadata extraction is not currently supported
+ * in the browser environment. These files will use the filename as the title.
  */
 export async function loadAudioMetadata(
   stream: ReadableStream<Uint8Array>,
@@ -43,11 +24,15 @@ export async function loadAudioMetadata(
     return await loadId3(stream);
   }
 
-  // For other formats, use musicmetadata
-  return await loadWithMusicMetadata(stream);
+  // For other formats, read the raw data without metadata extraction
+  return await loadRawAudio(stream);
 }
 
-async function loadWithMusicMetadata(
+/**
+ * Load audio file without metadata extraction.
+ * Returns raw audio data with empty metadata structure.
+ */
+async function loadRawAudio(
   stream: ReadableStream<Uint8Array>,
 ): Promise<AudioMetadata> {
   // Read the entire stream into a buffer
@@ -66,26 +51,18 @@ async function loadWithMusicMetadata(
 
   const data = concatBuffers(...chunks);
 
-  // Create a Node-compatible stream from the buffer
-  const nodeStream = createNodeReadableStream(data);
-
-  // Parse metadata using musicmetadata
-  const metadata = await new Promise<MusicMetadata>((resolve, reject) => {
-    musicmetadata(
-      nodeStream,
-      { duration: true },
-      (err: Error | null, meta: MusicMetadata) => {
-        if (err != null) {
-          reject(err);
-        } else {
-          resolve(meta);
-        }
-      },
-    );
-  });
-
-  // Convert musicmetadata format to our ID3-compatible format
-  return convertToId3Format(metadata, data);
+  // Return empty metadata structure
+  // The Track class will use the filename as the title (fallback behavior)
+  return {
+    version: [4, 0],
+    unsync: false,
+    tagSize: 0,
+    xheader: false,
+    xindicator: false,
+    frames: {},
+    data,
+    size: data.byteLength,
+  };
 }
 
 function concatBuffers(...buffers: Uint8Array[]): Uint8Array {
@@ -97,155 +74,4 @@ function concatBuffers(...buffers: Uint8Array[]): Uint8Array {
     offset += buffer.length;
   }
   return result;
-}
-
-function createNodeReadableStream(data: Uint8Array): any {
-  let offset = 0;
-  const chunkSize = 64 * 1024; // 64KB chunks
-
-  const stream = {
-    readable: true,
-    on(event: string, handler: (...args: unknown[]) => void) {
-      if (event === "data") {
-        // Emit data in chunks asynchronously
-        setImmediate(() => {
-          while (offset < data.length) {
-            const chunk = data.slice(
-              offset,
-              Math.min(offset + chunkSize, data.length),
-            );
-            offset += chunk.length;
-            handler(Buffer.from(chunk));
-          }
-        });
-      }
-      if (event === "end") {
-        setImmediate(() => {
-          handler();
-        });
-      }
-      return stream;
-    },
-    removeListener() {
-      return stream;
-    },
-    pause() {
-      return stream;
-    },
-    resume() {
-      return stream;
-    },
-    pipe(dest: any) {
-      // Emit data asynchronously to match Node stream behavior
-      setImmediate(() => {
-        offset = 0; // Reset offset for pipe
-        while (offset < data.length) {
-          const chunk = data.slice(
-            offset,
-            Math.min(offset + chunkSize, data.length),
-          );
-          offset += chunk.length;
-          dest.write(Buffer.from(chunk));
-        }
-        dest.end();
-      });
-      return dest;
-    },
-  };
-
-  return stream;
-}
-
-function convertToId3Format(
-  metadata: MusicMetadata,
-  data: Uint8Array,
-): AudioMetadata {
-  // Create ID3-compatible frame structure
-  const frames: ID3["frames"] = {};
-
-  // Map common metadata fields to ID3 frame IDs
-  if (typeof metadata.title === "string" && metadata.title.length > 0) {
-    frames.TIT2 = {
-      id: "TIT2",
-      size: 0,
-      flags: null,
-      frameDataSize: null,
-      description: "Title",
-      data: metadata.title,
-    };
-  }
-
-  if (Array.isArray(metadata.artist) && metadata.artist.length > 0) {
-    frames.TOA = {
-      id: "TOA",
-      size: 0,
-      flags: null,
-      frameDataSize: null,
-      description: "Artist",
-      data: metadata.artist[0],
-    };
-  }
-
-  if (typeof metadata.album === "string" && metadata.album.length > 0) {
-    frames.TALB = {
-      id: "TALB",
-      size: 0,
-      flags: null,
-      frameDataSize: null,
-      description: "Album",
-      data: metadata.album,
-    };
-  }
-
-  if (typeof metadata.year === "string" || typeof metadata.year === "number") {
-    frames.TYER = {
-      id: "TYER",
-      size: 0,
-      flags: null,
-      frameDataSize: null,
-      description: "Year",
-      data: String(metadata.year),
-    };
-  }
-
-  if (Array.isArray(metadata.genre) && metadata.genre.length > 0) {
-    frames.TCON = {
-      id: "TCON",
-      size: 0,
-      flags: null,
-      frameDataSize: null,
-      description: "Genre",
-      data: metadata.genre[0],
-    };
-  }
-
-  // Handle album art
-  if (Array.isArray(metadata.picture) && metadata.picture.length > 0) {
-    const picture = metadata.picture[0];
-    frames.APIC = {
-      id: "APIC",
-      size: 0,
-      flags: null,
-      frameDataSize: null,
-      description: "Picture",
-      data: {
-        mimetype:
-          picture.format === "jpg" ? "image/jpeg" : `image/${picture.format}`,
-        type: "Cover (front)",
-        description: "",
-        data: picture.data,
-      },
-    };
-  }
-
-  return {
-    version: [4, 0],
-    unsync: false,
-    tagSize: 0,
-    xheader: false,
-    xindicator: false,
-    frames,
-    data,
-    size: data.byteLength,
-  };
 }

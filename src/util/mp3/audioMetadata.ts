@@ -1,10 +1,9 @@
- 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access -- musicmetadata types are incomplete */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment -- musicmetadata types are incomplete */
 /* eslint-disable @typescript-eslint/no-unsafe-call -- musicmetadata types are incomplete */
 /* eslint-disable @typescript-eslint/no-unsafe-return -- musicmetadata types are incomplete */
 /* eslint-disable @typescript-eslint/no-explicit-any -- musicmetadata uses any types */
- 
+
 /* eslint-disable complexity -- metadata conversion requires checking multiple fields */
 // @ts-expect-error -- musicmetadata does not have type definitions
 import musicmetadata from "musicmetadata";

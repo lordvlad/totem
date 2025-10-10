@@ -58,6 +58,33 @@ async function getTestMedia() {
   );
 }
 
+async function getMixedFormatTestMedia() {
+  return await Promise.all(
+    [
+      "back.ogg",
+      "bing.ogg",
+      "hello.wav",
+      "one.m4a",
+      "three.ogg",
+      "two.mp3",
+    ].map(async (fileName) => {
+      const { size } = await stat(join(__dirname, fileName));
+      return id<Track>(
+        hydrate(
+          {
+            title: fileName,
+            artist: "Joachim Breitner",
+            fileName,
+            uuid: crypto.randomUUID(),
+            size,
+          },
+          Track,
+        ),
+      );
+    }),
+  );
+}
+
 describe("gme", async () => {
   let tmpDir: string;
 
@@ -222,6 +249,81 @@ Script for OID 1406:
       expect(stdout).toContain(
         'All lines do satisfy hypothesis "media indicies are correct"!',
       );
+    }
+  }, 10000);
+
+  it("should produce a valid gme file with mixed audio formats (ogg, wav, m4a, mp3)", async () => {
+    const gme = join(tmpDir, "data4.gme");
+    await buildTo({ ...cfg, tracks: await getMixedFormatTestMedia() }, gme);
+
+    {
+      const { stdout, stderr } = await tttool("info", gme);
+      console.log("stdout", stdout);
+      console.log("stderr", stderr);
+
+      expect(stderr).toBeFalsy();
+      expect(stdout).toContain(`Product ID: ${cfg.productId}`);
+      expect(stdout).toContain(`Language: ${cfg.language.substring(0, 6)}`);
+      expect(stdout).toContain("Number of registers: 0");
+      expect(stdout).toContain("Initial registers: []");
+      expect(stdout).toContain("Initial sounds: []");
+      expect(stdout).toContain("Audio table entries: 6");
+      expect(stdout).toContain("Audio table copy: Absent");
+      expect(stdout).toContain("Special OIDs: 7779, 7778");
+    }
+
+    {
+      const { stdout, stderr } = await tttool("lint", gme);
+      expect(stderr).toBeFalsy();
+      expect(stdout).toContain(
+        'All lines do satisfy hypothesis "play indicies are correct"!',
+      );
+      expect(stdout).toContain(
+        'All lines do satisfy hypothesis "media indicies are correct"!',
+      );
+    }
+
+    {
+      const { stdout, stderr } = await tttool("scripts", gme);
+      expect(stderr).toBeFalsy();
+      expect(stdout.split(/\r?\n/).join("\n")).toContain(`Script for OID 1401:
+    0==0? P(0)
+Script for OID 1402:
+    0==0? P(1)
+Script for OID 1403:
+    0==0? P(2)
+Script for OID 1404:
+    0==0? P(3)
+Script for OID 1405:
+    0==0? P(4)
+Script for OID 1406:
+    0==0? P(5)`);
+    }
+
+    {
+      const { stdout, stderr } = await tttool(
+        "media",
+        "--dir",
+        join(tmpDir, "media-mixed"),
+        gme,
+      );
+      expect(stderr).toBeFalsy();
+      expect(stdout).toContain("Audio Table entries: 6");
+
+      const mediaDir = join(tmpDir, "media-mixed");
+      const extractedFiles = await readdir(mediaDir);
+
+      expect(extractedFiles.length).toBe(6);
+    }
+
+    {
+      const game = await play(gme);
+      expect(await game.out).toContain("Initial");
+      expect(await game.err).toBeFalsy();
+      game.touch(1401);
+      expect(await game.out).toContain("Playing audio sample 0");
+
+      await game.exit();
     }
   }, 10000);
 });

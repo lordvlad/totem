@@ -59,6 +59,77 @@ jobs:
           bun run preview &
           sleep 5
       
+      # Step 9: Install GitHub CLI
+      - name: Install GitHub CLI
+        run: |
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+          gh --version
+      
+      # Step 10: Authenticate GitHub CLI
+      - name: Authenticate GitHub CLI with workflow token
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          gh auth status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Step 11: Demonstrate GitHub CLI - List Pull Requests
+      - name: Demonstrate gh pr list
+        run: |
+          echo "=== GitHub CLI: Listing Pull Requests ==="
+          echo ""
+          echo "Command: gh pr list"
+          echo ""
+          gh pr list --limit 10
+          echo ""
+          echo "Command: gh pr list --state open"
+          echo ""
+          gh pr list --state open --limit 10
+          echo ""
+          echo "Command: gh pr list --state closed --limit 5"
+          echo ""
+          gh pr list --state closed --limit 5 || echo "No closed PRs or not enough PRs"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Step 12: Demonstrate GitHub CLI - View PR with Comments
+      - name: Demonstrate gh pr view with comments
+        run: |
+          echo "=== GitHub CLI: Viewing Pull Request Details ==="
+          echo ""
+          # Get the first open PR number if it exists
+          PR_NUMBER=$(gh pr list --state open --limit 1 --json number --jq '.[0].number' 2>/dev/null || echo "")
+          
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Found open PR #$PR_NUMBER"
+            echo ""
+            echo "Command: gh pr view $PR_NUMBER"
+            echo ""
+            gh pr view "$PR_NUMBER"
+            echo ""
+            echo "Command: gh pr view $PR_NUMBER --comments"
+            echo ""
+            gh pr view "$PR_NUMBER" --comments
+          else
+            echo "No open pull requests found to demonstrate 'gh pr view --comments'"
+            echo ""
+            echo "Example command usage:"
+            echo "  gh pr view <PR_NUMBER> --comments"
+            echo ""
+            echo "This command would show:"
+            echo "  - PR title and description"
+            echo "  - PR metadata (status, reviewers, labels, etc.)"
+            echo "  - All comments on the PR"
+            echo "  - Review comments inline with code"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
       # Additional notes for developers
       - name: Development workflow notes
         run: |

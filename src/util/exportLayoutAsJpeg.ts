@@ -87,14 +87,14 @@ export async function exportLayoutAsJpeg(
 
   const svgElements = element.querySelectorAll("svg");
 
-  for (const svg of svgElements) {
-    const rect = svg.getBoundingClientRect();
-
-    const x = (rect.left - containerRect.left) * scaleX;
-    const y = (rect.top - containerRect.top) * scaleY;
-
-    await svgToCanvas({ svg, canvas, x, y, scaleX, scaleY });
-  }
+  await Promise.all(
+    Array.from(svgElements).map(async (svg) => {
+      const rect = svg.getBoundingClientRect();
+      const x = (rect.left - containerRect.left) * scaleX;
+      const y = (rect.top - containerRect.top) * scaleY;
+      await svgToCanvas({ svg, canvas, x, y, scaleX, scaleY });
+    }),
+  );
 
   return await new Promise((resolve, reject) => {
     canvas.toBlob(

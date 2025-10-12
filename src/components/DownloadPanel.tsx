@@ -243,7 +243,7 @@ export function DownloadPanel() {
           throw new Error("Print layout not found");
         }
 
-        const fileName = `${projectName} - ${photoSize.name.replace(/\s/g, "")}.jpg`;
+        const fileName = `${projectName} - ${photoSize.name.replace(/\s+/g, "-")}.jpg`;
         await exportLayoutAsJpeg(printPreview, photoSize, fileName);
 
         notifications.show({

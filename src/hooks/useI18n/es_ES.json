@@ -102,5 +102,9 @@
   "Load from URL": "Cargar desde URL",
   "Project URL": "URL del proyecto",
   "Enter a public URL to a .ndjson project file": "Ingrese una URL pública a un archivo de proyecto .ndjson",
-  "Loading project from URL...": "Cargando proyecto desde URL..."
+  "Loading project from URL...": "Cargando proyecto desde URL...",
+  "Download JPEG": "Descargar JPEG",
+  "Select Photo Size": "Seleccionar tamaño de foto",
+  "Choose a photo size for high-quality JPEG export (1200 DPI):": "Elija un tamaño de foto para exportar JPEG de alta calidad (1200 DPI):",
+  "JPEG file downloaded": "Archivo JPEG descargado"
 }

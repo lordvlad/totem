@@ -1,4 +1,12 @@
-import { Button, Checkbox, Flex, Group, Modal } from "@mantine/core";
+import {
+  Button,
+  Checkbox,
+  Flex,
+  Group,
+  Modal,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useDisclosure, useLocalStorage } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { useCallback, useState } from "react";
@@ -7,6 +15,7 @@ import Feather from "../components/icons/Feather";
 import Printer from "../components/icons/Printer";
 import TestTube from "../components/icons/TestTube";
 import { Download } from "../components/icons/Download";
+import { BookImage } from "../components/icons/BookImage";
 import { useOptions } from "../hooks/useOptions";
 import { useLibrary } from "../hooks/useLibrary";
 import { useI18n } from "../hooks/useI18n";
@@ -21,6 +30,11 @@ import {
 import { Track } from "../util/mp3/track";
 import { hydrate } from "../util/hydrate";
 import { id } from "tsafe";
+import {
+  exportLayoutAsJpeg,
+  PHOTO_SIZES,
+  type PhotoSize,
+} from "../util/exportLayoutAsJpeg";
 
 export function DownloadPanel() {
   const {
@@ -208,6 +222,50 @@ export function DownloadPanel() {
     }
   }, [language, build, i18n]);
 
+  const [jpegModalOpened, { open: openJpegModal, close: closeJpegModal }] =
+    useDisclosure(false);
+  const [isExportingJpeg, setIsExportingJpeg] = useState(false);
+
+  const onJpegExportClick = useCallback(() => {
+    openJpegModal();
+  }, [openJpegModal]);
+
+  const onJpegSizeSelect = useCallback(
+    async (photoSize: PhotoSize) => {
+      closeJpegModal();
+      setIsExportingJpeg(true);
+
+      try {
+        const printPreview = document.querySelector(
+          ".print-only",
+        ) as HTMLElement;
+        if (!printPreview) {
+          throw new Error("Print layout not found");
+        }
+
+        const fileName = `${projectName} - ${photoSize.name.replace(/\s+/g, "-")}.jpg`;
+        await exportLayoutAsJpeg(printPreview, photoSize, fileName);
+
+        notifications.show({
+          title: i18n`Success`,
+          message: i18n`JPEG file downloaded`,
+          autoClose: 10 * 1000,
+          icon: <BookImage />,
+        });
+      } catch (e) {
+        notifications.show({
+          title: i18n`Error`,
+          message: String(e),
+          autoClose: 10 * 1000,
+          icon: <AlertTriangle />,
+        });
+      } finally {
+        setIsExportingJpeg(false);
+      }
+    },
+    [projectName, i18n, closeJpegModal],
+  );
+
   return (
     <>
       <Group gap={4}>
@@ -227,6 +285,15 @@ export function DownloadPanel() {
           leftSection={<Printer {...iconStyle} />}
         >
           {i18n`Print`}
+        </Button>
+        <Button
+          pr={8}
+          disabled={isBundling || tracks.length === 0 || isExportingJpeg}
+          onClick={onJpegExportClick}
+          loading={isExportingJpeg}
+          leftSection={<BookImage {...iconStyle} />}
+        >
+          {i18n`Download JPEG`}
         </Button>
       </Group>
 
@@ -272,6 +339,29 @@ export function DownloadPanel() {
           <Flex style={{ flexGrow: 1 }}></Flex>
           <Button onClick={onPrintHintClose}>{i18n`OK`}</Button>
         </Flex>
+      </Modal>
+
+      <Modal
+        opened={jpegModalOpened}
+        onClose={closeJpegModal}
+        title={i18n`Select Photo Size`}
+        centered
+      >
+        <Text size="sm" mb="md">
+          {i18n`Choose a photo size for high-quality JPEG export (1200 DPI):`}
+        </Text>
+        <Stack gap="xs">
+          {PHOTO_SIZES.map((size) => (
+            <Button
+              key={size.name}
+              variant="light"
+              onClick={() => onJpegSizeSelect(size)}
+              fullWidth
+            >
+              {size.name}
+            </Button>
+          ))}
+        </Stack>
       </Modal>
     </>
   );

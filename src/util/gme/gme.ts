@@ -799,13 +799,14 @@ function createScriptTable({
   tracks?: Track[];
 }) {
   const scripts = cfgScripts ?? createAlbumControls(tracks);
-  const scriptKeys = Object.keys(scripts);
-  const headSize = 4 + 4 + 4 * scriptKeys.length;
-  const firstOid = Math.min(...scriptKeys.map(Number));
-  const lastOid = Math.max(...scriptKeys.map(Number));
+  const scriptKeys = Object.keys(scripts).map(Number);
+  const firstOid = Math.min(...scriptKeys);
+  const lastOid = Math.max(...scriptKeys);
   const seq = new Array(lastOid - firstOid + 1)
     .fill(0)
     .map((_, i) => i + firstOid);
+  // headSize must use seq.length (full OID range) not scriptKeys.length (sparse keys)
+  const headSize = 4 + 4 + 4 * seq.length;
 
   const items: ScriptTableItem[] = [];
   let currentOffset = offset + 8;

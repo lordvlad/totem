@@ -103,14 +103,14 @@ function reduce(s: typeof state, action: A): S {
         .then(() => dispatch({ event: "removed", tracks: action.tracks }))
         .catch((e1: unknown) => console.error(e1));
       return { ...s, isLoading: true };
-    case "removed":
+    case "removed": {
+      const removedUuids = new Set(action.tracks.map((t) => t.uuid));
       return {
         ...s,
         isLoading: false,
-        tracks: s.tracks.filter(
-          (t) => !new Set(action.tracks.map((t) => t.uuid)).has(t.uuid),
-        ),
+        tracks: s.tracks.filter((t) => !removedUuids.has(t.uuid)),
       };
+    }
     case "clear":
       Promise.all([
         delMany(s.tracks.map((t) => getProjectKey(`track:${t.uuid}`))),

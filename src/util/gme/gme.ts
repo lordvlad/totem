@@ -9,6 +9,22 @@ import { singleChunkStream } from "../singleChunkStream";
 import { concatBuffers } from "../concatBuffers";
 import { range } from "../../components/OIDCode/util";
 
+// Pre-computed game table data - parsed once at module load
+const GAME_TABLE_DATA = new Uint8Array([
+  0x0c, 0x00, 0x00, 0x00, 0x71, 0x70, 0x01, 0x00, 0x35, 0x7a, 0x01, 0x00, 0x91,
+  0x7f, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xcd, 0x82, 0x01, 0x00, 0x59, 0x8a, 0x01,
+  0x00, 0xe7, 0x8e, 0x01, 0x00, 0x4f, 0x97, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f,
+  0x9f, 0x01, 0x00, 0xc7, 0x9f, 0x01, 0x00, 0x69, 0xa1, 0x01, 0x00, 0x69, 0xad,
+  0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0xfb, 0xb2, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+]);
+
+// Special codes table base template (40 bytes)
+// Positions: 0-1 = replayOid, 2-3 = stopOid, rest are zeros or reserved
+const SPECIAL_CODES_BASE_SIZE = 40;
+
 interface ScriptValue {
   value: number;
 }
@@ -19,11 +35,6 @@ type ScriptParameter = ScriptValue | ScriptRegister;
 
 function isRegister(x: unknown): x is ScriptRegister {
   return x !== null && typeof x === "object" && "register" in x;
-}
-
-function toHex(num: number) {
-  const hex = num.toString(16).padStart(4, "0");
-  return `${hex.slice(2, 4)} ${hex.slice(0, 2)}`;
 }
 
 const scriptConditionOps = {
@@ -278,30 +289,14 @@ function createSpecialCodesTable({
    * f: unknown, 0 or 1 (always 1 for g != 0, but can also be 1 for g = 0)
    * g: unknown, (in this example: discover mode)
    */
-  const example = `
-          #             68 18 00 00 67 18 64 18 65 18 00 00
-                        aa aa bb bb cc cc dd dd ee ee pp pp
-          # 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-            pp pp pp pp pp pp pp pp pp pp pp pp pp pp pp pp
-          # 00 00 00 00 00 00 00 00 01 00 66 18
-            pp pp pp pp pp pp pp pp ff ff gg gg 
-  `;
-  const data = example
-    .split("\n")
-    .map((s) => s.trim())
-    .filter((s) => s.length !== 0 && !s.startsWith("#"))
-    .join("\n")
-    .replace("aa aa", toHex(replayOid))
-    .replace("bb bb", toHex(stopOid))
-    .replace("cc cc", "00 00")
-    .replace("dd dd", "00 00")
-    .replace("ee ee", "00 00")
-    .replace("ff ff", "00 00")
-    .replace("gg gg", "00 00")
-    .replaceAll("pp", "00")
-    .split(/\s+/)
-    .filter((s) => s.length)
-    .map((s) => parseInt(s, 16));
+  // Create a zero-filled buffer and set the OID values
+  const data = new Uint8Array(SPECIAL_CODES_BASE_SIZE);
+  // Set replayOid at offset 0 (little-endian)
+  data[0] = replayOid & 0xff;
+  data[1] = (replayOid >> 8) & 0xff;
+  // Set stopOid at offset 2 (little-endian)
+  data[2] = stopOid & 0xff;
+  data[3] = (stopOid >> 8) & 0xff;
   return {
     size: data.length,
     write(buf: Buf) {
@@ -311,23 +306,10 @@ function createSpecialCodesTable({
 }
 function createGameTable({ offset }: { offset: number }) {
   // https://github.com/entropia/tip-toi-reveng/wiki/GME-Game-Table
-  const data = `
-            0c 00 00 00 71 70 01 00  35 7a 01 00 91 7f 01 00
-            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-            cd 82 01 00 59 8a 01 00  e7 8e 01 00 4f 97 01 00 
-            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-            0f 9f 01 00 c7 9f 01 00  69 a1 01 00 69 ad 01 00 
-            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-            fb b2 01 00 
-            00 00 00 00
-            `
-    .split(/\s+/)
-    .filter((s) => s.length)
-    .map((s) => parseInt(s, 16));
   return {
-    size: data.length,
+    size: GAME_TABLE_DATA.length,
     write(buf: Buf) {
-      buf.uint8.set(data, offset);
+      buf.uint8.set(GAME_TABLE_DATA, offset);
     },
   };
 }
@@ -340,26 +322,28 @@ function createMediaTable({
   tracks: Track[];
 }) {
   const size = 8 * tracks.length;
+  const items: MediaTableItem[] = [];
 
-  const { items } = tracks.reduce(
-    ({ items, offset, mediaOffset }, track) => ({
-      offset: offset + 8,
-      mediaOffset: mediaOffset + track.size,
-      items: [
-        ...items,
-        id<MediaTableItem>({
-          offset,
-          mediaOffset,
-          write({ view }) {
-            view.setUint32(this.offset, this.mediaOffset, true);
-            view.setUint32(this.offset + 4, this.track.size, true);
-          },
-          track,
-        }),
-      ],
-    }),
-    { offset, items: id<MediaTableItem[]>([]), mediaOffset: offset + size },
-  );
+  let currentOffset = offset;
+  let mediaOffset = offset + size;
+
+  for (const track of tracks) {
+    const itemOffset = currentOffset;
+    const itemMediaOffset = mediaOffset;
+    items.push(
+      id<MediaTableItem>({
+        offset: itemOffset,
+        mediaOffset: itemMediaOffset,
+        write({ view }) {
+          view.setUint32(this.offset, this.mediaOffset, true);
+          view.setUint32(this.offset + 4, this.track.size, true);
+        },
+        track,
+      }),
+    );
+    currentOffset += 8;
+    mediaOffset += track.size;
+  }
 
   return {
     items,
@@ -613,50 +597,19 @@ function writeSpecialCodesTable(
   replayOid: number,
   stopOid: number,
 ): void {
-  const example = `
-          #             68 18 00 00 67 18 64 18 65 18 00 00
-                        aa aa bb bb cc cc dd dd ee ee pp pp
-          # 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-            pp pp pp pp pp pp pp pp pp pp pp pp pp pp pp pp
-          # 00 00 00 00 00 00 00 00 01 00 66 18
-            pp pp pp pp pp pp pp pp ff ff gg gg 
-  `;
-  const data = example
-    .split("\n")
-    .map((s) => s.trim())
-    .filter((s) => s.length !== 0 && !s.startsWith("#"))
-    .join("\n")
-    .replace("aa aa", toHex(replayOid))
-    .replace("bb bb", toHex(stopOid))
-    .replace("cc cc", "00 00")
-    .replace("dd dd", "00 00")
-    .replace("ee ee", "00 00")
-    .replace("ff ff", "00 00")
-    .replace("gg gg", "00 00")
-    .replaceAll("pp", "00")
-    .split(/\s+/)
-    .filter((s) => s.length)
-    .map((s) => parseInt(s, 16));
-
+  // Create a zero-filled buffer and set the OID values
+  const data = new Uint8Array(SPECIAL_CODES_BASE_SIZE);
+  // Set replayOid at offset 0 (little-endian)
+  data[0] = replayOid & 0xff;
+  data[1] = (replayOid >> 8) & 0xff;
+  // Set stopOid at offset 2 (little-endian)
+  data[2] = stopOid & 0xff;
+  data[3] = (stopOid >> 8) & 0xff;
   w.writeBytes(data);
 }
 
 function writeGameTable(w: BufWriter): void {
-  const data = `
-            0c 00 00 00 71 70 01 00  35 7a 01 00 91 7f 01 00
-            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-            cd 82 01 00 59 8a 01 00  e7 8e 01 00 4f 97 01 00 
-            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-            0f 9f 01 00 c7 9f 01 00  69 a1 01 00 69 ad 01 00 
-            00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-            fb b2 01 00 
-            00 00 00 00
-            `
-    .split(/\s+/)
-    .filter((s) => s.length)
-    .map((s) => parseInt(s, 16));
-
-  w.writeBytes(data);
+  w.writeBytes(GAME_TABLE_DATA);
 }
 
 function writeMediaTable(w: BufWriter, tracks: Track[]): void {
@@ -846,38 +799,35 @@ function createScriptTable({
   tracks?: Track[];
 }) {
   const scripts = cfgScripts ?? createAlbumControls(tracks);
-  const headSize = 4 + 4 + 4 * Object.keys(scripts).length;
-  const firstOid = Math.min(...Object.keys(scripts).map(Number));
-  const lastOid = Math.max(...Object.keys(scripts).map(Number));
+  const scriptKeys = Object.keys(scripts).map(Number);
+  const firstOid = Math.min(...scriptKeys);
+  const lastOid = Math.max(...scriptKeys);
   const seq = new Array(lastOid - firstOid + 1)
     .fill(0)
     .map((_, i) => i + firstOid);
+  // headSize must use seq.length (full OID range) not scriptKeys.length (sparse keys)
+  const headSize = 4 + 4 + 4 * seq.length;
 
-  const { items, size } = seq.reduce(
-    ({ items, offset, scriptOffset, size }, oid) => {
-      const encoded = encodeScript(scripts[oid], scriptOffset);
-      return {
-        offset: offset + 4,
-        size: size + (encoded?.byteLength ?? 0),
-        scriptOffset: scriptOffset + (encoded?.byteLength ?? 0),
-        items: [
-          ...items,
-          id<ScriptTableItem>({
-            encoded,
-            script: scripts[oid],
-            offset,
-            scriptOffset: oid in scripts ? scriptOffset : 0xffff_ffff,
-          }),
-        ],
-      };
-    },
-    {
-      size: headSize,
-      offset: offset + 8,
-      items: id<ScriptTableItem[]>([]),
-      scriptOffset: offset + headSize,
-    },
-  );
+  const items: ScriptTableItem[] = [];
+  let currentOffset = offset + 8;
+  let scriptOffset = offset + headSize;
+  let size = headSize;
+
+  for (const oid of seq) {
+    const encoded = encodeScript(scripts[oid], scriptOffset);
+    items.push(
+      id<ScriptTableItem>({
+        encoded,
+        script: scripts[oid],
+        offset: currentOffset,
+        scriptOffset: oid in scripts ? scriptOffset : 0xffff_ffff,
+      }),
+    );
+    currentOffset += 4;
+    size += encoded?.byteLength ?? 0;
+    scriptOffset += encoded?.byteLength ?? 0;
+  }
+
   return {
     size,
     write({ uint8, view }: Buf) {
@@ -1182,19 +1132,14 @@ function mediaFileCypher(x: number) {
   const y = x ^ 0xff;
   return new TransformStream<Uint8Array>({
     transform(chunk, controller) {
-      controller.enqueue(
-        chunk.map((n) => {
-          switch (n) {
-            case 0:
-            case 0xff:
-            case x:
-            case y:
-              return n;
-            default:
-              return x ^ n;
-          }
-        }),
-      );
+      // Create a copy to avoid mutating the input chunk
+      const result = new Uint8Array(chunk.length);
+      for (let i = 0; i < chunk.length; i++) {
+        const n = chunk[i];
+        // Values 0, 0xff, x, y pass through unchanged; others are XORed with x
+        result[i] = n === 0 || n === 0xff || n === x || n === y ? n : x ^ n;
+      }
+      controller.enqueue(result);
     },
   });
 }

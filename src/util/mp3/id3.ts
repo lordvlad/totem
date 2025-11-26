@@ -315,16 +315,25 @@ async function readTags(
 ): Promise<Omit<ID3, "fileName">> {
   const getBuffer = (() => {
     const chunks: Uint8Array[] = [];
-
-    const getBuf = async () => await new Blob(chunks).arrayBuffer();
-
-    let buf = new Uint8Array().buffer;
+    let totalLength = 0;
+    let buf: ArrayBuffer = new ArrayBuffer(0);
 
     return async (n: number) => {
-      while (buf.byteLength < n) {
+      while (totalLength < n) {
         const { value, done } = await stream.read();
-        if (!done) chunks.push(value);
-        buf = await getBuf();
+        if (done) break;
+        chunks.push(value);
+        totalLength += value.length;
+      }
+      // Only rebuild the buffer if we added new chunks
+      if (buf.byteLength < totalLength) {
+        const result = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const chunk of chunks) {
+          result.set(chunk, offset);
+          offset += chunk.length;
+        }
+        buf = result.buffer;
       }
       return buf;
     };

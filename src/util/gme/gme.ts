@@ -23,12 +23,7 @@ const GAME_TABLE_DATA = new Uint8Array([
 
 // Special codes table base template (40 bytes)
 // Positions: 0-1 = replayOid, 2-3 = stopOid, rest are zeros or reserved
-const SPECIAL_CODES_BASE = new Uint8Array([
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00,
-]);
+const SPECIAL_CODES_BASE_SIZE = 40;
 
 interface ScriptValue {
   value: number;
@@ -294,8 +289,8 @@ function createSpecialCodesTable({
    * f: unknown, 0 or 1 (always 1 for g != 0, but can also be 1 for g = 0)
    * g: unknown, (in this example: discover mode)
    */
-  // Create a copy of the template and set the OID values
-  const data = new Uint8Array(SPECIAL_CODES_BASE);
+  // Create a zero-filled buffer and set the OID values
+  const data = new Uint8Array(SPECIAL_CODES_BASE_SIZE);
   // Set replayOid at offset 0 (little-endian)
   data[0] = replayOid & 0xff;
   data[1] = (replayOid >> 8) & 0xff;
@@ -602,8 +597,8 @@ function writeSpecialCodesTable(
   replayOid: number,
   stopOid: number,
 ): void {
-  // Create a copy of the template and set the OID values
-  const data = new Uint8Array(SPECIAL_CODES_BASE);
+  // Create a zero-filled buffer and set the OID values
+  const data = new Uint8Array(SPECIAL_CODES_BASE_SIZE);
   // Set replayOid at offset 0 (little-endian)
   data[0] = replayOid & 0xff;
   data[1] = (replayOid >> 8) & 0xff;
